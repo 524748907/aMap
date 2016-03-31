@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,width=device-width,initial-scale=1.0'/>
+        <title>聊天盒子</title>
+        <link rel='stylesheet' type='text/css' href='../css/bootstrap.min.css' />
+		<link rel='stylesheet' href='../css/github.css'>
+		<style type='text/css'>
+		  .diy-btn-group-test {margin : 10px 0px 0px 0px;}
+		</style>
+		
+    </head>
+    <body>
+    </body>
+	<script src="../script/jquery-1.11.1.min.js"></script>
+	<script src='../script/demo.js'></script>
+	<script src='../script/highlight.pack.js'></script>
+    <script type='text/javascript' src='../script/api.js'></script>
+    <script type='text/javascript'>
+    
+    function openMap(){
+    	var map = api.require('aMap');
+    	map.open({
+		    rect: {
+		        x: 0,
+		        y: 300,
+		        h: 400
+		    },
+		    showUserLocation: true,
+    		zoomLevel: 11,
+		    center: {
+		       lon: 116.4021310000,
+		       lat: 39.9994480000
+		    },
+		}, function(ret){
+			if(ret.status){
+		        alert('地图打开成功');
+			}
+		});
+    }
+    
+    function setRect(){
+    	var map = api.require('aMap');
+		map.setRect({
+			rect: {
+		        x: 0,
+		        y: 0,
+		        w: 320,
+		        h: 300
+		    }
+		});
+    }
+    
+     function showUserTrue(){
+    	var map = api.require('aMap');
+		map.showUserLocation({
+			isShow: true
+		});
+    }
+    
+    function showUserFalse(){
+    	var map = api.require('aMap');
+		map.showUserLocation({
+			isShow: false
+		});
+    }
+    
+     function closeMap(){
+    	var map = api.require('aMap');
+		map.close();
+    }
+    
+    function showMap(){
+    	var map = api.require('aMap');
+		map.show();
+    }
+    
+    function hideMap(){
+    	var map = api.require('aMap');
+		map.hide();
+    }
+    
+    function getLocation(){
+    	var aMap = api.require('aMap');
+		aMap.getLocation({
+		    accuracy: '100m',
+		    autoStop: true,
+		    filter: 1
+		}, function(ret, err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }else{
+		        alert(err.code);
+		    }
+		});
+    }
+    
+    function getDistance(){
+    	var map = api.require('aMap');
+		map.getDistance({
+		    start: {
+		        lon: 106.486654,
+		        lat: 29.490295
+		    },
+		    end: {
+		        lon: 106.581515,
+		        lat: 29.615467
+		    }
+		},function(ret){
+		    if(ret.status){
+		        alert(ret.distance);
+		    }
+		});
+    }
+    
+    function showUserLocation(){
+    	var map = api.require('aMap');
+		map.showUserLocation({
+		    isShow: false
+		});
+    }
+    
+     function setTrackingMode(){
+    	var map = api.require('aMap');
+		map.setTrackingMode({
+		    trackingMode: 'follow'
+		});
+    }
+    
+    function setMapAttr(){
+    	var map = api.require('aMap');
+		map.setMapAttr({
+		    type: 'night'
+		});
+    }
+    
+    function setCenter(){
+    	var map = api.require('aMap');
+		map.setCenter({
+		    coords: {
+		       lon: 116.4021310000,
+		       lat: 39.9994480000
+		    }
+		});
+    }
+    
+    function getCenter(){
+    	var map = api.require('aMap');
+		map.getCenter(function(ret){
+		    if(ret.status){
+		       alert(JSON.stringify(ret));
+		    }
+		});
+    }
+    
+    function panBy(){
+    	var map = api.require('aMap');
+		map.panBy({
+		    x: 50,
+		    y: 100
+		});
+    }
+    
+    function setZoomLevel(){
+    	var map = api.require('aMap');
+		map.setZoomLevel({
+		    level: 11
+		});
+    }
+    
+    function getZoomLevel(){
+    	var map = api.require('aMap');
+		map.getZoomLevel(function(ret, err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }else{
+		        alert(err.code);
+		    }
+		});
+    }
+    
+    function getLocFromName(){
+    	var map = api.require('aMap');
+		map.getCoordsFromName({
+		    city : '北京',
+			address : '北京天安门'
+		}, function(ret, err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }else{
+		        alert(err.code);
+		    }
+		});
+    }
+    
+    function getNameFromLoc(){
+    	var map = api.require('aMap');
+		map.getNameFromCoords({
+		       lon : 116.384767,
+				lat : 39.989539
+		}, function(ret, err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }else{
+		        alert(err.code);
+		    }
+		});
+    }
+    
+     function addAnno(){
+    	var map = api.require('aMap');
+		map.addAnnotations({
+		    annotations: [{
+		        id: 1, lon: 116.297, lat: 40.109,
+		        icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png']
+		    },
+		    {
+		        id: 2, lon: 116.29, lat: 40.109
+		    },
+		    {
+		        id: 3, lon: 116.298, lat: 40.11
+		    }],
+		    //icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png'],
+		    draggable:true
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+    function addMoveAnno(){
+    	var map = api.require('aMap');
+		map.addMobileAnnotations({
+		    annotations: [{
+		        id: 4, lon: 116.297, lat: 40.109
+		    },
+		    {
+		        id: 5, lon: 116.29, lat: 40.109
+		    },
+		    {
+		        id: 6, lon: 116.298, lat: 40.11
+		    }],
+		    draggable:true
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+    function getAnnoCoords(){
+    	var map = api.require('aMap');
+		map.getAnnotationCoords({
+		    id:1
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+		function setAnnotationCoords() {
+			var map = api.require('aMap');
+			map.setAnnotationCoords({
+				id : 2,
+				lon : 116.41141,
+				lat : 39.916036
+			});
+		};
+    
+    function setBubble(){
+    	var map = api.require('aMap');
+		map.setBubble({
+		    id:1,
+		    content: {
+		        title: '大标题大标题大标题大标题大标题',
+		        subTitle: '概述内容概述内容概述内容概述内容概述内容',
+		        illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+		    },
+		    styles: {
+		        titleColor: '#000',
+		        titleSize: 16,
+		        subTitleColor: '#999',
+		        subTitleSize: 12,
+		        illusAlign: 'right'
+		    }
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+		
+		map.setBubble({
+		    id:2,
+		    content: {
+		        title: '标题',
+		        subTitle: '概述内容',
+		        illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+		    },
+		    styles: {
+		        titleColor: '#000',
+		        titleSize: 16,
+		        subTitleColor: '#999',
+		        subTitleSize: 12,
+		        illusAlign: 'left'
+		    }
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+    function popupBubble(){
+    	var map = api.require('aMap');
+		map.popupBubble({
+		    id:1
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+    
+    function addBillboard(){
+    	var map = api.require('aMap');
+		map.addBillboard({
+				id : 4,
+				draggable : true,
+				coords : {
+					lon : 116.233,
+					lat : 39.134
+				},
+				bgImg : 'widget://image/qipao.png',
+				content : {
+					title : '霸王别姬 屠洪刚大哥',
+					subTitle : '概述内容概述内容概述内容',
+					illus : 'widget://image/weibiaoti1.png'
+				},
+				styles : {
+					titleColor : '#000',
+					titleSize : 16,
+					subTitleColor : '#999',
+					subTitleSize : 12,
+					illusAlign : 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function searchRoute(){
+    	var map = api.require('aMap');
+		map.searchRoute({
+		    id: 1,
+		    type: 'transit',
+		    policy: 'transit_time_first',
+		    start: {
+		        lon: 116.403838,
+		        lat: 39.914437
+		    },
+		    end: {
+		        lon: 116.384852,
+		        lat: 39.989576
+		    },
+		    city:'北京',
+		    nightflag: false,
+		    waypoints:[]
+		}, function(ret, err){
+		    api.alert({msg:JSON.stringify(ret)});
+		    drawRoute();
+		});
+    }
+    
+    function drawRoute(){
+    	var map = api.require('aMap');
+		map.drawRoute({
+		    id: 1,
+		    styles:{
+			    walkLine:{                    //（可选项）JSON对象；步行路线样式
+			        width: 3,                 //（可选项）数字类型；步行路线的线条宽度；默认：3
+			        color:'#698B22',          //（可选项）字符串类型；步行路线的线条颜色，支持rgb、rgba、#；默认：#698B22
+			    },
+			    driveLine:{                   //（可选项）JSON对象；驾车路线样式
+			        width: 6,                 //（可选项）数字类型；驾车路线的线条宽度；默认：5
+			        color:'#0000EE',          //（可选项）字符串类型；驾车路线的线条颜色，支持rgb、rgba、#；默认：#00868B
+			    },
+			    busLine:{                     //（可选项）JSON对象；公交路线样式
+			        width: 4,                 //（可选项）数字类型；公交路线的线条宽度；默认：4
+			        color:'#00BFFF',          //（可选项）字符串类型；公交路线的线条颜色，支持rgb、rgba、#；默认：#00BFFF
+			    }
+		    }
+		}, function(ret, err){
+		    api.alert({msg:JSON.stringify(ret)});
+		});
+    }
+    
+    function removeRoute(){
+    	var map = api.require('aMap');
+		map.removeRoute({
+			ids:[1]
+		});
+    }
+    
+    function searchBus(){
+    	var map = api.require('aMap');
+		map.searchBusRoute({
+			city: '北京',
+		    line: '315',
+		    offset:20,
+		    page:0
+		}, function(ret, err){
+		    api.alert({msg:JSON.stringify(ret)});
+		    drawBus();
+		});
+    }
+    
+    function drawBus(){
+    	var map = api.require('aMap');
+		map.drawBusRoute({
+			id:1
+		}, function(ret, err){
+		    api.alert({msg:JSON.stringify(ret)});
+		});
+    }
+    
+    function removeBusRoute(){
+    	var map = api.require('aMap');
+		map.removeBusRoute({
+			ids:[1]
+		});
+    }
+    
+    function searchInCity(){
+    	var map = api.require('aMap');
+		map.searchInCity({
+		    city: '北京',
+		    keyword: '学校',
+		    offset: 20,
+		    page: 1
+		},function(ret){
+		    if(ret.status){
+		       alert(JSON.stringify(ret)); 
+		    }
+		});
+    }
+    
+    function searchNearby(){
+    	var map = api.require('aMap');
+		map.searchNearby({
+		    keyword: 'KTV',
+		    lon: 116.384767,
+		    lat: 39.989539,
+		    radius: 2000,
+		    offset: 20,
+		    page: 1
+		},function(ret,err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }
+		});
+    }
+    
+    function searchInPolygon(){
+    	var map = api.require('aMap');
+		map.searchInPolygon({
+		    keyword: '图书馆', 
+		    points:[{
+		      lat: 34.55648,
+		      lon: 112.47723
+		    },{
+		      lat: 34.13144,
+		      lon: 112.87723
+		    },{
+		      lat: 34.13144,
+		      lon: 112.47723
+		    }],
+		    offset: 20,
+		    page: 1,
+		    sortrule: 0
+		},function(ret,err){
+		    if(ret.status){
+		        alert(JSON.stringify(ret));
+		    }
+		});
+    }
+    
+    function autoComplete(){
+    	var map = api.require('aMap');
+		map.autocomplete({
+		    keyword: '育新',
+		    city: '北京'
+		},function(ret){
+		    if(ret.status){
+		        alert(JSON.stringify(ret)); 
+		    }
+		});
+    }
+    
+    function moveAnno(){
+    	var map = api.require('aMap');
+		  map.moveAnnotation({
+		      id: 4,
+		      duration: 6,
+		      end:{
+		          lon:116.3843839609304,
+		          lat:39.98964439091298
+		      }
+		  }, function(ret, err){
+		      alert(ret.id + '移动结束')
+		  });
+    }
+    
+    function removeAnno(){
+    	var map = api.require('aMap');
+		map.removeAnnotations({
+		    ids: [1,2,3,4,5,6,7]
+		});
+    }
+
+	function isPolygonContantPoint() {
+			var map = api.require('aMap');
+			map.isPolygonContantPoint({
+				point : {
+					lon : 116.39432327,
+					lat : 39.98963192
+				},
+				points : [{
+					lon : 118.39432327,
+					lat : 39.98963192
+				}, {
+					lon : 116.49432328,
+					lat : 39.98963192
+				}, {
+					lon : 110.39432327,
+					lat : 39.88933191
+				}]
+			}, function(ret) {
+				alert(ret.status);
+			});
+		};
+		
+		
+		function interconvertCoords() {
+			var map = api.require('aMap');
+			map.interconvertCoords({
+				x : 39.2563,
+				y : 110.6656
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		
+		function addEventListener() {
+			var map = api.require('aMap');
+			map.addEventListener({
+				name : 'click'
+			}, function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function removeEventListener() {
+			var map = api.require('aMap');
+			map.removeEventListener({
+				name : 'click'
+			});
+		};
+		
+		
+		function addLine() {
+			var map = api.require('aMap');
+			map.addLine({
+				id : 1,
+				styles : {
+					type : 'arrow',
+					borderColor : '#FF0000',
+					borderWidth : 100,
+					lineDash : true,
+					strokeImg : ''
+				},
+				points : [{
+					lon : 116,
+					lat : 40
+				}, {
+					lon : 116.298,
+					lat : 40.109
+				}]
+			});
+		};
+		function addCircle() {
+			var map = api.require('aMap');
+			map.addCircle({
+				id : 2,
+				center : {
+					lon : 116.298,
+					lat : 40.11,
+				},
+				radius : 500000,
+				styles : {
+					borderColor : '#FF0000',
+					borderWidth : 100,
+					lineDash : true,
+					fillColor : 'rgba(125,125,125,0.8)'
+				}
+			});
+		};
+		function addPolygon() {
+			var map = api.require('aMap');
+			map.addPolygon({
+				id : 4,
+				styles : {
+					borderColor : '#FF0000',
+					borderWidth : 20,
+					lineDash : false,
+					fillColor : '#ff0'
+				},
+				points : [{
+					lon : 116,
+					lat : 40
+				}, {
+					lon : 117.298,
+					lat : 40.109
+				}, {
+					lon : 116.298,
+					lat : 40.11
+				}]
+			});
+		};
+		function addImg() {
+			var map = api.require('aMap');
+			map.addImg({
+				id : 5,
+				imgPath : 'widget://image/qipao.png',
+				lbLon : 116,
+				lbLat : 40,
+				rtLon : 116.298,
+				rtLat : 40.11
+			});
+		};
+		
+		
+		
+		function getProvinces() {
+			var map = api.require('aMap');
+			map.getProvinces(function(ret,err){
+				
+				alert(JSON.stringify(ret));
+				
+			});
+		};
+		
+		function getAllCities() {
+			var map = api.require('aMap');
+			map.getAllCities(function(ret,err){
+				
+				alert(JSON.stringify(ret));
+				
+			});
+		};
+		
+		function downloadRegion() {
+			var map = api.require('aMap');
+			map.downloadRegion({
+			    adcode: '340000'
+			}, function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+    </script>
+    
+   <body>
+    <div id="wrap">
+        <div id="main"> 
+            <div  >
+            	
+            	<input type="button" onclick="getProvinces()" value="getProvinces" /><br><br>
+            	<input type="button" onclick="getAllCities()" value="getAllCities" /><br><br>
+            	<input type="button" onclick="downloadRegion()" value="downloadRegion" /><br><br>
+            
+            	<input type="button" onclick="addPolygon()" value="addPolygon" /><br><br>
+            	<input type="button" onclick="addCircle()" value="addCircle" /><br><br>
+            	<input type="button" onclick="addLine()" value="addLine" /><br><br>
+            	<input type="button" onclick="addImg()" value="addImg" /><br><br>
+            
+            
+            	<input type="button" onclick="openMap()" value="openMap" /><br><br>
+            	<input type="button" onclick="closeMap()" value="closeMap" /><br><br>
+            	<input type="button" onclick="showMap()" value="showMap" /><br><br>
+            	<input type="button" onclick="hideMap()" value="hideMap" /><br><br>
+            	
+            	<input type="button" onclick="setRect()" value="setRect" /><br><br>
+            	
+            	<input type="button" onclick="showUserTrue()" value="showUserTrue" /><br><br>
+            	<input type="button" onclick="showUserFalse()" value="showUserFalse" /><br><br>
+            	<input type="button" onclick="getLocation()" value="getLocation" /><br><br>
+            	
+            	<input type="button" onclick="getDistance()" value="getDistance" /><br><br>
+            	
+            	<input type="button" onclick="showUserLocation()" value="showUserLocation" /><br><br>
+            	
+            	<input type="button" onclick="setTrackingMode()" value="setTrackingMode" /><br><br>
+            	
+            	<input type="button" onclick="setCenter()" value="setCenter" /><br><br>
+            	
+            	<input type="button" onclick="getCenter()" value="getCenter" /><br><br>
+            	
+            	<input type="button" onclick="panBy()" value="panBy" /><br><br>
+            	
+            	<input type="button" onclick="setZoomLevel()" value="setZoomLevel" /><br><br>
+            	
+            	<input type="button" onclick="getZoomLevel()" value="getZoomLevel" /><br><br>
+            	
+            	<input type="button" onclick="setMapAttr()" value="setMapAttr" /><br><br>
+            	
+            	<input type="button" onclick="getLocFromName()" value="getLocFromName" /><br><br>
+            	
+            	<input type="button" onclick="getNameFromLoc()" value="getNameFromLoc" /><br><br>
+            	
+            	<input type="button" onclick="addAnno()" value="addAnno" /><br><br>
+            	
+            	<input type="button" onclick="getAnnoCoords()" value="getAnnoCoords" /><br><br>
+            	
+            	<input type="button" onclick="setAnnotationCoords()" value="setAnnotationCoords" /><br><br>
+            	
+            	<input type="button" onclick="setBubble()" value="setBubble" /><br><br>
+            	
+            	<input type="button" onclick="popupBubble()" value="popupBubble" /><br><br>
+            	
+            	<input type="button" onclick="addBillboard()" value="addBillboard" /><br><br>
+            	
+            	<input type="button" onclick="searchRoute()" value="searchRoute" /><br><br>
+            	
+            	<input type="button" onclick="drawRoute()" value="drawRoute" /><br><br>
+            	
+            	<input type="button" onclick="removeRoute()" value="removeRoute" /><br><br>
+            	
+            	<input type="button" onclick="searchBus()" value="searchBus" /><br><br>
+            	
+            	<input type="button" onclick="removeBusRoute()" value="removeBusRoute" /><br><br>
+            	
+            	<input type="button" onclick="searchInCity()" value="searchInCity" /><br><br>
+            	
+            	<input type="button" onclick="searchNearby()" value="searchNearby" /><br><br>
+            	
+            	<input type="button" onclick="searchInPolygon()" value="searchInPolygon" /><br><br>
+            	
+            	<input type="button" onclick="autoComplete()" value="autoComplete" /><br><br>
+            	
+            	<input type="button" onclick="addMoveAnno()" value="addMoveAnno" /><br><br>
+            	
+            	<input type="button" onclick="moveAnno()" value="moveAnno" /><br><br>
+            	
+            	<input type="button" onclick="removeAnno()" value="removeAnno" /><br><br>
+            	
+            	<input type="button" onclick="isPolygonContantPoint()" value="isPolygonContantPoint" /><br><br>
+            	
+            	<input type="button" onclick="interconvertCoords()" value="interconvertCoords" /><br><br>
+            	
+            	<input type="button" onclick="addEventListener()" value="addEventListener" /><br><br>
+            	
+            	<input type="button" onclick="removeEventListener()" value="removeEventListener" /><br><br>
+            	<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+            </div>
+
+        </div>   
+    </div>
+</body>
+    
+</html>

@@ -1,0 +1,429 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		03D770EB1C51D70E003229D8 /* AMapNaviKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D770EA1C51D70E003229D8 /* AMapNaviKit.framework */; };
+		03DDE03B1C27DAEE002EF95C /* ACAMButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0321C27DAEE002EF95C /* ACAMButton.m */; };
+		03DDE03C1C27DAEE002EF95C /* ACBubbleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0341C27DAEE002EF95C /* ACBubbleView.m */; };
+		03DDE03D1C27DAEE002EF95C /* ACGDAnnotaion.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0361C27DAEE002EF95C /* ACGDAnnotaion.m */; };
+		03DDE03E1C27DAEE002EF95C /* AnimatedAnnotationView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0381C27DAEE002EF95C /* AnimatedAnnotationView.m */; };
+		03DDE03F1C27DAEE002EF95C /* GDMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE03A1C27DAEE002EF95C /* GDMap.m */; };
+		03DDE0671C27DAF9002EF95C /* AMapAsyncImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0421C27DAF9002EF95C /* AMapAsyncImageView.m */; };
+		03DDE0681C27DAF9002EF95C /* BusStopAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0531C27DAF9002EF95C /* BusStopAnnotation.m */; };
+		03DDE0691C27DAF9002EF95C /* CommonUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0551C27DAF9002EF95C /* CommonUtility.m */; };
+		03DDE06A1C27DAF9002EF95C /* LineDashPolyline.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0571C27DAF9002EF95C /* LineDashPolyline.m */; };
+		03DDE06B1C27DAF9002EF95C /* MABusPolyline.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0591C27DAF9002EF95C /* MABusPolyline.m */; };
+		03DDE06C1C27DAF9002EF95C /* MANaviAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05B1C27DAF9002EF95C /* MANaviAnnotation.m */; };
+		03DDE06D1C27DAF9002EF95C /* MANaviPolyline.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05D1C27DAF9002EF95C /* MANaviPolyline.m */; };
+		03DDE06E1C27DAF9002EF95C /* MANaviRoute.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05F1C27DAF9002EF95C /* MANaviRoute.m */; };
+		03DDE0701C27DAF9002EF95C /* AMapSearchKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03DDE0651C27DAF9002EF95C /* AMapSearchKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		03DDE0231C27DA8A002EF95C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		03D770EA1C51D70E003229D8 /* AMapNaviKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AMapNaviKit.framework; sourceTree = "<group>"; };
+		03DDE0251C27DA8A002EF95C /* libGDMap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGDMap.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		03DDE0311C27DAEE002EF95C /* ACAMButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACAMButton.h; sourceTree = "<group>"; };
+		03DDE0321C27DAEE002EF95C /* ACAMButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACAMButton.m; sourceTree = "<group>"; };
+		03DDE0331C27DAEE002EF95C /* ACBubbleView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACBubbleView.h; sourceTree = "<group>"; };
+		03DDE0341C27DAEE002EF95C /* ACBubbleView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACBubbleView.m; sourceTree = "<group>"; };
+		03DDE0351C27DAEE002EF95C /* ACGDAnnotaion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACGDAnnotaion.h; sourceTree = "<group>"; };
+		03DDE0361C27DAEE002EF95C /* ACGDAnnotaion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACGDAnnotaion.m; sourceTree = "<group>"; };
+		03DDE0371C27DAEE002EF95C /* AnimatedAnnotationView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnimatedAnnotationView.h; sourceTree = "<group>"; };
+		03DDE0381C27DAEE002EF95C /* AnimatedAnnotationView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnimatedAnnotationView.m; sourceTree = "<group>"; };
+		03DDE0391C27DAEE002EF95C /* GDMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDMap.h; sourceTree = "<group>"; };
+		03DDE03A1C27DAEE002EF95C /* GDMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GDMap.m; sourceTree = "<group>"; };
+		03DDE0411C27DAF9002EF95C /* AMapAsyncImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMapAsyncImageView.h; sourceTree = "<group>"; };
+		03DDE0421C27DAF9002EF95C /* AMapAsyncImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMapAsyncImageView.m; sourceTree = "<group>"; };
+		03DDE0441C27DAF9002EF95C /* ASICacheDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASICacheDelegate.h; sourceTree = "<group>"; };
+		03DDE0451C27DAF9002EF95C /* ASIHTTPRequestConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASIHTTPRequestConfig.h; sourceTree = "<group>"; };
+		03DDE0461C27DAF9002EF95C /* ASIHTTPRequestDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASIHTTPRequestDelegate.h; sourceTree = "<group>"; };
+		03DDE0471C27DAF9002EF95C /* ASIProgressDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASIProgressDelegate.h; sourceTree = "<group>"; };
+		03DDE0481C27DAF9002EF95C /* UZASIAuthenticationDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIAuthenticationDialog.h; sourceTree = "<group>"; };
+		03DDE0491C27DAF9002EF95C /* UZASIDataCompressor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIDataCompressor.h; sourceTree = "<group>"; };
+		03DDE04A1C27DAF9002EF95C /* UZASIDataDecompressor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIDataDecompressor.h; sourceTree = "<group>"; };
+		03DDE04B1C27DAF9002EF95C /* UZASIDownloadCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIDownloadCache.h; sourceTree = "<group>"; };
+		03DDE04C1C27DAF9002EF95C /* UZASIFormDataRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIFormDataRequest.h; sourceTree = "<group>"; };
+		03DDE04D1C27DAF9002EF95C /* UZASIHTTPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIHTTPRequest.h; sourceTree = "<group>"; };
+		03DDE04E1C27DAF9002EF95C /* UZASIInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASIInputStream.h; sourceTree = "<group>"; };
+		03DDE04F1C27DAF9002EF95C /* UZASINetworkQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZASINetworkQueue.h; sourceTree = "<group>"; };
+		03DDE0501C27DAF9002EF95C /* UZReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZReachability.h; sourceTree = "<group>"; };
+		03DDE0521C27DAF9002EF95C /* BusStopAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BusStopAnnotation.h; sourceTree = "<group>"; };
+		03DDE0531C27DAF9002EF95C /* BusStopAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BusStopAnnotation.m; sourceTree = "<group>"; };
+		03DDE0541C27DAF9002EF95C /* CommonUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommonUtility.h; sourceTree = "<group>"; };
+		03DDE0551C27DAF9002EF95C /* CommonUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CommonUtility.m; sourceTree = "<group>"; };
+		03DDE0561C27DAF9002EF95C /* LineDashPolyline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineDashPolyline.h; sourceTree = "<group>"; };
+		03DDE0571C27DAF9002EF95C /* LineDashPolyline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LineDashPolyline.m; sourceTree = "<group>"; };
+		03DDE0581C27DAF9002EF95C /* MABusPolyline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MABusPolyline.h; sourceTree = "<group>"; };
+		03DDE0591C27DAF9002EF95C /* MABusPolyline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MABusPolyline.m; sourceTree = "<group>"; };
+		03DDE05A1C27DAF9002EF95C /* MANaviAnnotation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MANaviAnnotation.h; sourceTree = "<group>"; };
+		03DDE05B1C27DAF9002EF95C /* MANaviAnnotation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MANaviAnnotation.m; sourceTree = "<group>"; };
+		03DDE05C1C27DAF9002EF95C /* MANaviPolyline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MANaviPolyline.h; sourceTree = "<group>"; };
+		03DDE05D1C27DAF9002EF95C /* MANaviPolyline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MANaviPolyline.m; sourceTree = "<group>"; };
+		03DDE05E1C27DAF9002EF95C /* MANaviRoute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MANaviRoute.h; sourceTree = "<group>"; };
+		03DDE05F1C27DAF9002EF95C /* MANaviRoute.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MANaviRoute.m; sourceTree = "<group>"; };
+		03DDE0641C27DAF9002EF95C /* AMap.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = AMap.bundle; sourceTree = "<group>"; };
+		03DDE0651C27DAF9002EF95C /* AMapSearchKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AMapSearchKit.framework; sourceTree = "<group>"; };
+		03DDE0721C27DB07002EF95C /* res_aMap */ = {isa = PBXFileReference; lastKnownFileType = folder; path = res_aMap; sourceTree = "<group>"; };
+		03DDE0741C27DB32002EF95C /* UZAppUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZAppUtils.h; sourceTree = "<group>"; };
+		03DDE0751C27DB7E002EF95C /* UZModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZModule.h; sourceTree = "<group>"; };
+		03DDE0761C27DB8F002EF95C /* NSDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDictionaryUtils.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		03DDE0221C27DA8A002EF95C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				03D770EB1C51D70E003229D8 /* AMapNaviKit.framework in Frameworks */,
+				03DDE0701C27DAF9002EF95C /* AMapSearchKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		03DDE01C1C27DA8A002EF95C = {
+			isa = PBXGroup;
+			children = (
+				03DDE0731C27DB21002EF95C /* headFile */,
+				03DDE0271C27DA8A002EF95C /* GDMap */,
+				03DDE0261C27DA8A002EF95C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		03DDE0261C27DA8A002EF95C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0251C27DA8A002EF95C /* libGDMap.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		03DDE0271C27DA8A002EF95C /* GDMap */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0311C27DAEE002EF95C /* ACAMButton.h */,
+				03DDE0321C27DAEE002EF95C /* ACAMButton.m */,
+				03DDE0331C27DAEE002EF95C /* ACBubbleView.h */,
+				03DDE0341C27DAEE002EF95C /* ACBubbleView.m */,
+				03DDE0351C27DAEE002EF95C /* ACGDAnnotaion.h */,
+				03DDE0361C27DAEE002EF95C /* ACGDAnnotaion.m */,
+				03DDE0371C27DAEE002EF95C /* AnimatedAnnotationView.h */,
+				03DDE0381C27DAEE002EF95C /* AnimatedAnnotationView.m */,
+				03DDE0391C27DAEE002EF95C /* GDMap.h */,
+				03DDE03A1C27DAEE002EF95C /* GDMap.m */,
+				03DDE0721C27DB07002EF95C /* res_aMap */,
+				03DDE0401C27DAF9002EF95C /* imgeCache */,
+				03DDE0511C27DAF9002EF95C /* MARoute */,
+				03DDE0601C27DAF9002EF95C /* sourceSDK */,
+			);
+			path = GDMap;
+			sourceTree = "<group>";
+		};
+		03DDE0401C27DAF9002EF95C /* imgeCache */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0411C27DAF9002EF95C /* AMapAsyncImageView.h */,
+				03DDE0421C27DAF9002EF95C /* AMapAsyncImageView.m */,
+				03DDE0431C27DAF9002EF95C /* uzasi */,
+			);
+			path = imgeCache;
+			sourceTree = "<group>";
+		};
+		03DDE0431C27DAF9002EF95C /* uzasi */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0441C27DAF9002EF95C /* ASICacheDelegate.h */,
+				03DDE0451C27DAF9002EF95C /* ASIHTTPRequestConfig.h */,
+				03DDE0461C27DAF9002EF95C /* ASIHTTPRequestDelegate.h */,
+				03DDE0471C27DAF9002EF95C /* ASIProgressDelegate.h */,
+				03DDE0481C27DAF9002EF95C /* UZASIAuthenticationDialog.h */,
+				03DDE0491C27DAF9002EF95C /* UZASIDataCompressor.h */,
+				03DDE04A1C27DAF9002EF95C /* UZASIDataDecompressor.h */,
+				03DDE04B1C27DAF9002EF95C /* UZASIDownloadCache.h */,
+				03DDE04C1C27DAF9002EF95C /* UZASIFormDataRequest.h */,
+				03DDE04D1C27DAF9002EF95C /* UZASIHTTPRequest.h */,
+				03DDE04E1C27DAF9002EF95C /* UZASIInputStream.h */,
+				03DDE04F1C27DAF9002EF95C /* UZASINetworkQueue.h */,
+				03DDE0501C27DAF9002EF95C /* UZReachability.h */,
+			);
+			path = uzasi;
+			sourceTree = "<group>";
+		};
+		03DDE0511C27DAF9002EF95C /* MARoute */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0521C27DAF9002EF95C /* BusStopAnnotation.h */,
+				03DDE0531C27DAF9002EF95C /* BusStopAnnotation.m */,
+				03DDE0541C27DAF9002EF95C /* CommonUtility.h */,
+				03DDE0551C27DAF9002EF95C /* CommonUtility.m */,
+				03DDE0561C27DAF9002EF95C /* LineDashPolyline.h */,
+				03DDE0571C27DAF9002EF95C /* LineDashPolyline.m */,
+				03DDE0581C27DAF9002EF95C /* MABusPolyline.h */,
+				03DDE0591C27DAF9002EF95C /* MABusPolyline.m */,
+				03DDE05A1C27DAF9002EF95C /* MANaviAnnotation.h */,
+				03DDE05B1C27DAF9002EF95C /* MANaviAnnotation.m */,
+				03DDE05C1C27DAF9002EF95C /* MANaviPolyline.h */,
+				03DDE05D1C27DAF9002EF95C /* MANaviPolyline.m */,
+				03DDE05E1C27DAF9002EF95C /* MANaviRoute.h */,
+				03DDE05F1C27DAF9002EF95C /* MANaviRoute.m */,
+			);
+			path = MARoute;
+			sourceTree = "<group>";
+		};
+		03DDE0601C27DAF9002EF95C /* sourceSDK */ = {
+			isa = PBXGroup;
+			children = (
+				03D770EA1C51D70E003229D8 /* AMapNaviKit.framework */,
+				03DDE0641C27DAF9002EF95C /* AMap.bundle */,
+				03DDE0651C27DAF9002EF95C /* AMapSearchKit.framework */,
+			);
+			path = sourceSDK;
+			sourceTree = "<group>";
+		};
+		03DDE0731C27DB21002EF95C /* headFile */ = {
+			isa = PBXGroup;
+			children = (
+				03DDE0741C27DB32002EF95C /* UZAppUtils.h */,
+				03DDE0751C27DB7E002EF95C /* UZModule.h */,
+				03DDE0761C27DB8F002EF95C /* NSDictionaryUtils.h */,
+			);
+			path = headFile;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		03DDE0241C27DA8A002EF95C /* GDMap */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 03DDE02E1C27DA8A002EF95C /* Build configuration list for PBXNativeTarget "GDMap" */;
+			buildPhases = (
+				03DDE0211C27DA8A002EF95C /* Sources */,
+				03DDE0221C27DA8A002EF95C /* Frameworks */,
+				03DDE0231C27DA8A002EF95C /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GDMap;
+			productName = GDMap;
+			productReference = 03DDE0251C27DA8A002EF95C /* libGDMap.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		03DDE01D1C27DA8A002EF95C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0720;
+				ORGANIZATIONNAME = "___Turbo___";
+				TargetAttributes = {
+					03DDE0241C27DA8A002EF95C = {
+						CreatedOnToolsVersion = 7.2;
+						DevelopmentTeam = SHHXHGE3MJ;
+					};
+				};
+			};
+			buildConfigurationList = 03DDE0201C27DA8A002EF95C /* Build configuration list for PBXProject "GDMap" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 03DDE01C1C27DA8A002EF95C;
+			productRefGroup = 03DDE0261C27DA8A002EF95C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				03DDE0241C27DA8A002EF95C /* GDMap */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		03DDE0211C27DA8A002EF95C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				03DDE03E1C27DAEE002EF95C /* AnimatedAnnotationView.m in Sources */,
+				03DDE03C1C27DAEE002EF95C /* ACBubbleView.m in Sources */,
+				03DDE0671C27DAF9002EF95C /* AMapAsyncImageView.m in Sources */,
+				03DDE06D1C27DAF9002EF95C /* MANaviPolyline.m in Sources */,
+				03DDE0681C27DAF9002EF95C /* BusStopAnnotation.m in Sources */,
+				03DDE03D1C27DAEE002EF95C /* ACGDAnnotaion.m in Sources */,
+				03DDE06C1C27DAF9002EF95C /* MANaviAnnotation.m in Sources */,
+				03DDE03F1C27DAEE002EF95C /* GDMap.m in Sources */,
+				03DDE03B1C27DAEE002EF95C /* ACAMButton.m in Sources */,
+				03DDE06A1C27DAF9002EF95C /* LineDashPolyline.m in Sources */,
+				03DDE06E1C27DAF9002EF95C /* MANaviRoute.m in Sources */,
+				03DDE06B1C27DAF9002EF95C /* MABusPolyline.m in Sources */,
+				03DDE0691C27DAF9002EF95C /* CommonUtility.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		03DDE02C1C27DA8A002EF95C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		03DDE02D1C27DA8A002EF95C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		03DDE02F1C27DA8A002EF95C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					armv7s,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/GDMap/sourceSDK/2D",
+					"$(PROJECT_DIR)/GDMap/sourceSDK",
+				);
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		03DDE0301C27DA8A002EF95C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					armv7s,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/GDMap/sourceSDK/2D",
+					"$(PROJECT_DIR)/GDMap/sourceSDK",
+				);
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		03DDE0201C27DA8A002EF95C /* Build configuration list for PBXProject "GDMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03DDE02C1C27DA8A002EF95C /* Debug */,
+				03DDE02D1C27DA8A002EF95C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		03DDE02E1C27DA8A002EF95C /* Build configuration list for PBXNativeTarget "GDMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03DDE02F1C27DA8A002EF95C /* Debug */,
+				03DDE0301C27DA8A002EF95C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 03DDE01D1C27DA8A002EF95C /* Project object */;
+}
