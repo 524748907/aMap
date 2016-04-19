@@ -10,14 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import com.amap.api.maps.AMap;
-import com.amap.api.maps.overlay.RouteOverlay;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
 import com.amap.api.services.route.BusRouteResult;
@@ -74,7 +72,11 @@ public class MapSearch implements OnRouteSearchListener {
 	private String mSearchType;
 
 	@SuppressLint("UseSparseArrays")
-	private Map<Integer, RouteOverlay> mRouteOverlayMap = new HashMap<Integer, RouteOverlay>();
+	private Map<Integer, CustomBusRoute> mBusRouteOverlayMap = new HashMap<Integer, CustomBusRoute>();
+	@SuppressLint("UseSparseArrays")
+	private Map<Integer, CustomDriveRoute> mDriveRouteOverlayMap = new HashMap<Integer, CustomDriveRoute>();
+	@SuppressLint("UseSparseArrays")
+	private Map<Integer, CustomWalkRoute> mWalkRouteOverlayMap = new HashMap<Integer, CustomWalkRoute>();
 
 	public MapSearch(Context context) {
 		this.mContext = context;
@@ -176,13 +178,25 @@ public class MapSearch implements OnRouteSearchListener {
 	public void removeRoute(UZModuleContext moduleContext, AMap aMap) {
 		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 		List<Integer> ids = jsParamsUtil.removeRouteIds(moduleContext);
-		if (mRouteOverlayMap == null)
-			return;
 		if (ids != null) {
 			for (int id : ids) {
-				RouteOverlay routeOverlay = mRouteOverlayMap.get(id);
-				if (routeOverlay != null) {
-					routeOverlay.removeFromMap();
+				if (mBusRouteOverlayMap.containsKey(id)) {
+					CustomBusRoute busRoute = mBusRouteOverlayMap.get(id);
+					if (busRoute != null) {
+						busRoute.removeFromMap();
+					}
+				}
+				if (mDriveRouteOverlayMap.containsKey(id)) {
+					CustomDriveRoute driveRoute = mDriveRouteOverlayMap.get(id);
+					if (driveRoute != null) {
+						driveRoute.removeFromMap();
+					}
+				}
+				if (mWalkRouteOverlayMap.containsKey(id)) {
+					CustomWalkRoute walkRoute = mWalkRouteOverlayMap.get(id);
+					if (walkRoute != null) {
+						walkRoute.removeFromMap();
+					}
 				}
 			}
 		}
@@ -201,7 +215,7 @@ public class MapSearch implements OnRouteSearchListener {
 				if (busPath != null) {
 					CustomBusRoute customBusRoute = getCustomBusRoute(
 							moduleContext, aMap, busPath);
-					mRouteOverlayMap.put(id, customBusRoute);
+					mBusRouteOverlayMap.put(id, customBusRoute);
 					customBusRoute.removeFromMap();
 					customBusRoute.addToMap();
 					if (moduleContext.optBoolean("autoresizing", true)) {
@@ -225,7 +239,7 @@ public class MapSearch implements OnRouteSearchListener {
 				if (drivePath != null) {
 					CustomDriveRoute customDriveRoute = getCustomDriveRoute(
 							moduleContext, aMap, drivePath);
-					mRouteOverlayMap.put(id, customDriveRoute);
+					mDriveRouteOverlayMap.put(id, customDriveRoute);
 					customDriveRoute.removeFromMap();
 					customDriveRoute.addToMap();
 					if (moduleContext.optBoolean("autoresizing", true)) {
@@ -249,7 +263,7 @@ public class MapSearch implements OnRouteSearchListener {
 				if (walkPath != null) {
 					CustomWalkRoute customWalkRoute = getCustomWalkRoute(
 							moduleContext, aMap, walkPath);
-					mRouteOverlayMap.put(id, customWalkRoute);
+					mWalkRouteOverlayMap.put(id, customWalkRoute);
 					customWalkRoute.removeFromMap();
 					customWalkRoute.addToMap();
 					if (moduleContext.optBoolean("autoresizing", true)) {

@@ -14,6 +14,7 @@ import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
@@ -37,6 +38,7 @@ public class MapOpen {
 		if (mMapView == null) {
 			mMapView = new UzMapView(context);
 			mMapView.onCreate(null);
+			mMapView.onResume();
 			final MapOpen map = this;
 			mMapView.addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
 				@Override
@@ -113,13 +115,13 @@ public class MapOpen {
 
 	private void insertView(UzAMap uzAMap, UZModuleContext moduleContext,
 			Context context, UzMapView mapView) {
-		LayoutParams layoutParams = layoutParams(moduleContext, context);
+		RelativeLayout.LayoutParams layoutParams = layoutParams(moduleContext, context);
 		String fixedOn = moduleContext.optString("fixedOn");
 		boolean fixed = moduleContext.optBoolean("fixed", true);
 		uzAMap.insertViewToCurWindow(mapView, layoutParams, fixedOn, fixed);
 	}
 
-	private LayoutParams layoutParams(UZModuleContext moduleContext,
+	private RelativeLayout.LayoutParams layoutParams(UZModuleContext moduleContext,
 			Context context) {
 		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 		int x = jsParamsUtil.x(moduleContext);

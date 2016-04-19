@@ -19,7 +19,6 @@ import com.amap.api.services.core.SuggestionCity;
 import com.amap.api.services.help.Inputtips;
 import com.amap.api.services.help.Tip;
 import com.amap.api.services.help.Inputtips.InputtipsListener;
-import com.amap.api.services.poisearch.PoiItemDetail;
 import com.amap.api.services.poisearch.PoiResult;
 import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.services.poisearch.PoiSearch.OnPoiSearchListener;
@@ -136,11 +135,6 @@ public class MapPoi implements OnPoiSearchListener {
 	}
 
 	@Override
-	public void onPoiItemDetailSearched(PoiItemDetail detail, int rCode) {
-
-	}
-
-	@Override
 	public void onPoiSearched(PoiResult result, int rCode) {
 		if (rCode == 0) {
 			if (result != null && result.getQuery() != null) {
@@ -165,7 +159,7 @@ public class MapPoi implements OnPoiSearchListener {
 					poi.put("uid", poiItem.getPoiId());
 					poi.put("name", poiItem.getTitle());
 					poi.put("type", poiItem.getPoiId());
-					poi.put("address", poiItem.getAdName());
+					poi.put("address", poiItem.getSnippet());
 					poi.put("tel", poiItem.getTel());
 					poi.put("distance", poiItem.getDistance());
 					LatLonPoint latLonPoint = poiItem.getLatLonPoint();
@@ -214,5 +208,10 @@ public class MapPoi implements OnPoiSearchListener {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void onPoiItemSearched(PoiItem arg0, int arg1) {
+		
 	}
 }
