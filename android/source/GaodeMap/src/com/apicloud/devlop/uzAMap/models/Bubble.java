@@ -6,6 +6,8 @@
 //
 package com.apicloud.devlop.uzAMap.models;
 
+import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
+
 import android.graphics.Bitmap;
 
 public class Bubble {
@@ -19,13 +21,15 @@ public class Bubble {
 	private String illusAlign;
 	private int titleColor;
 	private int subTitleColor;
+	private UZModuleContext moduleContext;
 
 	public Bubble() {
 	}
 
-	public Bubble(int id, Bitmap bgImg, String title,
-			String subTitle, String iconPath, int titleSize, int subTitleSize,
-			String illusAlign, int titleColor, int subTitleColor) {
+	public Bubble(int id, Bitmap bgImg, String title, String subTitle,
+			String iconPath, int titleSize, int subTitleSize,
+			String illusAlign, int titleColor, int subTitleColor,
+			UZModuleContext moduleContext) {
 		this.id = id;
 		this.bgImg = bgImg;
 		this.title = title;
@@ -36,6 +40,7 @@ public class Bubble {
 		this.illusAlign = illusAlign;
 		this.titleColor = titleColor;
 		this.subTitleColor = subTitleColor;
+		this.moduleContext = moduleContext;
 	}
 
 	public int getId() {
@@ -116,5 +121,13 @@ public class Bubble {
 
 	public void setSubTitleColor(int subTitleColor) {
 		this.subTitleColor = subTitleColor;
+	}
+
+	public UZModuleContext getModuleContext() {
+		return moduleContext;
+	}
+
+	public void setModuleContext(UZModuleContext moduleContext) {
+		this.moduleContext = moduleContext;
 	}
 }

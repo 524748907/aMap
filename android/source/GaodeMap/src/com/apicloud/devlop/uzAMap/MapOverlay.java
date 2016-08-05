@@ -6,14 +6,19 @@
 //
 package com.apicloud.devlop.uzAMap;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdate;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.GroundOverlay;
@@ -24,7 +29,9 @@ import com.amap.api.maps.model.Polygon;
 import com.amap.api.maps.model.PolygonOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
+import com.apicloud.devlop.uzAMap.models.LocusData;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
+import com.google.android.gms.internal.js;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
 
@@ -81,6 +88,56 @@ public class MapOverlay {
 			if (mAMap != null) {
 				Polyline polyline = mAMap.addPolyline(polylineOptions);
 				mLineMap.put(id, polyline);
+			}
+		}
+	}
+
+	public void addLocus(UZModuleContext moduleContext) {
+		int id = moduleContext.optInt("id");
+		PolylineOptions polylineOptions = new PolylineOptions();
+		double borderWidth = moduleContext.optDouble("borderWidth", 5);
+		polylineOptions.width((float) borderWidth);
+		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
+		List<LocusData> locusDatas = jsParamsUtil.locusDatas(mUzAMap,
+				moduleContext);
+		List<Integer> colorList = new ArrayList<Integer>();
+		if (locusDatas != null) {
+			double lbLon = 0;
+			double lbLat = 0;
+			double rtLon = 0;
+			double rtLat = 0;
+			for (int i = 0; i < locusDatas.size(); i++) {
+				LocusData ld = locusDatas.get(i);
+				double lat = ld.getLatitude();
+				double lon = ld.getLongtitude();
+				if (i == 0) {
+					lbLat = lat;
+					lbLon = lon;
+				}
+				if (lat > lbLat) {
+					rtLat = lat;
+				} else {
+					lbLat = lat;
+				}
+				if (lon > lbLon) {
+					rtLon = lon;
+				} else {
+					lbLon = lon;
+				}
+				colorList.add(ld.getRgba());
+				polylineOptions.add(new LatLng(ld.getLatitude(), ld
+						.getLongtitude()));
+			}
+			LatLng lbLatLng = new LatLng(lbLat, lbLon);
+			LatLng rtLatLng = new LatLng(rtLat, rtLon);
+			polylineOptions.colorValues(colorList);
+			if (mAMap != null) {
+				Polyline polyline = mAMap.addPolyline(polylineOptions);
+				mLineMap.put(id, polyline);
+				if (moduleContext.optBoolean("autoresizing", true)) {
+					mAMap.animateCamera(CameraUpdateFactory.newLatLngBounds(
+							new LatLngBounds(lbLatLng, rtLatLng), 0));
+				}
 			}
 		}
 	}

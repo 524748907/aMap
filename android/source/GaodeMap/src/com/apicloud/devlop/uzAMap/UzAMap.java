@@ -39,6 +39,14 @@ public class UzAMap extends UZModule {
 	public void jsmethod_close(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			mMap.closeMap(this);
+			mMap = null;
+			mLocation = null;
+			mAnnotations = null;
+			mOverlays = null;
+			mSearch = null;
+			mBusLine = null;
+			mMapAnimationOverlay = null;
+			mMapOffline = null;
 		}
 	}
 
@@ -353,6 +361,19 @@ public class UzAMap extends UZModule {
 		}
 	}
 
+	public void jsmethod_closeBubble(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView.getMap(),
+							mContext);
+				}
+				mAnnotations.closeBubble(moduleContext);
+			}
+		}
+	}
+
 	public void jsmethod_addBillboard(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
@@ -426,6 +447,18 @@ public class UzAMap extends UZModule {
 		}
 	}
 
+	public void jsmethod_addLocus(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mOverlays == null) {
+					mOverlays = new MapOverlay(this, mapView.getMap());
+				}
+				mOverlays.addLocus(moduleContext);
+			}
+		}
+	}
+
 	public void jsmethod_addCircle(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
@@ -488,7 +521,7 @@ public class UzAMap extends UZModule {
 				if (mSearch == null) {
 					mSearch = new MapSearch(mContext);
 				}
-				mSearch.drawRoute(moduleContext, mapView.getMap());
+				mSearch.drawRoute(moduleContext, mapView.getMap(), this);
 			}
 		}
 	}

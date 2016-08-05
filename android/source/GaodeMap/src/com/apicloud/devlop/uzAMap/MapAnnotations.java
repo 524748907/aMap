@@ -10,15 +10,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
+
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.InfoWindowAdapter;
 import com.amap.api.maps.AMap.OnInfoWindowClickListener;
@@ -174,6 +177,14 @@ public class MapAnnotations implements OnMarkerClickListener,
 			marker.showInfoWindow();
 		}
 	}
+	
+	public void closeBubble(UZModuleContext moduleContext) {
+		int id = moduleContext.optInt("id");
+		Marker marker = mMarkers.get(id);
+		if (marker != null) {
+			marker.hideInfoWindow();
+		}
+	}
 
 	@SuppressWarnings("deprecation")
 	public void addBillboard(UZModuleContext moduleContext) {
@@ -237,11 +248,13 @@ public class MapAnnotations implements OnMarkerClickListener,
 					BitmapLoadFrom from) {
 				((ImageView) container).setImageBitmap(bitmap);
 				Billboard billboard = mBillboards.get(id);
-				Marker marker = mAMap.addMarker(createBillboardOptions(
-						billboard.getLon(), billboard.getLat(),
-						billboard.getView(), billboard.isDraggable()));
-				billboard.setMarker(marker);
-				mMarkers.put(id, marker);
+				if (billboard != null) {
+					Marker marker = mAMap.addMarker(createBillboardOptions(
+							billboard.getLon(), billboard.getLat(),
+							billboard.getView(), billboard.isDraggable()));
+					billboard.setMarker(marker);
+					mMarkers.put(id, marker);
+				}
 			}
 
 			@Override
@@ -360,7 +373,7 @@ public class MapAnnotations implements OnMarkerClickListener,
 	@SuppressWarnings("deprecation")
 	@Override
 	public View getInfoWindow(Marker marker) {
-		Bubble bubble = mMarkerBubbleMap.get(marker);
+		final Bubble bubble = mMarkerBubbleMap.get(marker);
 		if (bubble == null)
 			return null;
 		String illusAlign = bubble.getIllusAlign();
@@ -380,6 +393,14 @@ public class MapAnnotations implements OnMarkerClickListener,
 		}
 		ImageView iconView = (ImageView) infoContent
 				.findViewById(UZResourcesIDFinder.getResIdID("icon"));
+		iconView.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
+						bubble.getId(), "clickIllus");
+			}
+		});
 		if (bubble.getIconPath() != null
 				&& bubble.getIconPath().startsWith("http")) {
 			getImgShowUtil().display(iconView, bubble.getIconPath(),
@@ -389,18 +410,36 @@ public class MapAnnotations implements OnMarkerClickListener,
 			iconView.setBackgroundDrawable(new BitmapDrawable(jsParamsUtil
 					.getBitmap(mUzAMap.makeRealPath(bubble.getIconPath()))));
 		}
+		if (bubble.getIconPath() == null || bubble.getIconPath().isEmpty()) {
+			iconView.setVisibility(View.GONE);
+		}
 
 		TextView titleView = (TextView) infoContent
 				.findViewById(UZResourcesIDFinder.getResIdID("title"));
 		titleView.setText(bubble.getTitle());
 		titleView.setTextColor(bubble.getTitleColor());
 		titleView.setTextSize(bubble.getTitleSize());
+		titleView.setOnClickListener(new OnClickListener() {
 
+			@Override
+			public void onClick(View v) {
+				CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
+						bubble.getId(), "clickContent");
+			}
+		});
 		TextView subTitleView = (TextView) infoContent
 				.findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
 		subTitleView.setText(bubble.getSubTitle());
 		subTitleView.setTextColor(bubble.getSubTitleColor());
 		subTitleView.setTextSize(bubble.getSubTitleSize());
+		subTitleView.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
+						bubble.getId(), "clickContent");
+			}
+		});
 		return infoContent;
 	}
 

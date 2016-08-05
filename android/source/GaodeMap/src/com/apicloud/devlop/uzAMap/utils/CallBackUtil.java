@@ -194,6 +194,18 @@ public class CallBackUtil {
 		}
 	}
 
+	public static void infoWindowClickCallBack(UZModuleContext moduleContext,
+			int id, String clickType) {
+		JSONObject ret = new JSONObject();
+		try {
+			ret.put("id", id);
+			ret.put("eventType", clickType);
+			moduleContext.success(ret, false);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void markerDragCallBack(UZModuleContext moduleContext,
 			int id, String dragState) {
 		JSONObject ret = new JSONObject();

@@ -6,11 +6,14 @@
 //
 package com.apicloud.devlop.uzAMap.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
@@ -24,6 +27,7 @@ import com.amap.api.services.core.LatLonPoint;
 import com.apicloud.devlop.uzAMap.UzAMap;
 import com.apicloud.devlop.uzAMap.models.Annotation;
 import com.apicloud.devlop.uzAMap.models.Bubble;
+import com.apicloud.devlop.uzAMap.models.LocusData;
 import com.apicloud.devlop.uzAMap.models.MoveAnnotation;
 import com.uzmap.pkg.uzcore.UZCoreUtil;
 import com.uzmap.pkg.uzcore.uzmodule.UZModule;
@@ -368,7 +372,8 @@ public class JsParamsUtil {
 		int titleColor = UZUtility.parseCssColor(titleColorStr);
 		int subTitleColor = UZUtility.parseCssColor(subTitleColorStr);
 		return new Bubble(id, bgImg, title, subTitle, iconPath, titleSize,
-				subTitleSize, illusAlign, titleColor, subTitleColor);
+				subTitleSize, illusAlign, titleColor, subTitleColor,
+				moduleContext);
 	}
 
 	public int bubbleId(UZModuleContext moduleContext) {
@@ -671,6 +676,45 @@ public class JsParamsUtil {
 				idList.add(ids.optInt(i));
 			}
 			return idList;
+		}
+		return null;
+	}
+
+	public List<LocusData> locusDatas(UzAMap aMap, UZModuleContext moduleContext) {
+		List<LocusData> locusDatas = new ArrayList<LocusData>();
+		String path = moduleContext.optString("locusData");
+		if (path != null) {
+			try {
+				InputStream is = UZUtility.guessInputStream(aMap
+						.makeRealPath(path));
+				StringBuffer sb = new StringBuffer();
+				BufferedReader in = new BufferedReader(
+						new InputStreamReader(is));
+				String temp = null;
+				while (true) {
+					temp = in.readLine();
+					if (temp == null)
+						break;
+					String tmp = new String(temp.getBytes(), "utf-8");
+					sb.append(tmp);
+				}
+				is.close();
+				in.close();
+				JSONArray json = new JSONArray(sb.toString());
+				JSONObject obj = null;
+				for (int i = 0; i < json.length(); i++) {
+					obj = json.optJSONObject(i);
+					double lon = Double.valueOf(obj.optString("longtitude"));
+					double lat = Double.valueOf(obj.optString("latitude"));
+					int rgba = UZUtility.parseCssColor(obj.optString("rgba"));
+					locusDatas.add(new LocusData(lon, lat, rgba));
+				}
+				return locusDatas;
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}

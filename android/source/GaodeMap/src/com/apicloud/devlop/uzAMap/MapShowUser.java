@@ -10,14 +10,12 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.os.Bundle;
 import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.location.LocationManagerProxy;
-import com.amap.api.location.LocationProviderProxy;
+import com.amap.api.location.AMapLocationClientOption.AMapLocationMode;
 import com.amap.api.maps.AMap;
-import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
@@ -27,18 +25,18 @@ import com.amap.api.maps.model.MyLocationStyle;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
-public class MapShowUser implements LocationSource, AMapLocationListener {
-	private OnLocationChangedListener mListener;
-	private LocationManagerProxy mAMapLocationManager;
+public class MapShowUser implements AMapLocationListener {
 	private Context mContext;
 	private Marker mLocMarker;
+	private AMapLocationClient mLocationClient;
+	private AMapLocationClientOption mLocationOption;
 
 	public void showUserLocation(AMap aMap, UZModuleContext moduleContext,
 			Context context) {
 		mContext = context;
 		boolean isShow = moduleContext.optBoolean("isShow", true);
 		if (aMap != null) {
-			setLocationEnable(aMap, isShow);
+			init();
 			if (mLocMarker != null) {
 				mLocMarker.remove();
 			}
@@ -63,28 +61,28 @@ public class MapShowUser implements LocationSource, AMapLocationListener {
 		}
 	}
 
-	private void setLocationEnable(AMap aMap, boolean isShow) {
-		if (isShow) {
-			aMap.setLocationSource(this);
-			aMap.setMyLocationType(AMap.LOCATION_TYPE_LOCATE);
-		}
-		aMap.setMyLocationEnabled(isShow);
-	}
-
 	public void showUserLocationOpen(MapOpen mMap, Context context) {
 		mContext = context;
 		if (mMap != null) {
 			AMap aMap = mMap.getMapView().getMap();
-			setLocationEnable(aMap, true);
+			init();
 			addLocMarker(aMap);
 			aMap.setMyLocationStyle(createLocationStyle(context));
 		}
+	}
+	
+	private void init() {
+		mLocationClient = new AMapLocationClient(mContext);
+		mLocationOption = new AMapLocationClientOption();
+		mLocationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
+		mLocationClient.setLocationListener(this);
+		mLocationClient.startLocation();
 	}
 
 	public void showUserLocation(AMap aMap, Context context) {
 		mContext = context;
 		if (aMap != null) {
-			setLocationEnable(aMap, true);
+			init();
 			addLocMarker(aMap);
 			aMap.setMyLocationStyle(createLocationStyle(context));
 		}
@@ -121,29 +119,8 @@ public class MapShowUser implements LocationSource, AMapLocationListener {
 	}
 
 	@Override
-	public void onLocationChanged(Location location) {
-
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-
-	}
-
-	@Override
-	public void onProviderEnabled(String provider) {
-
-	}
-
-	@Override
-	public void onProviderDisabled(String provider) {
-
-	}
-
-	@Override
 	public void onLocationChanged(AMapLocation aLocation) {
-		if (mListener != null && aLocation != null) {
-			mListener.onLocationChanged(aLocation);
+		if (aLocation != null) {
 			if (mLocMarker != null) {
 				mLocMarker.setPosition(new LatLng(aLocation.getLatitude(),
 						aLocation.getLongitude()));
@@ -151,25 +128,4 @@ public class MapShowUser implements LocationSource, AMapLocationListener {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public void activate(OnLocationChangedListener listener) {
-		mListener = listener;
-		if (mAMapLocationManager == null) {
-			mAMapLocationManager = LocationManagerProxy.getInstance(mContext);
-			mAMapLocationManager.requestLocationUpdates(
-					LocationProviderProxy.AMapNetwork, 2000, 10, this);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public void deactivate() {
-		mListener = null;
-		if (mAMapLocationManager != null) {
-			mAMapLocationManager.removeUpdates(this);
-			mAMapLocationManager.destory();
-		}
-		mAMapLocationManager = null;
-	}
 }

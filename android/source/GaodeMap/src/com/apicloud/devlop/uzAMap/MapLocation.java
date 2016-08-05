@@ -11,40 +11,33 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
-import android.os.Bundle;
 import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
-
 import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.location.LocationManagerProxy;
-import com.amap.api.location.LocationProviderProxy;
-import com.amap.api.maps.AMap;
-import com.amap.api.maps.LocationSource;
+import com.amap.api.location.AMapLocationClientOption.AMapLocationMode;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
-public class MapLocation implements LocationSource, AMapLocationListener,
-		SensorEventListener {
+public class MapLocation implements AMapLocationListener, SensorEventListener {
 	private Context mContext;
 	private UZModuleContext mModuleContext;
-	private AMap mMap;
-	private OnLocationChangedListener mListener;
-	private LocationManagerProxy mAMapLocationManager;
 	private int mAccuracy;
 	private float mMinDistance;
 	private boolean mAutoStop;
 	private SensorManager mSensorManager;
 	private Sensor mSensor;
+	private AMapLocationClient mLocationClient;
+	private AMapLocationClientOption mLocationOption;
 
 	public void getLocation(UZModuleContext moduleContext, Context context) {
 		mContext = context;
 		initSensor();
 		UzMapView mMapView = new UzMapView(mContext);
 		mMapView.onCreate(null);
-		mMap = mMapView.getMap();
 		mModuleContext = moduleContext;
 		mAccuracy = moduleContext.optInt("accuracy", 10);
 		mMinDistance = (float) moduleContext.optDouble("filter", 1.0);
@@ -53,8 +46,8 @@ public class MapLocation implements LocationSource, AMapLocationListener,
 	}
 
 	public void stopLocation() {
-		if (mMap != null) {
-			mMap.setMyLocationEnabled(false);
+		if (mLocationClient != null) {
+			mLocationClient.stopLocation();
 		}
 	}
 
@@ -68,68 +61,11 @@ public class MapLocation implements LocationSource, AMapLocationListener,
 	}
 
 	private void init() {
-		if (mMap != null) {
-			mMap.setLocationSource(this);
-			mMap.setMyLocationEnabled(true);
-		}
-	}
-
-	@Override
-	public void onLocationChanged(Location location) {
-
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-
-	}
-
-	@Override
-	public void onProviderEnabled(String provider) {
-
-	}
-
-	@Override
-	public void onProviderDisabled(String provider) {
-
-	}
-
-	@Override
-	public void onLocationChanged(AMapLocation aLocation) {
-		boolean status = false;
-		if (mListener != null && aLocation != null) {
-			aLocation.setAccuracy(mAccuracy);
-			status = true;
-		}
-		CallBackUtil
-				.locationCallBack(mModuleContext, aLocation, mAngle, status);
-		if (mAutoStop) {
-			mMap.setMyLocationEnabled(false);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public void activate(OnLocationChangedListener listener) {
-		mListener = listener;
-		if (mAMapLocationManager == null) {
-			mAMapLocationManager = LocationManagerProxy.getInstance(mContext);
-			mAMapLocationManager
-					.requestLocationUpdates(LocationProviderProxy.AMapNetwork,
-							2000, mMinDistance, this);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public void deactivate() {
-		mListener = null;
-		if (mAMapLocationManager != null) {
-			mAMapLocationManager.removeUpdates(this);
-			mAMapLocationManager.destory();
-		}
-		mAMapLocationManager = null;
-		mSensorManager.unregisterListener(this, mSensor);
+		mLocationClient = new AMapLocationClient(mContext);
+		mLocationOption = new AMapLocationClientOption();
+		mLocationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
+		mLocationClient.setLocationListener(this);
+		mLocationClient.startLocation();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -177,5 +113,19 @@ public class MapLocation implements LocationSource, AMapLocationListener,
 			return -90;
 		}
 		return 0;
+	}
+
+	@Override
+	public void onLocationChanged(AMapLocation aLocation) {
+		boolean status = false;
+		if (aLocation != null) {
+			aLocation.setAccuracy(mAccuracy);
+			status = true;
+		}
+		CallBackUtil
+				.locationCallBack(mModuleContext, aLocation, mAngle, status);
+		if (mAutoStop) {
+			stopLocation();
+		}
 	}
 }

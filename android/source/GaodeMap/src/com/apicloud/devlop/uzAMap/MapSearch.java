@@ -38,6 +38,7 @@ import com.apicloud.devlop.uzAMap.models.CustomBusRoute;
 import com.apicloud.devlop.uzAMap.models.CustomDriveRoute;
 import com.apicloud.devlop.uzAMap.models.CustomWalkRoute;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
+import com.uzmap.pkg.uzcore.uzmodule.UZModule;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class MapSearch implements OnRouteSearchListener {
@@ -84,7 +85,7 @@ public class MapSearch implements OnRouteSearchListener {
 
 	@Override
 	public void onBusRouteSearched(BusRouteResult result, int rCode) {
-		if (rCode == 0) {
+		if (rCode == 1000) {
 			if (result != null && result.getPaths() != null
 					&& result.getPaths().size() > 0) {
 				mBusRouteResult = result;
@@ -98,7 +99,7 @@ public class MapSearch implements OnRouteSearchListener {
 
 	@Override
 	public void onDriveRouteSearched(DriveRouteResult result, int rCode) {
-		if (rCode == 0) {
+		if (rCode == 1000) {
 			if (result != null && result.getPaths() != null
 					&& result.getPaths().size() > 0) {
 				mDriveRouteResult = result;
@@ -112,7 +113,7 @@ public class MapSearch implements OnRouteSearchListener {
 
 	@Override
 	public void onWalkRouteSearched(WalkRouteResult result, int rCode) {
-		if (rCode == 0) {
+		if (rCode == 1000) {
 			if (result != null && result.getPaths() != null
 					&& result.getPaths().size() > 0) {
 				mWalkRouteResult = result;
@@ -157,19 +158,20 @@ public class MapSearch implements OnRouteSearchListener {
 				wayPoints, nightflag);
 	}
 
-	public void drawRoute(UZModuleContext moduleContext, AMap aMap) {
+	public void drawRoute(UZModuleContext moduleContext, AMap aMap,
+			UZModule module) {
 		if (mSearchType != null) {
 			if (mSearchType.equals(ROUTE_TYPE_TRANSIT)) {
 				if (mBusRouteResult != null) {
-					drawBusRoute(moduleContext, aMap);
+					drawBusRoute(moduleContext, aMap, module);
 				}
 			} else if (mSearchType.equals(ROUTE_TYPE_DRIVE)) {
 				if (mDriveRouteResult != null) {
-					drawDriveRoute(moduleContext, aMap);
+					drawDriveRoute(moduleContext, aMap, module);
 				}
 			} else if (mSearchType.equals(ROUTE_TYPE_WALK)) {
 				if (mWalkRouteResult != null) {
-					drawWalkRoute(moduleContext, aMap);
+					drawWalkRoute(moduleContext, aMap, module);
 				}
 			}
 		}
@@ -202,7 +204,8 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 	}
 
-	private void drawBusRoute(UZModuleContext moduleContext, AMap aMap) {
+	private void drawBusRoute(UZModuleContext moduleContext, AMap aMap,
+			UZModule module) {
 		if (mContext == null) {
 			return;
 		}
@@ -214,7 +217,7 @@ public class MapSearch implements OnRouteSearchListener {
 				BusPath busPath = paths.get(index);
 				if (busPath != null) {
 					CustomBusRoute customBusRoute = getCustomBusRoute(
-							moduleContext, aMap, busPath);
+							moduleContext, aMap, busPath, module);
 					mBusRouteOverlayMap.put(id, customBusRoute);
 					customBusRoute.removeFromMap();
 					customBusRoute.addToMap();
@@ -226,7 +229,8 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 	}
 
-	private void drawDriveRoute(UZModuleContext moduleContext, AMap aMap) {
+	private void drawDriveRoute(UZModuleContext moduleContext, AMap aMap,
+			UZModule module) {
 		if (mContext == null) {
 			return;
 		}
@@ -238,7 +242,7 @@ public class MapSearch implements OnRouteSearchListener {
 				DrivePath drivePath = paths.get(index);
 				if (drivePath != null) {
 					CustomDriveRoute customDriveRoute = getCustomDriveRoute(
-							moduleContext, aMap, drivePath);
+							moduleContext, aMap, drivePath, module);
 					mDriveRouteOverlayMap.put(id, customDriveRoute);
 					customDriveRoute.removeFromMap();
 					customDriveRoute.addToMap();
@@ -250,7 +254,8 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 	}
 
-	private void drawWalkRoute(UZModuleContext moduleContext, AMap aMap) {
+	private void drawWalkRoute(UZModuleContext moduleContext, AMap aMap,
+			UZModule module) {
 		if (mContext == null) {
 			return;
 		}
@@ -262,7 +267,7 @@ public class MapSearch implements OnRouteSearchListener {
 				WalkPath walkPath = paths.get(index);
 				if (walkPath != null) {
 					CustomWalkRoute customWalkRoute = getCustomWalkRoute(
-							moduleContext, aMap, walkPath);
+							moduleContext, aMap, walkPath, module);
 					mWalkRouteOverlayMap.put(id, customWalkRoute);
 					customWalkRoute.removeFromMap();
 					customWalkRoute.addToMap();
@@ -275,7 +280,7 @@ public class MapSearch implements OnRouteSearchListener {
 	}
 
 	private CustomBusRoute getCustomBusRoute(UZModuleContext moduleContext,
-			AMap aMap, BusPath busPath) {
+			AMap aMap, BusPath busPath, UZModule module) {
 		CustomBusRoute customBusRoute = new CustomBusRoute(mContext, aMap,
 				busPath, mBusRouteResult.getStartPos(),
 				mBusRouteResult.getTargetPos());
@@ -285,21 +290,21 @@ public class MapSearch implements OnRouteSearchListener {
 		customBusRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customBusRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
 		customBusRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
-		customBusRoute.setBusPointImgPath(jsParamsUtil.iconPath(moduleContext,
-				"bus"));
-		customBusRoute.setWalkPointImgPath(jsParamsUtil.iconPath(moduleContext,
-				"man"));
-		customBusRoute.setDrivePointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "car"));
-		customBusRoute.setStartPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "start"));
-		customBusRoute.setEndPointImgPath(jsParamsUtil.iconPath(moduleContext,
-				"end"));
+		customBusRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "bus")));
+		customBusRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "man")));
+		customBusRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "car")));
+		customBusRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "start")));
+		customBusRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "end")));
 		return customBusRoute;
 	}
 
 	private CustomDriveRoute getCustomDriveRoute(UZModuleContext moduleContext,
-			AMap aMap, DrivePath drivePath) {
+			AMap aMap, DrivePath drivePath, UZModule module) {
 		CustomDriveRoute customDriveRoute = new CustomDriveRoute(mContext,
 				aMap, drivePath, mDriveRouteResult.getStartPos(),
 				mDriveRouteResult.getTargetPos());
@@ -309,21 +314,21 @@ public class MapSearch implements OnRouteSearchListener {
 		customDriveRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customDriveRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
 		customDriveRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
-		customDriveRoute.setBusPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "bus"));
-		customDriveRoute.setWalkPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "man"));
-		customDriveRoute.setDrivePointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "car"));
-		customDriveRoute.setStartPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "start"));
-		customDriveRoute.setEndPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "end"));
+		customDriveRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "bus")));
+		customDriveRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "man")));
+		customDriveRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "car")));
+		customDriveRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "start")));
+		customDriveRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "end")));
 		return customDriveRoute;
 	}
 
 	private CustomWalkRoute getCustomWalkRoute(UZModuleContext moduleContext,
-			AMap aMap, WalkPath walkPath) {
+			AMap aMap, WalkPath walkPath, UZModule module) {
 		CustomWalkRoute customWalkRoute = new CustomWalkRoute(mContext, aMap,
 				walkPath, mWalkRouteResult.getStartPos(),
 				mWalkRouteResult.getTargetPos());
@@ -333,16 +338,16 @@ public class MapSearch implements OnRouteSearchListener {
 		customWalkRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customWalkRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
 		customWalkRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
-		customWalkRoute.setBusPointImgPath(jsParamsUtil.iconPath(moduleContext,
-				"bus"));
-		customWalkRoute.setWalkPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "man"));
-		customWalkRoute.setDrivePointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "car"));
-		customWalkRoute.setStartPointImgPath(jsParamsUtil.iconPath(
-				moduleContext, "start"));
-		customWalkRoute.setEndPointImgPath(jsParamsUtil.iconPath(moduleContext,
-				"end"));
+		customWalkRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "bus")));
+		customWalkRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "man")));
+		customWalkRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "car")));
+		customWalkRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "start")));
+		customWalkRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "end")));
 		return customWalkRoute;
 	}
 

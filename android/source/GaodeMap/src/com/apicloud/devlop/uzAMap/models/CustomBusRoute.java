@@ -6,13 +6,16 @@
 //
 package com.apicloud.devlop.uzAMap.models;
 
+import java.io.IOException;
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.overlay.BusRouteOverlay;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomBusRoute extends BusRouteOverlay {
 	private int busColor;
@@ -88,8 +91,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 
 	@Override
 	protected BitmapDescriptor getEndBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(endPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(endPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -98,8 +107,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 
 	@Override
 	protected BitmapDescriptor getStartBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(startPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(startPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -108,8 +123,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 
 	@Override
 	protected BitmapDescriptor getBusBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(busPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(busPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -118,8 +139,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 
 	@Override
 	protected BitmapDescriptor getDriveBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(drivePointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(drivePointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -128,8 +155,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 
 	@Override
 	protected BitmapDescriptor getWalkBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(walkPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(walkPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}

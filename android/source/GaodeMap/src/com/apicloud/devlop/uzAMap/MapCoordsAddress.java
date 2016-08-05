@@ -74,7 +74,7 @@ public class MapCoordsAddress implements OnGeocodeSearchListener {
 
 	@Override
 	public void onGeocodeSearched(GeocodeResult result, int code) {
-		if (code == 0) {
+		if (code == 1000) {
 			if (result != null && result.getGeocodeAddressList() != null
 					&& result.getGeocodeAddressList().size() > 0) {
 				GeocodeAddress address = result.getGeocodeAddressList().get(0);
@@ -89,7 +89,7 @@ public class MapCoordsAddress implements OnGeocodeSearchListener {
 
 	@Override
 	public void onRegeocodeSearched(RegeocodeResult result, int code) {
-		if (code == 0) {
+		if (code == 1000) {
 			if (result != null && result.getRegeocodeAddress() != null
 					&& result.getRegeocodeAddress().getFormatAddress() != null) {
 				regeocodeSearchedBack(result, true, code);
@@ -145,6 +145,7 @@ public class MapCoordsAddress implements OnGeocodeSearchListener {
 				if (roadList != null && roadList.size() > 0) {
 					ret.put("thoroughfare", roadList.get(0).getName());
 				}
+				ret.put("township", regeocodeAddress.getTownship());
 				mModuleContext.success(ret, false);
 			} catch (JSONException e) {
 				e.printStackTrace();

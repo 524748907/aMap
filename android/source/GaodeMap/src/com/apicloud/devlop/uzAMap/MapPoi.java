@@ -96,10 +96,11 @@ public class MapPoi implements OnPoiSearchListener {
 
 			@Override
 			public void onGetInputtips(List<Tip> tipList, int rCode) {
-				if (rCode == 0) {
+				if (rCode == 1000) {
 					moduleContext.success(autoCompleteJson(tipList), false);
+				} else {
+					failCallBack(moduleContext);
 				}
-				failCallBack(moduleContext);
 			}
 		});
 		try {
@@ -136,7 +137,7 @@ public class MapPoi implements OnPoiSearchListener {
 
 	@Override
 	public void onPoiSearched(PoiResult result, int rCode) {
-		if (rCode == 0) {
+		if (rCode == 1000) {
 			if (result != null && result.getQuery() != null) {
 				callBack(mModuleContext, callBackJson(result));
 				return;
@@ -212,6 +213,6 @@ public class MapPoi implements OnPoiSearchListener {
 
 	@Override
 	public void onPoiItemSearched(PoiItem arg0, int arg1) {
-		
+
 	}
 }

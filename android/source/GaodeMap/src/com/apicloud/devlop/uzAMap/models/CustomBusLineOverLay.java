@@ -6,12 +6,17 @@
 //
 package com.apicloud.devlop.uzAMap.models;
 
+import java.io.IOException;
+
 import android.content.Context;
+import android.graphics.BitmapFactory;
+
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.overlay.BusLineOverlay;
 import com.amap.api.services.busline.BusLineItem;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomBusLineOverLay extends BusLineOverlay {
 	private int color;
@@ -57,8 +62,14 @@ public class CustomBusLineOverLay extends BusLineOverlay {
 
 	@Override
 	protected BitmapDescriptor getBusBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(busPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(busPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -67,8 +78,14 @@ public class CustomBusLineOverLay extends BusLineOverlay {
 
 	@Override
 	protected BitmapDescriptor getEndBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(endPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(endPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}
@@ -77,8 +94,14 @@ public class CustomBusLineOverLay extends BusLineOverlay {
 
 	@Override
 	protected BitmapDescriptor getStartBitmapDescriptor() {
-		BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory
-				.fromPath(startPointImgPath);
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(startPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		if (bitmapDescriptor != null) {
 			return bitmapDescriptor;
 		}

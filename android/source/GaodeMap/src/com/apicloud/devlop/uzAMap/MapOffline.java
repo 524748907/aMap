@@ -15,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
+import android.util.Log;
+
 import com.amap.api.maps.AMapException;
 import com.amap.api.maps.offlinemap.OfflineMapCity;
 import com.amap.api.maps.offlinemap.OfflineMapManager;
@@ -23,7 +25,7 @@ import com.amap.api.maps.offlinemap.OfflineMapProvince;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class MapOffline implements OfflineMapDownloadListener {
-
+	private boolean mIsDownload;
 	private OfflineMapManager mAMapManager;
 	private Map<String, UZModuleContext> mModuleContextMap = new HashMap<String, UZModuleContext>();
 
@@ -52,6 +54,7 @@ public class MapOffline implements OfflineMapDownloadListener {
 		if (mAMapManager == null) {
 			mAMapManager = new OfflineMapManager(context, this);
 		}
+		mAMapManager.restart();
 		String adcode = moduleContext.optString("adcode");
 		if (adcode != null) {
 			mModuleContextMap.put(adcode, moduleContext);
@@ -59,9 +62,10 @@ public class MapOffline implements OfflineMapDownloadListener {
 					.getOfflineMapCityList();
 			if (cities != null) {
 				for (OfflineMapCity city : cities) {
-					if (adcode.equals(city.getAdcode())) {
+					if (adcode.equals(city.getCode())) {
 						try {
 							mAMapManager.downloadByCityCode(adcode);
+							mIsDownload = true;
 						} catch (AMapException e) {
 							e.printStackTrace();
 						}
@@ -76,6 +80,7 @@ public class MapOffline implements OfflineMapDownloadListener {
 					try {
 						mAMapManager.downloadByProvinceName(province
 								.getProvinceName());
+						mIsDownload = true;
 					} catch (AMapException e) {
 						e.printStackTrace();
 					}
@@ -93,12 +98,14 @@ public class MapOffline implements OfflineMapDownloadListener {
 	public void cancelAllDownload(UZModuleContext moduleContext, Context context) {
 		if (mAMapManager != null) {
 			mAMapManager.stop();
+			mIsDownload = false;
 		}
 	}
 
 	public void pauseDownload(UZModuleContext moduleContext, Context context) {
 		if (mAMapManager != null) {
 			mAMapManager.pause();
+			mIsDownload = false;
 		}
 	}
 
@@ -122,53 +129,58 @@ public class MapOffline implements OfflineMapDownloadListener {
 	}
 
 	public void isDownloading(UZModuleContext moduleContext, Context context) {
-		if (mAMapManager != null) {
-			String adcode = moduleContext.optString("adcode");
-			if (adcode != null) {
-				ArrayList<OfflineMapCity> cities = mAMapManager
-						.getDownloadingCityList();
-				boolean isDownloading = false;
-				if (cities != null) {
-					for (OfflineMapCity city : cities) {
-						if (adcode.equals(city.getAdcode())) {
-							try {
-								isDownloadingCallBack(moduleContext, true);
-								isDownloading = true;
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-				ArrayList<OfflineMapProvince> provinces = mAMapManager
-						.getDownloadingProvinceList();
-				if (provinces != null) {
-					for (OfflineMapProvince province : provinces) {
-						if (adcode.equals(province.getProvinceCode())) {
-							try {
-								isDownloadingCallBack(moduleContext, true);
-								isDownloading = true;
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-				if (!isDownloading) {
-					try {
-						isDownloadingCallBack(moduleContext, false);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		} else {
-			try {
-				isDownloadingCallBack(moduleContext, false);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+		try {
+			isDownloadingCallBack(moduleContext, mIsDownload);
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
+		// if (mAMapManager != null) {
+		// String adcode = moduleContext.optString("adcode");
+		// if (adcode != null) {
+		// ArrayList<OfflineMapCity> cities = mAMapManager
+		// .getDownloadingCityList();
+		// boolean isDownloading = false;
+		// if (cities != null) {
+		// for (OfflineMapCity city : cities) {
+		// if (adcode.equals(city.getAdcode())) {
+		// try {
+		// isDownloadingCallBack(moduleContext, true);
+		// isDownloading = true;
+		// } catch (JSONException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+		// }
+		// ArrayList<OfflineMapProvince> provinces = mAMapManager
+		// .getDownloadingProvinceList();
+		// if (provinces != null) {
+		// for (OfflineMapProvince province : provinces) {
+		// if (adcode.equals(province.getProvinceCode())) {
+		// try {
+		// isDownloadingCallBack(moduleContext, true);
+		// isDownloading = true;
+		// } catch (JSONException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+		// }
+		// if (!isDownloading) {
+		// try {
+		// isDownloadingCallBack(moduleContext, false);
+		// } catch (JSONException e) {
+		// e.printStackTrace();
+		// }
+		// }
+		// }
+		// } else {
+		// try {
+		// isDownloadingCallBack(moduleContext, false);
+		// } catch (JSONException e) {
+		// e.printStackTrace();
+		// }
+		// }
 	}
 
 	@Override
@@ -176,10 +188,11 @@ public class MapOffline implements OfflineMapDownloadListener {
 		OfflineMapCity city = mAMapManager.getItemByCityName(name);
 		OfflineMapProvince province = mAMapManager.getItemByProvinceName(name);
 		if (city != null) {
+			System.out.println(status);
 			long expectedSize = city.getSize();
 			long receivedSize = expectedSize * completeCode / 100;
 			UZModuleContext moduleContext = mModuleContextMap.get(city
-					.getAdcode());
+					.getCode());
 			if (moduleContext != null) {
 				downloadCallBack(moduleContext, status, expectedSize,
 						receivedSize);
@@ -200,7 +213,7 @@ public class MapOffline implements OfflineMapDownloadListener {
 			long expectedSize, long receivedSize) {
 		JSONObject ret = new JSONObject();
 		try {
-			ret.put("status", status);
+			ret.put("status", tranStatus(status));
 			JSONObject info = new JSONObject();
 			info.put("expectedSize", expectedSize);
 			info.put("receivedSize", receivedSize);
@@ -209,6 +222,26 @@ public class MapOffline implements OfflineMapDownloadListener {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private int tranStatus(int status) {
+		switch (status) {
+		case -1:
+			return 7;
+		case 0:
+			return 2;
+		case 1:
+			return 5;
+		case 2:
+			return 2;
+		case 3:
+			return 4;
+		case 4:
+			return 6;
+		case 5:
+			return 4;
+		}
+		return status;
 	}
 
 	private void getProvincesCallBack(UZModuleContext moduleContext,
@@ -268,11 +301,11 @@ public class MapOffline implements OfflineMapDownloadListener {
 
 	@Override
 	public void onCheckUpdate(boolean arg0, String arg1) {
-		
+		Log.i("amap-demo", "onCheckUpdate " + arg1 + " : " + arg0);
 	}
 
 	@Override
 	public void onRemove(boolean arg0, String arg1, String arg2) {
-		
+
 	}
 }

@@ -110,7 +110,7 @@ public class MapBusLine implements OnBusLineSearchListener {
 
 	@Override
 	public void onBusLineSearched(BusLineResult result, int rCode) {
-		if (rCode == 0) {
+		if (rCode == 1000) {
 			if (result != null && result.getQuery() != null) {
 				if (result.getQuery().getCategory() == SearchType.BY_LINE_NAME) {
 					if (result.getPageCount() > 0) {
