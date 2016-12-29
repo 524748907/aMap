@@ -301,7 +301,7 @@ public class MapAnnotations implements OnMarkerClickListener,
 					.defaultMarker(BitmapDescriptorFactory.HUE_RED);
 			markerOptions.icon(bitmapDescriptor);
 		}
-		markerOptions.anchor(0.5f, 0.5f).position(new LatLng(lat, lon))
+		markerOptions.anchor(0.5f, 1f).position(new LatLng(lat, lon))
 				.draggable(draggable).period(period).perspective(true)
 				.title(null).snippet(null);
 		return markerOptions;
@@ -358,7 +358,7 @@ public class MapAnnotations implements OnMarkerClickListener,
 		if (annotation != null)
 			CallBackUtil.markerClickCallBack(annotation.getModuleContext(),
 					annotation.getId());
-		return false;
+		return true;
 	}
 
 	@Override

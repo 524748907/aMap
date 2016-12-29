@@ -8,6 +8,9 @@ package com.apicloud.devlop.uzAMap;
 
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.graphics.Point;
 
 import com.amap.api.maps.AMap;
@@ -339,11 +342,21 @@ public class MapSimple {
 		if (aMap != null) {
 			String name = moduleContext.optString("name");
 			if (name.equals("viewChange")) {
-				aMap.setOnCameraChangeListener(getCameraChangeListener(moduleContext));
+				mIsCamaraLis = true;
+				if (!mIsZoomCallBack) {
+					aMap.setOnCameraChangeListener(getCameraChangeListener(moduleContext));
+				}
 			} else if (name.equals("longPress")) {
 				aMap.setOnMapLongClickListener(getOnMapLongClickListener(moduleContext));
 			} else if (name.equals("click")) {
 				aMap.setOnMapClickListener(getOnMapClickListener(moduleContext));
+			} else if (name.equals("zoom")) {
+				mZoomCallBack = moduleContext;
+				mIsZoomCallBack = true;
+				mZoomLevel = aMap.getCameraPosition().zoom;
+				if (!mIsCamaraLis) {
+					aMap.setOnCameraChangeListener(getCameraChangeListener(moduleContext));
+				}
 			}
 		}
 	}
@@ -353,10 +366,13 @@ public class MapSimple {
 			String name = moduleContext.optString("name");
 			if (name.equals("viewChange")) {
 				aMap.setOnCameraChangeListener(null);
+				mIsCamaraLis = false;
 			} else if (name.equals("longPress")) {
 				aMap.setOnMapLongClickListener(null);
 			} else if (name.equals("click")) {
 				aMap.setOnMapClickListener(null);
+			} else if (name.equals("zoom")) {
+				mIsZoomCallBack = false;
 			}
 		}
 	}
@@ -366,7 +382,13 @@ public class MapSimple {
 		return new OnCameraChangeListener() {
 			@Override
 			public void onCameraChangeFinish(CameraPosition cameraPosition) {
-				CallBackUtil.viewChangeCallBack(moduleContext, cameraPosition);
+				if (mIsCamaraLis) {
+					CallBackUtil.viewChangeCallBack(moduleContext,
+							cameraPosition);
+				}
+				if (mIsZoomCallBack) {
+					callBack(moduleContext, cameraPosition.zoom);
+				}
 			}
 
 			@Override
@@ -394,5 +416,27 @@ public class MapSimple {
 				CallBackUtil.clickCallBack(moduleContext, latLng);
 			}
 		};
+	}
+
+	private float mZoomLevel;
+	private boolean mIsZoomCallBack;
+	private boolean mIsCamaraLis;
+	private UZModuleContext mZoomCallBack;
+
+	private void callBack(UZModuleContext moduleContext, float zoomLevel) {
+		String zoomEvent = null;
+		if (zoomLevel > mZoomLevel) {
+			zoomEvent = "zoomIn";
+		} else {
+			zoomEvent = "zoomOut";
+		}
+		mZoomLevel = zoomLevel;
+		JSONObject ret = new JSONObject();
+		try {
+			ret.put("zoomEvent", zoomEvent);
+			mZoomCallBack.success(ret, false);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 }

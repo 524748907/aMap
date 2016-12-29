@@ -4,5 +4,6 @@
 		    name:'aMap',
 		    class:'com.apicloud.devlop.uzAMap.UzAMap'
 		}
+		
 	]
 }

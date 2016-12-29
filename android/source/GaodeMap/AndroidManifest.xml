@@ -68,6 +68,16 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name="com.uzmap.pkg.uzapp.UZApplication"
@@ -95,9 +105,9 @@
 
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="请使用您自己申请的key" />
-			
-		<service android:name="com.amap.api.location.APSService" >
+            android:value="d4677c216f8ce292724e90b6e9ec4f93" />
+
+        <service android:name="com.amap.api.location.APSService" >
         </service>
     </application>
 
