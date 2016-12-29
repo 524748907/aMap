@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  MANaviPolyline.m
+//  officialDemo2D
+//
+//  Created by xiaoming han on 15/5/25.
+//  Copyright (c) 2015年 AutoNavi. All rights reserved.
+//
 
 #import "MANaviPolyline.h"
 

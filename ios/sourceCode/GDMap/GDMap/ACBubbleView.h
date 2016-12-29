@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  ACBubbleView.h
+//  UZEngine
+//
+//  Created by zhengcuan on 15/12/4.
+//  Copyright © 2015年 APICloud. All rights reserved.
+//
 
 #import <UIKit/UIKit.h>
 

@@ -1,11 +1,13 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  MANaviPolyline.h
+//  officialDemo2D
+//
+//  Created by xiaoming han on 15/5/25.
+//  Copyright (c) 2015年 AutoNavi. All rights reserved.
+//
 
-#import <AMapNaviKit/MAMapKit.h>
+//#import <AMapNaviKit/MAMapKit.h>
+#import <MAMapKit/MAMapKit.h>
 #import "MANaviAnnotation.h"
 
 @interface MANaviPolyline : NSObject<MAOverlay>

@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  MANaviRoute.m
+//  OfficialDemo3D
+//
+//  Created by yi chen on 1/7/15.
+//  Copyright (c) 2015 songjian. All rights reserved.
+//
 
 #import "MANaviRoute.h"
 #import "CommonUtility.h"

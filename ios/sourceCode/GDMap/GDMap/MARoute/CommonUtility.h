@@ -1,12 +1,14 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  CommonUtility.h
+//  SearchV3Demo
+//
+//  Created by songjian on 13-8-22.
+//  Copyright (c) 2013年 songjian. All rights reserved.
+//
 
 #import <Foundation/Foundation.h>
-#import <AMapNaviKit/MAMapKit.h>
+//#import <AMapNaviKit/MAMapKit.h>
+#import <MAMapKit/MAMapKit.h>
 #import <AMapSearchKit/AMapSearchAPI.h>
 
 @interface CommonUtility : NSObject

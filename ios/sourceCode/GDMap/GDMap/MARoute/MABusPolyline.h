@@ -1,12 +1,14 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  MABusPolyline.h
+//  UZEngine
+//
+//  Created by zhengcuan on 15/12/19.
+//  Copyright © 2015年 uzmap. All rights reserved.
+//
 
 #import <Foundation/Foundation.h>
-#import <AMapNaviKit/MAMapKit.h>
+//#import <AMapNaviKit/MAMapKit.h>
+#import <MAMapKit/MAMapKit.h>
 
 @interface MABusPolyline : NSObject<MAOverlay>
 

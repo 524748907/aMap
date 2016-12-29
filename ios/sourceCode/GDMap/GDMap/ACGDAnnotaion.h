@@ -1,11 +1,13 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  UZGDAnnotaion.h
+//  UZEngine
+//
+//  Created by zhengcuan on 15/11/26.
+//  Copyright © 2015年 APICloud. All rights reserved.
+//
 
-#import <AMapNaviKit/MAMapKit.h>
+//#import <AMapNaviKit/MAMapKit.h>
+#import <MAMapKit/MAMapKit.h>
 
 typedef enum {
     ANNOTATION_MARKE = 0,  //标注
@@ -18,7 +20,7 @@ typedef enum {
 @interface ACGDAnnotaion : MAPointAnnotation
 
 @property (nonatomic, assign) AnnotationType type;      //annotation的类型
-@property (nonatomic, assign) NSInteger annotId;        //annotation的id
+@property (nonatomic, assign) NSInteger annotId,clickCbId;        //annotation的id
 @property (nonatomic, strong) NSArray *pinIcons;        //annotation的icon图标
 @property (nonatomic, assign) BOOL draggable;           //annotation是否可拖动
 @property (nonatomic, assign) float interval;           //annotation标注动画时间

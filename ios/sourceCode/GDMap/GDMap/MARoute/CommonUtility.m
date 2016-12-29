@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  CommonUtility.m
+//  SearchV3Demo
+//
+//  Created by songjian on 13-8-22.
+//  Copyright (c) 2013年 songjian. All rights reserved.
+//
 
 #import "CommonUtility.h"
 #import "LineDashPolyline.h"

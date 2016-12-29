@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  UZGDAnnotaion.m
+//  UZEngine
+//
+//  Created by zhengcuan on 15/11/26.
+//  Copyright © 2015年 APICloud. All rights reserved.
+//
 
 #import "ACGDAnnotaion.h"
 
@@ -22,7 +23,7 @@ static CLLocationCoordinate2D interpolateCoordinate(CLLocationCoordinate2D from,
 @implementation ACGDAnnotaion
 
 @synthesize type;
-@synthesize annotId;
+@synthesize annotId, clickCbId;
 @synthesize pinIcons;
 @synthesize draggable, haveBubble;
 @synthesize interval;

@@ -1,9 +1,10 @@
-/**
- * APICloud Modules
- * Copyright (c) 2014-2015 by APICloud, Inc. All Rights Reserved.
- * Licensed under the terms of the The MIT License (MIT).
- * Please see the license.html included with this distribution for details.
- */
+//
+//  ACAMButton.h
+//  UZEngine
+//
+//  Created by zhengcuan on 15/12/7.
+//  Copyright © 2015年 uzmap. All rights reserved.
+//
 
 #import <UIKit/UIKit.h>
 
