@@ -532,6 +532,7 @@ public class MapSearch implements OnRouteSearchListener {
 	}
 
 	private JSONObject buslines(BusStep busStep) throws JSONException {
+		@SuppressWarnings("deprecation")
 		RouteBusLineItem busLineItem = busStep.getBusLine();
 		JSONObject buslines = new JSONObject();
 		if (busLineItem != null) {

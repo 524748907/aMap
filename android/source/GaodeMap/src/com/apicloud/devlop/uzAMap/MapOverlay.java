@@ -15,10 +15,8 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import com.amap.api.maps.AMap;
-import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.GroundOverlay;
@@ -31,7 +29,6 @@ import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.apicloud.devlop.uzAMap.models.LocusData;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
-import com.google.android.gms.internal.js;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
 

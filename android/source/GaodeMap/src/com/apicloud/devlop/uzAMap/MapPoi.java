@@ -89,6 +89,7 @@ public class MapPoi implements OnPoiSearchListener {
 		poiSearch.searchPOIAsyn();
 	}
 
+	@SuppressWarnings("deprecation")
 	public void autoComplete(final UZModuleContext moduleContext) {
 		String city = moduleContext.optString("city", "");
 		String keyword = moduleContext.optString("keyword");

@@ -316,23 +316,23 @@
     
     
     function addBillboard(){
-    	var map = api.require('aMap');
-		map.addBillboard({
+    	var aMap = api.require('aMap');
+		aMap.addBillboard({
 				id : 4,
 				draggable : true,
 				coords : {
 					lon : 116.233,
 					lat : 39.134
 				},
-				bgImg : 'widget://image/qipao.png',
+				bgImg : 'widget://image/abg.jpg',
 				content : {
-					title : '霸王别姬 屠洪刚大哥',
+					title : '大标题大标题大标题大标题',
 					subTitle : '概述内容概述内容概述内容',
-					illus : 'widget://image/weibiaoti1.png'
+					illus : 'widget://image/aiil.jpg'
 				},
 				styles : {
 					titleColor : '#000',
-					titleSize : 16,
+					titleSize : 12,
 					subTitleColor : '#999',
 					subTitleSize : 12,
 					illusAlign : 'left'
@@ -715,21 +715,6 @@
     <div id="wrap">
         <div id="main"> 
             <div  >
-            	<input type="button" onclick="addLocus()" value="addLocus" /><br><br>
-            	<input type="button" onclick="clearDisk()" value="clearDisk" /><br><br>
-            	<input type="button" onclick="getProvinces()" value="getProvinces" /><br><br>
-            	<input type="button" onclick="getAllCities()" value="getAllCities" /><br><br>
-            	<input type="button" onclick="downloadRegion()" value="downloadRegion" /><br><br>
-            	<input type="button" onclick="pauseDownload()" value="pauseDownload" /><br><br>
-            	<input type="button" onclick="isDownload()" value="isDownload" /><br><br>
-            	<input type="button" onclick="cancelDownload()" value="cancelDownload" /><br><br>
-            
-            	<input type="button" onclick="addPolygon()" value="addPolygon" /><br><br>
-            	<input type="button" onclick="addCircle()" value="addCircle" /><br><br>
-            	<input type="button" onclick="addLine()" value="addLine" /><br><br>
-            	<input type="button" onclick="addImg()" value="addImg" /><br><br>
-            
-            
             	<input type="button" onclick="openMap()" value="openMap" /><br><br>
             	<input type="button" onclick="closeMap()" value="closeMap" /><br><br>
             	<input type="button" onclick="showMap()" value="showMap" /><br><br>
@@ -798,6 +783,20 @@
             	<input type="button" onclick="moveAnno()" value="moveAnno" /><br><br>
             	
             	<input type="button" onclick="removeAnno()" value="removeAnno" /><br><br>
+            	
+            	<input type="button" onclick="addLocus()" value="addLocus" /><br><br>
+            	<input type="button" onclick="clearDisk()" value="clearDisk" /><br><br>
+            	<input type="button" onclick="getProvinces()" value="getProvinces" /><br><br>
+            	<input type="button" onclick="getAllCities()" value="getAllCities" /><br><br>
+            	<input type="button" onclick="downloadRegion()" value="downloadRegion" /><br><br>
+            	<input type="button" onclick="pauseDownload()" value="pauseDownload" /><br><br>
+            	<input type="button" onclick="isDownload()" value="isDownload" /><br><br>
+            	<input type="button" onclick="cancelDownload()" value="cancelDownload" /><br><br>
+            
+            	<input type="button" onclick="addPolygon()" value="addPolygon" /><br><br>
+            	<input type="button" onclick="addCircle()" value="addCircle" /><br><br>
+            	<input type="button" onclick="addLine()" value="addLine" /><br><br>
+            	<input type="button" onclick="addImg()" value="addImg" /><br><br>
             	
             	<input type="button" onclick="isPolygonContantPoint()" value="isPolygonContantPoint" /><br><br>
             	

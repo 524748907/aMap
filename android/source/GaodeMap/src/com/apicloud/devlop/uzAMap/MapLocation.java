@@ -19,6 +19,7 @@ import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.location.AMapLocationClientOption.AMapLocationMode;
+import com.amap.api.maps.MapView;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
@@ -26,7 +27,7 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 	private Context mContext;
 	private UZModuleContext mModuleContext;
 	private int mAccuracy;
-	private float mMinDistance;
+//	private float mMinDistance;
 	private boolean mAutoStop;
 	private SensorManager mSensorManager;
 	private Sensor mSensor;
@@ -36,11 +37,11 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 	public void getLocation(UZModuleContext moduleContext, Context context) {
 		mContext = context;
 		initSensor();
-		UzMapView mMapView = new UzMapView(mContext);
+		MapView mMapView = new UzMapView(mContext);
 		mMapView.onCreate(null);
 		mModuleContext = moduleContext;
 		mAccuracy = moduleContext.optInt("accuracy", 10);
-		mMinDistance = (float) moduleContext.optDouble("filter", 1.0);
+//		mMinDistance = (float) moduleContext.optDouble("filter", 1.0);
 		mAutoStop = moduleContext.optBoolean("autoStop", true);
 		init();
 	}

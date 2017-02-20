@@ -10,4 +10,7 @@
     <access origin="*" />
     <preference name="bounces" value="true" />
     <preference name="customRefreshHeader" value="UIPullRefresh" />
+    <feature name="googleAnalytics">
+        <param name="trackingID" value="UA-74846358-1" />
+    </feature> 
 </widget>
