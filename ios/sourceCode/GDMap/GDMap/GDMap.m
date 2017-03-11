@@ -54,11 +54,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //定位
     NSInteger getLocationCbid;
     BOOL getLocationAutostop;
-    /*
-    CLLocationManager *_locManager;
-     BOOL shouldAutoStop;
-     NSInteger getLocationCbid;
-     */
     MAUserLocation *currentUserLocation;
     //监听地图事件id
     NSInteger longPressCbid, viewChangeCbid, singleTapCbid, trackingModeCbid, zoomLisCbid;
@@ -158,13 +153,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     float orgY = [rectInfo floatValueForKey:@"y" defaultValue:0];
     float viewW = [rectInfo floatValueForKey:@"w" defaultValue:superView.bounds.size.width];
     float viewH = [rectInfo floatValueForKey:@"h" defaultValue:superView.bounds.size.height];
+    CGRect defaultRect = CGRectMake(orgX, orgY, viewW, viewH);
+    CGRect newRect = [paramsDict_ rectValueForKey:@"rect" defaultValue:defaultRect relativeToSuperView:superView];
+    
     BOOL fixed = [paramsDict_ boolValueForKey:@"fixed" defaultValue:YES];
     float zoomLevel = [paramsDict_ floatValueForKey:@"zoomLevel" defaultValue:10];
     BOOL isShow = [paramsDict_ boolValueForKey:@"showUserLocation" defaultValue:YES];
 
     //显示地图
-    self.mapView = [[MAMapView alloc]initWithFrame:CGRectMake(orgX, orgY, viewW, viewH)];
-    self.mapView.frame = CGRectMake(orgX, orgY, viewW, viewH);
+    self.mapView = [[MAMapView alloc]initWithFrame:newRect];
+    self.mapView.frame = newRect;
     self.mapView.delegate = self;
     [self.mapView setZoomLevel:zoomLevel animated:NO];
     self.mapView.showsUserLocation = isShow;
@@ -272,9 +270,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)getLocation:(NSDictionary *)paramsDict_ {
     getLocationCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     getLocationAutostop = [paramsDict_ boolValueForKey:@"autoStop" defaultValue:YES];
-    //NSString *File = [[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"];
-    //NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithContentsOfFile:File];
-    //NSArray *backAry = [dict objectForKey:@"UIBackgroundModes"];
     NSArray* backAry  = [[NSBundle mainBundle].infoDictionary objectForKey:@"UIBackgroundModes"];
     if (backAry && [backAry containsObject:@"location"]) {
         _mapView.pausesLocationUpdatesAutomatically = NO;
@@ -284,14 +279,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (currentUserLocation) {
         [sendDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
     } else {
-        //[sendDict setObject:[NSNumber numberWithBool:NO] forKey:@"status"];
-        //[self sendResultEventWithCallbackId:getLocationCbid dataDict:sendDict errDict:nil doDelete:NO];
         return;
     }
     if (getLocationCbid>=0) {
         [sendDict setObject:[NSNumber numberWithFloat:currentUserLocation.location.coordinate.latitude] forKey:@"lat"];
         [sendDict setObject:[NSNumber numberWithFloat:currentUserLocation.location.coordinate.longitude] forKey:@"lon"];
         [sendDict setObject:[NSNumber numberWithFloat:currentUserLocation.heading.trueHeading] forKey:@"heading"];
+        double altitud = currentUserLocation.location.altitude;
+        [sendDict setObject:@(altitud) forKey:@"altitude"];
         long long timestamp = (long long)([currentUserLocation.location.timestamp timeIntervalSince1970] * 1000);
         double acur = currentUserLocation.location.horizontalAccuracy;
         [sendDict setObject:@(acur) forKey:@"accuracy"];
@@ -3314,6 +3309,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [sendDict setObject:[NSNumber numberWithFloat:currentUserLocation.heading.trueHeading] forKey:@"heading"];
     double acur = currentUserLocation.location.horizontalAccuracy;
     [sendDict setObject:@(acur) forKey:@"accuracy"];
+    double altitud = currentUserLocation.location.altitude;
+    [sendDict setObject:@(altitud) forKey:@"altitude"];
     long long timestamp = (long long)([currentUserLocation.location.timestamp timeIntervalSince1970] * 1000);
     [sendDict setObject:[NSNumber numberWithLongLong:timestamp] forKey:@"timestamp"];
     [sendDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
@@ -4055,41 +4052,4 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     return pathAry;
 }
 
-/*
-#pragma mark - CLLocationManagerDelegate -
-
-- (void)locationManager:(CLLocationManager *)manager
-     didUpdateLocations:(NSArray<CLLocation *> *)locations __OSX_AVAILABLE_STARTING(__MAC_NA,__IPHONE_6_0) {
-    CLLocation *newLocation = [locations lastObject];
-    double lat = newLocation.coordinate.latitude;
-    double lon = newLocation.coordinate.longitude;
-    if ([self isValidLon:lon lat:lat]) {
-        long long timestamp = (long long)([newLocation.timestamp timeIntervalSince1970] * 1000);
-        NSMutableDictionary *info = [NSMutableDictionary dictionary];
-        [info setObject:@(YES) forKey:@"status"];
-        [info setObject:[NSNumber numberWithDouble:lat] forKey:@"lat"];
-        [info setObject:[NSNumber numberWithDouble:lon] forKey:@"lon"];
-        [info setObject:@(timestamp) forKey:@"timestamp"];
-        if (getLocationCbid >= 0) {
-            [self sendResultEventWithCallbackId:getLocationCbid dataDict:info errDict:nil doDelete:shouldAutoStop];
-        }
-    } else {
-        shouldAutoStop = YES;
-        NSDictionary *ret = @{@"status":@(NO)};
-        NSDictionary *err = @{@"code":[NSNumber numberWithInt:-1],@"msg":@"location failed"};
-        [self sendResultEventWithCallbackId:getLocationCbid dataDict:ret errDict:err doDelete:YES];
-    }
-    if (shouldAutoStop) {
-        [_locManager stopUpdatingLocation];
-        getLocationCbid = -1;
-    }
-}
-
-- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
-    NSDictionary *ret = @{@"status":@(NO)};
-    NSDictionary *err = @{@"code":[NSNumber numberWithInt:-1],@"msg":@"location failed"};
-    [self sendResultEventWithCallbackId:getLocationCbid dataDict:ret errDict:err doDelete:YES];
-    [_locManager stopUpdatingLocation];
-}
-*/
 @end
