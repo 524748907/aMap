@@ -11,6 +11,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 基础类
 
 <div class="outline">
+
 [open](#open)
 [close](#close)
 [show](#show)
@@ -41,11 +42,13 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [interconvertCoords](#interconvertCoords)
 [addEventListener](#addEventListener)
 [removeEventListener](#removeEventListener)
+
 </div>
 
 ## 标注、气泡类
 
 <div class="outline">
+
 [addAnnotations](#addAnnotations)
 [getAnnotationCoords](#getAnnotationCoords)
 [setAnnotationCoords](#setAnnotationCoords)
@@ -57,22 +60,26 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [addMobileAnnotations](#addMobileAnnotations)
 [moveAnnotation](#moveAnnotation)
 [removeAnnotations](#removeAnnotations)
+
 </div>
 
 ## 覆盖物类
 
 <div class="outline">
+
 [addLine](#addLine)
 [addCircle](#addCircle)
 [addPolygon](#addPolygon)
 [addImg](#addImg)
 [addLocus](#addLocus)
 [removeOverlay](#removeOverlay)
+
 </div>
 
 ## 搜索类
 
 <div class="outline">
+
 [searchRoute](#searchRoute)
 [drawRoute](#drawRoute)
 [removeRoute](#removeRoute)
@@ -83,11 +90,13 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [searchNearby](#searchNearby)
 [searchInPolygon](#searchInPolygon)  
 [autocomplete](#autocomplete)  
+
 </div>
 
 ## 离线地图类
 
 <div class="outline">
+
 [getProvinces](#getProvinces)
 [getMunicipalities](#getMunicipalities)
 [getNationWide](#getNationWide)
@@ -100,6 +109,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [clearDisk](#clearDisk)
 [checkNewestVersion](#checkNewestVersion)
 [reloadMap](#reloadMap)
+
 </div>
 
 # **概述**
