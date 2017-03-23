@@ -11,10 +11,15 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 <div class="outline">
 
 [open](#m1)
+
 [close](#m2)
+
 [show](#m3)
+
 [hide](#m4)
+
 [setRect](#m44)
+
 [getLocation](#m5)
 [stopLocation](#m501)
 [getCoordsFromName](#m6)
