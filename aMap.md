@@ -1,44 +1,72 @@
-/*
-Title: aMap
-Description: 高德地图
-*/
 
-##基础类
+
+## 基础类
 
 <div class="outline">
+
 [open](#m1)
+
 [close](#m2)
+
 [show](#m3)
+
 [hide](#m4)
+
 [setRect](#m44)
+
 [getLocation](#m5)
+
 [stopLocation](#m501)
+
 [getCoordsFromName](#m6)
+
 [getNameFromCoords](#m7)
+
 [getDistance](#m8)
+
 [showUserLocation](#m9)
+
 [setTrackingMode](#m10)
+
 [setCenter](#m11)
+
 [getCenter](#m111)
+
 [setZoomLevel](#m12)
+
 [getZoomLevel](#m13)
+
 [setMapAttr](#m14)
+
 [setRotation](#m15)
+
 [getRotation](#m16)
+
 [setOverlook](#m17)
+
 [getOverlook](#m18)
+
 [setRegion](#m19)
+
 [getRegion](#m20)
+
 [setScaleBar](#m21)
+
 [setCompass](#m22)
+
 [setLogo](#n22)
+
 [isPolygonContainsPoint](#m23)
+
 [interconvertCoords](#m24)
+
 [addEventListener](#m25)
+
 [removeEventListener](#m26)
+
 </div>
 
-##标注、气泡类
+## 标注、气泡类
 
 <div class="outline">
 [addAnnotations](#m27)
