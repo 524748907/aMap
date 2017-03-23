@@ -1,14 +1,15 @@
-#**概述**
+# **概述**
 
 高德地图模块源码（含iOS和Android）
 
 APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封装。目的是为了让 APICloud 的广大开发者只需用 html+js 即可快速、高效的集成高德移动端地图到自己的app内。所以需在高德开放平台提供的 SDK 基础上，按照 APICloud 平台的模块开发规范，对高德地图的 SDK 提供的接口进行一层封装。本模块只对高德地图的常用接口进行了封装，其中涉及到 UI 的部分功能无法完全彻底的封装。因此开源此模块源码，原生开发者可以在此模块的基础上继续完善该模块的其它接口。比如扩展地图上添加自定义气泡的接口，让前端开发者很快地在 APICloud 上开发出各式各样、效果炫酷的app。
 
-#**模块接口文档**
+# **模块接口文档**
 
-##基础类
+## 基础类
 
 <div class="outline">
+
 [open](#m1)
 [close](#m2)
 [show](#m3)
@@ -39,9 +40,10 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [interconvertCoords](#m24)
 [addEventListener](#m25)
 [removeEventListener](#m26)
+
 </div>
 
-##标注、气泡类
+## 标注、气泡类
 
 <div class="outline">
 [addAnnotations](#m27)
@@ -56,7 +58,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [removeAnnotations](#m36)
 </div>
 
-##覆盖物类
+## 覆盖物类
 
 <div class="outline">
 [addLine](#m37)
