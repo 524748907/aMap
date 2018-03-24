@@ -14,9 +14,9 @@ import android.graphics.BitmapFactory;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.overlay.WalkRouteOverlay;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.WalkPath;
+import com.apicloud.devlop.uzAMap.overlay.WalkRouteOverlay;
 import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomWalkRoute extends WalkRouteOverlay {

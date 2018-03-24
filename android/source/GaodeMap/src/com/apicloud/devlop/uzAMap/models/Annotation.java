@@ -14,7 +14,7 @@ import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import android.graphics.Bitmap;
 
 public class Annotation {
-	private int id;
+	private String id;
 	private Marker marker;
 	private double lat;
 	private double lon;
@@ -27,7 +27,7 @@ public class Annotation {
 	public Annotation() {
 	}
 
-	public Annotation(int id, double lat, double lon, List<Bitmap> icons,
+	public Annotation(String id, double lat, double lon, List<Bitmap> icons,
 			List<String> iconsPath, boolean draggable, double timeInterval) {
 		this.id = id;
 		this.lat = lat;
@@ -38,11 +38,11 @@ public class Annotation {
 		this.timeInterval = timeInterval;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

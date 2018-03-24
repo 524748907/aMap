@@ -34,7 +34,7 @@ public class MapBusLine implements OnBusLineSearchListener {
 	private UZModuleContext mModuleContext;
 	private BusLineResult mBusLineResult;
 	@SuppressLint("UseSparseArrays")
-	private Map<Integer, CustomBusLineOverLay> mBuslineMap = new HashMap<Integer, CustomBusLineOverLay>();
+	private Map<String, CustomBusLineOverLay> mBuslineMap = new HashMap<String, CustomBusLineOverLay>();
 
 	public MapBusLine(Context context) {
 		this.mContext = context;
@@ -57,7 +57,7 @@ public class MapBusLine implements OnBusLineSearchListener {
 	}
 
 	public void drawBusLine(UZModuleContext moduleContext, AMap aMap) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		int index = moduleContext.optInt("index");
 		List<BusLineItem> paths = mBusLineResult.getBusLines();
 		if (paths != null) {
@@ -79,11 +79,11 @@ public class MapBusLine implements OnBusLineSearchListener {
 
 	public void removeRoute(UZModuleContext moduleContext, AMap aMap) {
 		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
-		List<Integer> ids = jsParamsUtil.removeRouteIds(moduleContext);
+		List<String> ids = jsParamsUtil.removeRouteIds(moduleContext);
 		if (mBuslineMap == null)
 			return;
 		if (ids != null) {
-			for (int id : ids) {
+			for (String id : ids) {
 				CustomBusLineOverLay routeOverlay = mBuslineMap.get(id);
 				if (routeOverlay != null) {
 					routeOverlay.removeFromMap();

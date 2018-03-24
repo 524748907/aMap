@@ -15,14 +15,17 @@
 #import <CoreLocation/CoreLocation.h>
 #import "ACGDAnnotaion.h"
 #import "AnimatedAnnotationView.h"
-#import "AMapAsyncImageView.h"
-#import "ACAMButton.h"
+//#import "AMapAsyncImageView.h"
+//#import "ACAMButton.h"
+#import "UIImageView+WebCache.h"
 #import <AMapSearchKit/AMapSearchKit.h>
 #import "MANaviRoute.h"
 #import "CommonUtility.h"
 #import "BusStopAnnotation.h"
 #import "MABusPolyline.h"
 #import "UZMultiPolyline.h"
+#import "ACDistrictSearch.h"
+#import "ACDistrictLine.h"
 
 typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     AMapRoutePlanningTypeDrive = 0, //驾车
@@ -48,7 +51,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 #define ANNOTATION_MOBILETAG     1060
 
 @interface GDMap ()
-<MAMapViewDelegate, CanMovingAnimationDelegate, AMapSearchDelegate> {
+<MAMapViewDelegate, CanMovingAnimationDelegate, AMapSearchDelegate,UIGestureRecognizerDelegate> {
     MAMapView *_mapView;
     BOOL firstShowLocation;
     //定位
@@ -58,7 +61,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //监听地图事件id
     NSInteger longPressCbid, viewChangeCbid, singleTapCbid, trackingModeCbid, zoomLisCbid;
     //标注气泡类
-    NSInteger setBubbleCbid, addBillboardCbid, moveAnnoCbid, addMobileAnnoCbid;
     NSMutableDictionary *_allMovingAnno;//可移动的标注集合
     //覆盖物类
     NSMutableDictionary *_allOverlays;
@@ -79,6 +81,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSInteger poiSearchCbid, autoComplateCbid;
     //地理编码搜索
     NSInteger getLoctionByAddrCbid, getAddrByLocationCbid;
+    //网页气泡
+    NSInteger webBubbleCbid;
 }
 
 @property (nonatomic, strong) MAMapView *mapView;
@@ -92,6 +96,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 @property (nonatomic, strong) MANaviRoute *naviRoute;             //用于显示当前路线方案
 @property (nonatomic, strong) NSArray *allBusLines;               //搜索到的所有公交路线
 @property (nonatomic, strong) NSMutableDictionary *allBusRoutes;  //所有添加的公交路线
+@property (nonatomic, strong) NSDictionary *districtLineDict;     //边界线样式
+@property (nonatomic, strong) UIImage *placeholdImage;            //标注占位图片
 
 @end
 
@@ -111,6 +117,22 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 
 #pragma mark - lifeCycle -
 
+- (void)dealloc {
+    if (timerAnnoMove) {
+        [timerAnnoMove invalidate];
+        self.timerAnnoMove = nil;
+    }
+    if (_allMovingAnno) {
+        for (ACGDAnnotaion *annoEle in _allMovingAnno) {
+            if (annoEle.delegate) {
+                annoEle.delegate = nil;
+            }
+        }
+        [_allMovingAnno removeAllObjects];
+        self.allMovingAnno = nil;
+    }
+}
+
 - (void)dispose {
     [self close:nil];
 }
@@ -127,13 +149,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         } else {
             NSLog(@"Turbo_aMap_init_fail!");
         }
-        setBubbleCbid = -1;
-        addBillboardCbid = -1;
-        addMobileAnnoCbid = -1;
         zoomLisCbid = -1;
         self.timerAnnoMove = nil;
         canDraw = NO;
         poiSearchCbid = -1;
+        webBubbleCbid = -1;
     }
     return self;
 }
@@ -169,6 +189,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     self.mapView.mapType = MAMapTypeStandard;
     [self addSubview:self.mapView fixedOn:fixedOnName fixed:fixed];
     firstShowLocation = YES;
+    //[AMapServices sharedServices].enableHTTPS = YES;
     //设置父滚动视图的canCancelContentTouches
     UIWebView *webView = (UIWebView *)[self getViewByName:fixedOnName];
     id superViewObj = [webView superview];
@@ -198,24 +219,64 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
+- (void)takeSnapshotInRect:(NSDictionary *)paramsDict_ {
+    if (!self.mapView) {
+        return;
+    }
+    NSDictionary *rectInfo = [paramsDict_ dictValueForKey:@"rect" defaultValue:@{}];
+    float orgX = [rectInfo floatValueForKey:@"x" defaultValue:0];
+    float orgY = [rectInfo floatValueForKey:@"y" defaultValue:0];
+    float viewW = [rectInfo floatValueForKey:@"w" defaultValue:self.mapView.bounds.size.width];
+    float viewH = [rectInfo floatValueForKey:@"h" defaultValue:self.mapView.bounds.size.height];
+    CGRect defaultRect = CGRectMake(orgX, orgY, viewW, viewH);
+
+    UIImage *snapshot = [self.mapView takeSnapshotInRect:defaultRect];
+    NSString *imgPath = [paramsDict_ stringValueForKey:@"path" defaultValue:@""];
+    if (imgPath.length == 0) {
+        return;
+    }
+    imgPath = [self getPathWithUZSchemeURL:imgPath];
+    NSString *pathStr = [imgPath stringByDeletingLastPathComponent];
+    NSString *extention = [[imgPath pathExtension] uppercaseString];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if (![fileManager fileExistsAtPath:pathStr]) {        //创建路径
+        [fileManager createDirectoryAtPath:pathStr withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    NSData *data = nil;
+    if ([extention isEqualToString:@"JPG"] || [extention isEqualToString:@"JPEG"]) {
+        data = UIImageJPEGRepresentation(snapshot, 1.0);
+    } else {
+        data = UIImagePNGRepresentation(snapshot);
+    }
+    BOOL status = NO;
+    if (data) {
+      status = [fileManager createFileAtPath:imgPath contents:data attributes:nil];
+    }
+    //回调
+    NSInteger SnapshotCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    [self sendResultEventWithCallbackId:SnapshotCbid dataDict:@{@"status":@(status),@"realPath":imgPath} errDict:nil doDelete:YES];
+}
+
 - (void)close:(NSDictionary *)parmasDict_ {
-    if (self.mapView) {
-        self.mapView.delegate = nil;
-        [self.mapView removeFromSuperview];
-        self.mapView = nil;
+    if (timerAnnoMove) {
+        [timerAnnoMove invalidate];
+        self.timerAnnoMove = nil;
     }
     if (_allMovingAnno) {
-        for (ACGDAnnotaion *annoEle in _allMovingAnno) {
-            if (annoEle.delegate) {
-                annoEle.delegate = nil;
+        for (ACGDAnnotaion *annoEle in [_allMovingAnno allValues]) {
+            if (annoEle) {
+                if (annoEle.delegate) {
+                    annoEle.delegate = nil;
+                }
             }
         }
         [_allMovingAnno removeAllObjects];
         self.allMovingAnno = nil;
     }
-    if (timerAnnoMove) {
-        [timerAnnoMove invalidate];
-        self.timerAnnoMove = nil;
+    if (self.mapView) {
+        self.mapView.delegate = nil;
+        [self.mapView removeFromSuperview];
+        self.mapView = nil;
     }
     if (_allOverlays) {
         [_allOverlays removeAllObjects];
@@ -375,6 +436,48 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)showUserLocation:(NSDictionary *)paramsDict_ {
     BOOL isShow = [paramsDict_ boolValueForKey:@"isShow" defaultValue:YES];
      self.mapView.showsUserLocation = isShow;
+    //自定义当前位置图标
+    BOOL ring = [paramsDict_ boolValueForKey:@"showsAccuracyRing" defaultValue:YES];
+    BOOL indicator = [paramsDict_ boolValueForKey:@"showsHeadingIndicator" defaultValue:YES];
+    BOOL annimation = [paramsDict_ boolValueForKey:@"enablePulseAnnimation" defaultValue:YES];
+    MAUserLocationRepresentation *r = [[MAUserLocationRepresentation alloc] init];
+    ///精度圈是否显示，默认YES
+    r.showsAccuracyRing = ring;
+    ///是否显示方向指示(MAUserTrackingModeFollowWithHeading模式开启)。默认为YES
+    r.showsHeadingIndicator = indicator;
+    ///内部蓝色圆点是否使用律动效果, 默认YES
+    r.enablePulseAnnimation = annimation;
+    
+    NSString *fillColor = [paramsDict_ stringValueForKey:@"fillColor" defaultValue:nil];
+    if (fillColor.length > 0) {
+        ///精度圈 填充颜色, 默认 kAccuracyCircleDefaultColor
+        r.fillColor = [UZAppUtils colorFromNSString:fillColor];
+    }
+    NSString *strokeColor = [paramsDict_ stringValueForKey:@"strokeColor" defaultValue:nil];
+    if (strokeColor.length > 0) {
+        ///精度圈 边线颜色, 默认 kAccuracyCircleDefaultColor
+        r.strokeColor = [UZAppUtils colorFromNSString:strokeColor];
+    }
+    NSString *dotBgColor = [paramsDict_ stringValueForKey:@"dotBgColor" defaultValue:nil];
+    if (dotBgColor.length > 0) {
+        ///定位点背景色，不设置默认白色
+        r.locationDotBgColor = [UZAppUtils colorFromNSString:dotBgColor];
+    }
+    NSString *dotFillColor = [paramsDict_ stringValueForKey:@"dotFillColor" defaultValue:nil];
+    if (dotFillColor.length > 0) {
+        ///定位点蓝色圆点颜色，不设置默认蓝色
+        r.locationDotFillColor = [UZAppUtils colorFromNSString:dotFillColor];
+    }
+    NSString *icon = [paramsDict_ stringValueForKey:@"imagePath" defaultValue:nil];
+    if (icon.length > 0) {
+        ///定位图标, 与蓝色原点互斥
+        NSString *realPath = [self getPathWithUZSchemeURL:icon];
+        r.image = [UIImage imageWithContentsOfFile:realPath];
+    }
+    float lineWidth = [paramsDict_ floatValueForKey:@"lineWidth" defaultValue:0];
+    ///精度圈 边线宽度，默认0
+    r.lineWidth = lineWidth;
+    [self.mapView updateUserLocationRepresentation:r];
 }
 
 - (void)setTrackingMode:(NSDictionary *)paramsDict_ {
@@ -691,29 +794,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         return;
     }
     if ([nameStr isEqualToString:@"longPress"]) {//长按监听
-        if (longPressCbid != -1) {
-            [self deleteCallback:longPressCbid];
-        }
         longPressCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     } else if ([nameStr isEqualToString:@"viewChange"]) {//视角改变监听
-        if (viewChangeCbid != -1) {
-            [self deleteCallback:viewChangeCbid];
-        }
         viewChangeCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     } else if ([nameStr isEqualToString:@"click"]) {//单击监听
-        if (singleTapCbid != -1) {
-            [self deleteCallback:singleTapCbid];
-        }
         singleTapCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     } else if ([nameStr isEqualToString:@"trackingMode"]) {//tackingmode监听
-        if (trackingModeCbid != -1) {
-            [self deleteCallback:trackingModeCbid];
-        }
         trackingModeCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     } else if ([nameStr isEqualToString:@"zoom"]) {//tackingmode监听
-        if (zoomLisCbid != -1) {
-            [self deleteCallback:zoomLisCbid];
-        }
         zoomLisCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     }
 }
@@ -747,8 +835,56 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         if (zoomLisCbid != -1) {
             [self deleteCallback:zoomLisCbid];
         }
+        zoomLisCbid = -1;
     }
 }
+
+#pragma mark 室内地图
+- (void)isShowsIndoorMap:(NSDictionary *)paramsDict_ {
+    BOOL isShow = [self.mapView isShowsIndoorMap];
+    NSInteger cbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    [self sendResultEventWithCallbackId:cbid dataDict:@{@"status":@(isShow)} errDict:nil doDelete:YES];
+}
+
+- (void)showsIndoorMap:(NSDictionary *)paramsDict_ {
+    BOOL isShow = [paramsDict_ boolValueForKey:@"isShows" defaultValue:NO];
+    self.mapView.showsIndoorMap = isShow;
+}
+
+- (void)isShowsIndoorMapControl:(NSDictionary *)paramsDict_ {
+    BOOL isShow = [self.mapView isShowsIndoorMapControl];
+    NSInteger cbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    [self sendResultEventWithCallbackId:cbid dataDict:@{@"status":@(isShow)} errDict:nil doDelete:YES];
+}
+
+- (void)showsIndoorMapControl:(NSDictionary *)paramsDict_ {
+    BOOL isShow = [paramsDict_ boolValueForKey:@"isShows" defaultValue:NO];
+    self.mapView.showsIndoorMapControl = isShow;
+}
+
+- (void)indoorMapControlSize:(NSDictionary *)paramsDict_ {
+    CGSize size = [self.mapView indoorMapControlSize];
+    NSInteger cbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    [self sendResultEventWithCallbackId:cbid dataDict:@{@"size":@{@"width":@(size.width),@"height":@(size.height)}} errDict:nil doDelete:YES];
+}
+
+- (void)setIndoorMapControlOrigin:(NSDictionary *)paramsDict_ {
+    NSDictionary  *pointDict = [paramsDict_ dictValueForKey:@"point" defaultValue:@{}];
+    float x = [pointDict floatValueForKey:@"x" defaultValue:0];
+    float y = [pointDict floatValueForKey:@"y" defaultValue:0];
+    CGPoint point =CGPointMake(x, y);
+    [self.mapView setIndoorMapControlOrigin:point];
+}
+
+- (void)setCurrentIndoorMapFloorIndex:(NSDictionary *)paramsDict_ {
+    NSInteger floorIndex = [paramsDict_ integerValueForKey:@"floorIndex" defaultValue:0];
+    [self.mapView setCurrentIndoorMapFloorIndex:floorIndex];
+}
+
+- (void)clearIndoorMapCache:(NSDictionary *)paramsDict_ {
+    [self.mapView clearIndoorMapCache];
+}
+
 
 #pragma mark 标注、气泡类
 
@@ -795,7 +931,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         coor.latitude = lat;
         annotation.coordinate = coor;
         annotation.annotId = annoId;
-        annotation.clickCbId = addAnnCbid;
+        annotation.clickCbId = addAnnCbid;//点击标注的回调id
         annotation.interval = timeInterval;
         if (pinIcons.count > 0) {
             annotation.pinIcons = pinIcons;
@@ -881,6 +1017,36 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [self sendResultEventWithCallbackId:cbExistID dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil doDelete:YES];
 }
 
+
+- (void)addWebBubbleListener:(NSDictionary *)paramsDict_ {
+    webBubbleCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+}
+
+- (void)removeWebBubbleListener:(NSDictionary *)paramsDict_ {
+    webBubbleCbid = -1;
+}
+
+
+- (void)setWebBubble:(NSDictionary *)paramsDict_ {
+    NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    NSArray *annos = [self.mapView annotations];
+    for (ACGDAnnotaion *annoElem in annos) {
+        if (![annoElem isKindOfClass:[ACGDAnnotaion class]]) {
+            continue;
+        }
+        if (annoElem.annotId == [setID integerValue]) {
+//            annoElem.contentDict = contentInfo;
+//            annoElem.stylesDict = styleInfo;
+            annoElem.haveBubble = YES;
+            annoElem.webBubbleDict = paramsDict_;
+            [self.mapView removeAnnotation:annoElem];
+            [self.mapView addAnnotation:annoElem];
+            break;
+        }
+    }
+}
+
+
 - (void)setBubble:(NSDictionary *)paramsDict_ {
     NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
     NSString *bgImgStr = [paramsDict_ stringValueForKey:@"bgImg" defaultValue:nil];
@@ -889,10 +1055,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (![setID isKindOfClass:[NSString class]] || setID.length==0) {
         return;
     }
-    if (setBubbleCbid >= 0) {
-        [self deleteCallback:setBubbleCbid];
-    }
-    setBubbleCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    NSInteger setBubbleCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    
     NSArray *annos = [self.mapView annotations];
     for (ACGDAnnotaion *annoElem in annos) {
         if (![annoElem isKindOfClass:[ACGDAnnotaion class]]) {
@@ -905,6 +1069,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             annoElem.contentDict = contentInfo;
             annoElem.stylesDict = styleInfo;
             annoElem.haveBubble = YES;
+            annoElem.bubbleClickCbid = setBubbleCbid;
             [self.mapView removeAnnotation:annoElem];
             [self.mapView addAnnotation:annoElem];
             break;
@@ -963,10 +1128,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
     NSDictionary *contentInfo = [paramsDict_ dictValueForKey:@"content" defaultValue:@{}];
     NSDictionary *styleInfo = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
-    if (addBillboardCbid >= 0) {
-        [self deleteCallback:addBillboardCbid];
-    }
-    addBillboardCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    
+    NSInteger addBillboardCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     ACGDAnnotaion *annotation = [[ACGDAnnotaion alloc] init];
     CLLocationCoordinate2D coor;
     coor.longitude = lon;
@@ -974,6 +1137,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     annotation.coordinate = coor;
     annotation.annotId = [setID integerValue];
     annotation.billBgImg = bgImgStr;
+    annotation.addBillboardCbid = addBillboardCbid;
     annotation.draggable = [paramsDict_ boolValueForKey:@"draggable" defaultValue:NO];
     annotation.contentDict = contentInfo;
     annotation.stylesDict = styleInfo;
@@ -982,7 +1146,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)addMobileAnnotations:(NSDictionary *)paramsDict_ {
-    addMobileAnnoCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    NSInteger addMobileAnnoCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     NSArray *annoAry = [paramsDict_ arrayValueForKey:@"annotations" defaultValue:nil];
     NSMutableArray *annotationsAry = [NSMutableArray arrayWithCapacity:1];
     for (NSDictionary *annoInfo in annoAry) {
@@ -1005,6 +1169,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         coor.latitude = lat;
         annotation.coordinate = coor;
         annotation.annotId = annoId;
+        annotation.moveAnnoCbid = addMobileAnnoCbid;
         annotation.mobileBgImg = pinIcon;
         annotation.draggable = [annoInfo boolValueForKey:@"draggable" defaultValue:NO];
         annotation.type = ANNOTATION_MOBILEGD;
@@ -1034,10 +1199,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (![moveId isKindOfClass:[NSString class]] || moveId.length==0) {
         return;
     }
-    if (moveAnnoCbid >= 0) {
-        [self deleteCallback:moveAnnoCbid];
-    }
-    moveAnnoCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    
+    NSInteger moveAnnoEndCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     float moveDuration = [paramsDict_ floatValueForKey:@"duration" defaultValue:1];
     CFTimeInterval thisStep = CACurrentMediaTime();
     NSArray *annos = [self.mapView annotations];
@@ -1066,6 +1229,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             annoElem.lastStep = thisStep;
             annoElem.timeOffset = 0;
             annoElem.delegate = self;
+            annoElem.moveAnnoEndCbid = moveAnnoEndCbid;
             //添加到移动队列
             [self.allMovingAnno setObject:annoElem forKey:moveId];
             //先做旋转动画
@@ -1079,15 +1243,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             //再做移动动画
             __weak GDMap *OBJMap = self;
             void(^completion)(BOOL finished) = ^(BOOL finished) {
-                if (OBJMap.timerAnnoMove == nil) {
+                if (OBJMap.timerAnnoMove == nil) {//若已经存在计时器则不创建
                     [OBJMap.timerAnnoMove invalidate];
-                    OBJMap.timerAnnoMove = [CADisplayLink displayLinkWithTarget:OBJMap selector:@selector(doStep)];
-                    OBJMap.timerAnnoMove.frameInterval = 2;
+                    OBJMap.timerAnnoMove = [CADisplayLink displayLinkWithTarget:OBJMap selector:@selector(doStep)];//更屏幕刷新频率同步的计时器
+                    OBJMap.timerAnnoMove.frameInterval = 2;//比屏幕刷新频率低一半
                     NSRunLoop *mainRunLoop = [NSRunLoop currentRunLoop];
                     [OBJMap.timerAnnoMove addToRunLoop:mainRunLoop forMode:NSDefaultRunLoopMode];
                     [OBJMap.timerAnnoMove addToRunLoop:mainRunLoop forMode:UITrackingRunLoopMode];
                 }
             };
+            //0.3秒旋转后开始移动
             [UIView animateWithDuration:0.3 animations:animationManager completion:completion];
             break;
         }
@@ -1119,6 +1284,21 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             }
         }
         [self.mapView removeAnnotations:willRemoveAnnos];
+    } else {//若为空数组则移除全部
+        NSArray *annos = [self.mapView annotations];
+        NSMutableArray *willRemoveAnnos = [NSMutableArray arrayWithCapacity:1];
+        for (ACGDAnnotaion *annoAry in annos) {
+            if (![annoAry isKindOfClass:[ACGDAnnotaion class]]) {
+                continue;
+            }
+            [willRemoveAnnos addObject:annoAry];
+        }
+        for (ACGDAnnotaion *annoAry in willRemoveAnnos) {
+            if (annoAry.delegate) {
+                annoAry.delegate = nil;
+            }
+        }
+        [self.mapView removeAnnotations:willRemoveAnnos];
     }
 }
 
@@ -1141,8 +1321,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         [self.mapView removeOverlay:target];
     }
     overlayStyles = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
-    NSInteger pointCount = [pointAry count];
-    CLLocationCoordinate2D coorAry[500] = {0};
+    int pointCount = (int)[pointAry count];
+    
+    CLLocationCoordinate2D *coorAry = (CLLocationCoordinate2D*)malloc(pointCount*sizeof(CLLocationCoordinate2D));
+    
+    //CLLocationCoordinate2D coorAry[] = {0};
     for (int i=0; i<pointCount; i++){
         NSDictionary *item = [pointAry objectAtIndex:i];
         if ([item isKindOfClass:[NSDictionary class]]) {
@@ -1828,7 +2011,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)searchNearby:(NSDictionary *)paramsDict_ {
     NSString *keyword = [paramsDict_ stringValueForKey:@"keyword" defaultValue:nil];
     if (![keyword isKindOfClass:[NSString class]] || keyword.length==0) {
-        return;
+        //return;
     }
     float radius = [paramsDict_ floatValueForKey:@"radius" defaultValue:3000];
     if (radius == 0) {
@@ -1911,6 +2094,26 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     tips.keywords = keyword;
     tips.city = city;
     [self.mapSearch AMapInputTipsSearch:tips];
+}
+
+- (void)districtSearch:(NSDictionary *)paramsDict_ {
+    NSString *keyword = [paramsDict_ stringValueForKey:@"keyword" defaultValue:nil];
+    if (![keyword isKindOfClass:[NSString class]] || keyword.length==0) {
+        return;
+    }
+    _districtLineDict = [paramsDict_ dictValueForKey:@"showInMap" defaultValue:nil];
+    BOOL showInMap = self.districtLineDict?YES:NO;
+    NSInteger disSearchCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    //搜索实例对象
+    if (![self initSearchClass]) {
+        return;
+    }
+    ACDistrictSearch *dist = [[ACDistrictSearch alloc] init];
+    dist.showInMap = showInMap;
+    dist.searchResultCbid = disSearchCbid;
+    dist.keywords = keyword;
+    dist.requireExtension = YES;
+    [self.mapSearch AMapDistrictSearch:dist];
 }
 
 #pragma mark 离线地图类
@@ -2291,6 +2494,27 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         addrStr = @"";
     }
     [cbDict setObject:addrStr forKey:@"address"];
+    
+    NSString *building = placemark.building;
+    if (![building isKindOfClass:[NSString class]] || building.length==0) {
+        building = @"";
+    }
+    [cbDict setObject:building forKey:@"building"];
+    NSString *adcode = placemark.adcode;
+    if (![adcode isKindOfClass:[NSString class]] || adcode.length==0) {
+        adcode = @"";
+    }
+    [cbDict setObject:adcode forKey:@"adcode"];
+    NSString *citycode = placemark.citycode;
+    if (![citycode isKindOfClass:[NSString class]] || citycode.length==0) {
+        citycode = @"";
+    }
+    [cbDict setObject:citycode forKey:@"citycode"];
+    NSString *towncode = placemark.towncode;
+    if (![towncode isKindOfClass:[NSString class]] || towncode.length==0) {
+        towncode = @"";
+    }
+    [cbDict setObject:towncode forKey:@"towncode"];
     [cbDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
     [self sendResultEventWithCallbackId:getAddrByLocationCbid dataDict:cbDict errDict:nil  doDelete:YES];
 }
@@ -2573,6 +2797,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [self sendResultEventWithCallbackId:searcRouteCbid dataDict:sendDict errDict:nil doDelete:YES];
 }
 
+- (void)onDistrictSearchDone:(AMapDistrictSearchRequest *)request response:(AMapDistrictSearchResponse *)response {
+    ACDistrictSearch *dist = (ACDistrictSearch *)request;
+    if (dist.showInMap && self.mapView) {//显示在地图上
+        [self handleDistrictResponse:response];
+    }
+    //解析response获取行政区划，具体解析见 Demo
+    NSDictionary *sendDict = [self getDistrictDict:response];
+    [self sendResultEventWithCallbackId:dist.searchResultCbid dataDict:@{@"status":@(YES),@"districtResult":sendDict} errDict:nil doDelete:NO];
+}
+
 #pragma mark - MAMapViewDelegate -
 
 #pragma mark 覆盖物类代理
@@ -2609,17 +2843,40 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         polygonView.lineJoinType = kMALineJoinRound;
         polygonView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
         return polygonView;
+    } else if ([overlay isKindOfClass:[ACDistrictLine class]]) {
+        MAPolylineRenderer *polylineView = [[MAPolylineRenderer alloc] initWithPolyline:overlay];
+        NSString *strokeImage = [self.districtLineDict stringValueForKey:@"strokeImg" defaultValue:@""];
+        if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
+            polylineView.lineWidth = [self.districtLineDict floatValueForKey:@"borderWidth" defaultValue:2.0];
+            NSString *realStrokeImgPath = [self getPathWithUZSchemeURL:strokeImage];
+            [polylineView loadStrokeTextureImage:[UIImage imageWithContentsOfFile:realStrokeImgPath]];
+        } else {//线
+            polylineView.lineWidth = [self.districtLineDict floatValueForKey:@"borderWidth" defaultValue:2.0];
+            NSString *color = [self.districtLineDict stringValueForKey:@"borderColor" defaultValue:@"#000"];
+            polylineView.strokeColor = [UZAppUtils colorFromNSString:color];
+            polylineView.lineJoinType = kMALineJoinRound;
+            NSString *typeStr = [self.districtLineDict stringValueForKey:@"type" defaultValue:@"round"];
+            if ([typeStr isEqualToString:@"round"]) {
+                polylineView.lineCapType  = kMALineCapRound;
+            } else if ([typeStr isEqualToString:@"square"]) {
+                polylineView.lineCapType  = kMALineCapSquare;
+            } else {
+                polylineView.lineCapType  = kMALineCapArrow;
+            }
+            polylineView.lineDash = [self.districtLineDict boolValueForKey:@"lineDash" defaultValue:NO];
+        }
+        return polylineView;
     } else if ([overlay isKindOfClass:[MAPolyline class]]) {//线
         MAPolylineRenderer *polylineView = [[MAPolylineRenderer alloc] initWithPolyline:overlay];
-        NSString *keyStr = nil;
-        NSArray *allOverlayKeys = [self.allOverlays allKeys];
-        for (NSString *targetKey in allOverlayKeys) {
-            MAPolyline *target = [self.allOverlays objectForKey:targetKey];
-            if (target == overlay) {
-                keyStr = targetKey;
-                break;
-            }
-        }
+        //    NSString *keyStr = nil;
+        //    NSArray *allOverlayKeys = [self.allOverlays allKeys];
+        //    for (NSString *targetKey in allOverlayKeys) {
+        //        MAPolyline *target = [self.allOverlays objectForKey:targetKey];
+        //        if (target == overlay) {
+        //            keyStr = targetKey;
+        //            break;
+        //        }
+        //    }
         NSString *strokeImage = [overlayStyles stringValueForKey:@"strokeImg" defaultValue:@""];
         if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
             polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
@@ -2871,9 +3128,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 */
 #pragma mark 标注、气泡类代理
 - (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation {
+    if ([annotation isKindOfClass:[MAUserLocation class]]) {
+        return nil;
+    }
     ACGDAnnotaion *targetAnnot = (ACGDAnnotaion *) annotation;
     if ([targetAnnot isKindOfClass:[ACGDAnnotaion class]]) {
         static NSString *pointReuseIndetifier = @"pointReuseIndetifier";
+        //标注应该开启重用机制，后期待优化
+        //NSString *pointReuseIndetifier = [NSString stringWithFormat:@"%zi",targetAnnot.annotId];
         AnimatedAnnotationView *annotationView = (AnimatedAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:pointReuseIndetifier];
         if (annotationView == nil) {
             annotationView = [[AnimatedAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:pointReuseIndetifier];
@@ -2881,7 +3143,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         annotationView.draggable = targetAnnot.draggable;
         //设置标注、布告牌
         [self processAnnotationView:targetAnnot withView:annotationView];
-        //设置气泡
+        //若已设置设置气泡则开始加载气泡
         if (targetAnnot.haveBubble) {
             [self setBubbleView:targetAnnot withView:annotationView];
         }
@@ -3025,7 +3287,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)processAnnotationView:(ACGDAnnotaion *)annotation withView:(AnimatedAnnotationView *)annotationView {//标注，自定义，动态标注
     switch (annotation.type) {
         default:
-        case ANNOTATION_MARKE: {//设置标注为自定义图标（动态）
+            //设置标注为自定义图标（动态）
+        case ANNOTATION_MARKE: {
             NSArray *pinIconPaths = annotation.pinIcons;
             NSString *pinIconPath = nil;
             if (pinIconPaths.count == 0) {//默认大头针图标
@@ -3034,48 +3297,92 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 pinIconPath = [pinIconPaths firstObject];
             }
             UIImage *pinImage = [UIImage imageWithContentsOfFile:pinIconPath];
-            pinImage = [self scaleImage:pinImage];
-            if (pinImage) {
+            pinImage = [self scaleImage:pinImage];//2倍图缩放图片
+            //避免与可移动的标注的冲突
+            if (pinImage) {//普通标注
+                annotationView.animationView.hidden = YES;//动画标注隐藏
                 annotationView.image = pinImage;
+            } else {//动画标注
+                self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
+                NSString *animationFirstFramePath = [pinIconPaths firstObject];
+                UIImage *firstImage = [UIImage imageWithContentsOfFile:animationFirstFramePath];
+                CGSize firstImageSize = firstImage.size;
+                float sclW = firstImageSize.width/2.0;
+                float sclH = firstImageSize.height/2.0;
+                //重设标注的image
+                [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+                [annotationView refreshAnimatedPin:annotation];
+                annotationView.animationView.hidden = NO;
             }
             annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
+            annotationView.billboardView.hidden = YES;//避免与布告牌错乱
+            annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
         }
             break;
-            
-        case ANNOTATION_BILLBOARD: {//设置标注为布告牌
+            //设置标注为布告牌
+        case ANNOTATION_BILLBOARD: {
             if (annotationView.billboardView) {
                 [self refreshBillboardView:annotation withAnnotationView:annotationView];
             } else {
                 [self addBillboardView:annotation withAnnotationView:annotationView];
             }
+            //避免与布告牌和可移动标注的冲突
+            annotationView.billboardView.hidden = NO;
+            annotationView.animationView.hidden = YES;//动画标注隐藏
+            annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+            NSDictionary *stylesInfo = annotation.stylesDict;
+            NSDictionary *billboardSize = [stylesInfo dictValueForKey:@"size" defaultValue:@{}];
+            float sclW = [billboardSize floatValueForKey:@"width" defaultValue:160];
+            float sclH = [billboardSize floatValueForKey:@"height" defaultValue:75];
+            //重设标注的image
+            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
             annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
         }
             break;
-            
-        case ANNOTATION_MOBILEGD: {//设置标注为可移动对象
-            UIImage *pinImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
-            annotationView.image = pinImage;
+            //设置标注为可移动对象
+        case ANNOTATION_MOBILEGD: {
+            self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
+            annotationView.image = self.placeholdImage;
             NSString *mobilePath = annotation.mobileBgImg;
             UIImage *mbileImage = [UIImage imageWithContentsOfFile:[self getPathWithUZSchemeURL:mobilePath]];
             CGRect mobileRect = CGRectMake(0, 0, mbileImage.size.width/2.0, mbileImage.size.height/2.0);
-            UIImageView *mobileIcon = [[UIImageView alloc]init];
-            mobileIcon.frame = mobileRect;
-            mobileIcon.image = mbileImage;
-            [annotationView addSubview:mobileIcon];
-            mobileIcon.center = CGPointMake(annotationView.bounds.size.width/2.0, annotationView.bounds.size.height/2.0);
-            mobileIcon.tag = ANNOTATION_MOBILETAG;
+            if (annotationView.mobileIcon) {
+                annotationView.mobileIcon.frame = mobileRect;
+                annotationView.mobileIcon.image = mbileImage;
+            } else {
+                UIImageView *mobileIcon = [[UIImageView alloc]init];
+                mobileIcon.frame = mobileRect;
+                mobileIcon.image = mbileImage;
+                [annotationView addSubview:mobileIcon];
+                annotationView.mobileIcon = mobileIcon;
+            }
+            annotationView.mobileIcon.center = CGPointMake(annotationView.bounds.size.width/2.0, annotationView.bounds.size.height/2.0);
+            annotationView.mobileIcon.tag = ANNOTATION_MOBILETAG;
             annotationView.centerOffset = CGPointMake(0, 0);
+            annotationView.billboardView.hidden = YES;//避免与布告牌错乱
+            annotationView.animationView.hidden = YES;//避免与动画标注错乱
+            annotationView.mobileIcon.hidden = NO;
         }
             break;
     }
 }
 
+- (void)resetAnnotationViewImage:(AnimatedAnnotationView *)annotationView withSize:(CGSize)size {
+    float scale = [UIScreen mainScreen].scale;
+    UIImage *scaleImage = [self OriginImage:self.placeholdImage scaleToSize:CGSizeMake(size.width*scale, size.height*scale)];
+    UIImage *finalImage = [UIImage imageWithData:UIImagePNGRepresentation(scaleImage) scale:scale];
+    annotationView.image = finalImage;
+}
+//点击标注
 - (void)mapView:(MAMapView *)mapView didSelectAnnotationView:(MAAnnotationView *)view {
     ACGDAnnotaion *target = (ACGDAnnotaion *)view.annotation;
     if (![target isKindOfClass:[ACGDAnnotaion class]]) {
         return;
     }
-    if (target.clickCbId < 0) {
+    if ([view isSelected] && !target.haveBubble) {//若没有被设置气泡则取消标注选中状态
+        [mapView deselectAnnotation:target animated:NO];//取消标注选中状态
+    }
+    if (target.clickCbId < 0) {//标注点击事件回调
         return;
     }
     NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:1];
@@ -3132,24 +3439,24 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             break;
             
         case ANNOTATION_BILLBOARD:
-            sendId = addBillboardCbid;
+            sendId = target.addBillboardCbid;
             [sendDict setObject:@"drag" forKey:@"eventType"];
             break;
             
         case ANNOTATION_MOBILEGD:
-            sendId = addMobileAnnoCbid;
+            sendId = target.moveAnnoCbid;
             break;
     }
     [sendDict setObject:state forKeyedSubscript:@"dragState"];
     [self sendResultEventWithCallbackId:sendId dataDict:sendDict errDict:nil doDelete:NO];
 }
-
-- (void)didMoving:(ACGDAnnotaion *)anno {
+#pragma mark 可移动的标注代理
+- (void)didMovingAnimationFinished:(ACGDAnnotaion *)anno {
     anno.delegate = nil;
     anno.timeOffset = 0;
     NSString *moveId= [NSString stringWithFormat:@"%d",(int)anno.annotId];
     [_allMovingAnno removeObjectForKey:moveId];
-    [self sendResultEventWithCallbackId:moveAnnoCbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithInteger:anno.annotId] forKey:@"id"] errDict:nil doDelete:NO];
+    [self sendResultEventWithCallbackId:anno.moveAnnoEndCbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithInteger:anno.annotId] forKey:@"id"] errDict:nil doDelete:NO];
 }
 
 #pragma mark 基础类代理
@@ -3338,7 +3645,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:@""];
     float bubbleLong = 160;
     NSString *bgImgPathStr = annotaion.bubbleBgImg;
-    if (bgImgPathStr.length == 0) {
+    if (bgImgPathStr.length == 0) {//若使用默认气泡背景，则根据内容文字大小自适应，最小160
         CGSize feelSize = [title sizeWithFont:[UIFont systemFontOfSize:titleSize] constrainedToSize:CGSizeMake(400,100)];
         bubbleLong = feelSize.width;
         if (bubbleLong > _mapView.bounds.size.width-64) {
@@ -3354,7 +3661,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     UIImage *imageBg = nil;
     if (bgImgPathStr.length > 0) {
         imageBg = [UIImage imageWithContentsOfFile:bgImgPathStr];
-    } else {
+    } else {//默认气泡背景
         //右边气泡
         NSString *leftBubble = [[NSBundle mainBundle]pathForResource:@"res_aMap/bubble_left" ofType:@"png"];
         UIImage *leftImage = [UIImage imageWithContentsOfFile:leftBubble];
@@ -3385,8 +3692,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (illusPath.length > 0) {
         CGRect rect;
         if ([illusPath hasPrefix:@"http"]) {
-            AMapAsyncImageView *asyImg = [[AMapAsyncImageView alloc]init];
-            [asyImg loadImage:illusPath];
+            UIImageView *asyImg = [[UIImageView alloc]init];
+            NSURL *urlpath = [NSURL URLWithString:illusPath];
+            [asyImg sd_setImageWithURL:urlpath];
             if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
                 rect = CGRectMake(bubbleLong-40, labelY, 30, 40);
                 labelX = 10;
@@ -3402,6 +3710,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             ACAMButton *tap = [ACAMButton buttonWithType:UIButtonTypeCustom];
             tap.frame = asyImg.bounds;
             tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
             [tap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
             tap.tag = BUBBLEVIEW_ILLUSASBTN;
             [asyImg addSubview:tap];
@@ -3424,6 +3733,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             ACAMButton *tap = [ACAMButton buttonWithType:UIButtonTypeCustom];
             tap.frame = illusImg.bounds;
             tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
             [tap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
             tap.tag = BUBBLEVIEW_ILLUSIMBTN;
             [illusImg addSubview:tap];
@@ -3433,6 +3743,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         CGRect tapRect = CGRectMake(labelX, 10, 140, 60);
         tapContent.frame = tapRect;
         tapContent.btnId = annotaion.annotId;
+        tapContent.bubbleCbid = annotaion.bubbleClickCbid;
         [tapContent addTarget:self action:@selector(selectBubble:) forControlEvents:UIControlEventTouchDown];
         tapContent.tag = BUBBLEVIEW_CONTENTCK;
         [popView addSubview:tapContent];
@@ -3443,6 +3754,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         ACAMButton *tap = [ACAMButton buttonWithType:UIButtonTypeCustom];
         tap.frame = popView.bounds;
         tap.btnId = annotaion.annotId;
+        tap.bubbleCbid = annotaion.bubbleClickCbid;
         [tap addTarget:self action:@selector(selectBubble:) forControlEvents:UIControlEventTouchDown];
         tap.tag = BUBBLEVIEW_CONTENTCK;
         [popView addSubview:tap];
@@ -3534,8 +3846,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (illusPath.length > 0) {
         CGRect rect;
         if ([illusPath hasPrefix:@"http"]) {
-            AMapAsyncImageView *asyImg = [popView viewWithTag:BUBBLEVIEW_ILLUSAS];
-            [asyImg loadImage:illusPath];
+            UIImageView *asyImg = [popView viewWithTag:BUBBLEVIEW_ILLUSAS];
+            NSURL *urlpath = [NSURL URLWithString:illusPath];
+            [asyImg sd_setImageWithURL:urlpath];
             if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
                 rect = CGRectMake(bubbleLong-40, labelY, 30, 40);
                 labelX = 10;
@@ -3548,6 +3861,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             ACAMButton *tap = [asyImg viewWithTag:BUBBLEVIEW_ILLUSASBTN];
             tap.frame = asyImg.bounds;
             tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
             [tap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
         } else {
             NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
@@ -3565,6 +3879,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             ACAMButton *tap = [illusImg viewWithTag:BUBBLEVIEW_ILLUSIMBTN];
             tap.frame = illusImg.bounds;
             tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
             [tap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
         }
         //添加气泡单击事件
@@ -3572,6 +3887,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         CGRect tapRect = CGRectMake(labelX, 10, 140, 60);
         tapContent.frame = tapRect;
         tapContent.btnId = annotaion.annotId;
+        tapContent.bubbleCbid = annotaion.bubbleClickCbid;
         [tapContent addTarget:self action:@selector(selectBubble:) forControlEvents:UIControlEventTouchDown];
     } else {
         labelX = 10;
@@ -3580,6 +3896,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         ACAMButton *tap = [popView viewWithTag:BUBBLEVIEW_CONTENTCK];
         tap.frame = popView.bounds;
         tap.btnId = annotaion.annotId;
+        tap.bubbleCbid = annotaion.bubbleClickCbid;
         [tap addTarget:self action:@selector(selectBubble:) forControlEvents:UIControlEventTouchDown];
     }
     //标题
@@ -3604,20 +3921,324 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
-- (void)setBubbleView:(ACGDAnnotaion *)annotation withView:(AnimatedAnnotationView *)annotationView {//自定义气泡
-    if (annotationView.bubbleView) {
-        [self refreshBubbleView:annotation withBubble:annotationView.bubbleView];
+- (void)refreshWebBubbleView:(NSDictionary *)paramsDict_ withBubbleView:(ACBubbleView *)reBubbleView {
+    NSString *bubbleWebUrl = [paramsDict_ stringValueForKey:@"url" defaultValue:@""];
+    NSString *bubbleWebData = [paramsDict_ stringValueForKey:@"data" defaultValue:@""];
+    NSDictionary *sizeDict = [paramsDict_ dictValueForKey:@"size" defaultValue:@{}];
+    float bubbleW = [sizeDict floatValueForKey:@"width" defaultValue:50];
+    float bubbleH = [sizeDict floatValueForKey:@"height" defaultValue:50];
+    //NSInteger setWebBubbleCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    NSString *bubbleBg = [paramsDict_ stringValueForKey:@"bg" defaultValue:nil];
+    reBubbleView.frame = CGRectMake(0, 0, bubbleW, bubbleH);
+    if ([UZAppUtils isValidColor:bubbleBg]) {
+        reBubbleView.backgroundColor = [UZAppUtils colorFromNSString:bubbleBg];
     } else {
-        ACBubbleView *bubble = [self allocBubbleView:annotation];
-        bubble.hidden = YES;
-        annotationView.bubbleView = bubble;
+        reBubbleView.backgroundColor = [UIColor clearColor];
     }
+    //添加背景图片，若不存在则无
+    NSString *realImgPath = [self getPathWithUZSchemeURL:bubbleBg];
+    UIImage *bubbleImage = [UIImage imageWithContentsOfFile:realImgPath];
+    if (bubbleImage) {
+        reBubbleView.bubblleBgImgView.image = bubbleImage;
+        reBubbleView.bubblleBgImgView.frame = reBubbleView.bounds;
+        reBubbleView.bubblleBgImgView.hidden = NO;
+    } else {
+        reBubbleView.bubblleBgImgView.hidden = YES;
+    }
+    UIWebView *webView = reBubbleView.webBubbleView;
+    webView.frame = reBubbleView.bounds;
+    NSURL *url = nil;
+    if ([bubbleWebUrl hasPrefix:@"http"]) {
+        url = [NSURL URLWithString:bubbleWebUrl];//创建URL
+    } else {
+        bubbleWebUrl = [self getPathWithUZSchemeURL:bubbleWebUrl];
+        url = [NSURL fileURLWithPath:bubbleWebUrl];//创建URL
+    }
+    if (bubbleWebData.length <=0 ) {
+        NSURLRequest *request = [NSURLRequest requestWithURL:url];//创建NSURLRequest
+        [webView loadRequest:request];//加载
+    }else {
+        [webView loadHTMLString:bubbleWebData baseURL:nil];
+    }
+    // 监听点击
+    //UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
+    //singleTap.delegate = self;
+    //singleTap.delaysTouchesBegan = YES;
+    //singleTap.numberOfTapsRequired = 1;
+    //[webView addGestureRecognizer:singleTap];
+}
+
+- (void)setBubbleView:(ACGDAnnotaion *)annotation withView:(AnimatedAnnotationView *)annotationView {//自定义气泡
+    ACBubbleView *popBubbleView = annotationView.bubbleView;
+    NSDictionary *paramsDict_ = annotation.webBubbleDict;
+    if (!popBubbleView) {//没有bubbleView则创建
+        popBubbleView = [[ACBubbleView alloc]init];
+    }
+    if (paramsDict_) {//网页气泡
+        popBubbleView.normalBgImgView.hidden = YES;//隐藏普通气泡上的背景
+        //网页气泡的背景图片
+        if (!popBubbleView.bubblleBgImgView) {
+            UIImageView *bubblleBgImgView = [[UIImageView alloc]init];
+            [popBubbleView addSubview:bubblleBgImgView];
+            popBubbleView.bubblleBgImgView = bubblleBgImgView;
+        } else {
+            popBubbleView.bubblleBgImgView.hidden = NO;
+        }
+        //气泡上的网页
+        if (!popBubbleView.webBubbleView) {
+            UIWebView *webView = [[UIWebView alloc]init];
+            webView.scalesPageToFit = NO;//自动对页面进行缩放以适应屏幕
+            webView.scrollView.bounces = NO;
+            [webView setBackgroundColor:[UIColor clearColor]];
+            [webView setOpaque:NO];
+            [popBubbleView addSubview:webView];//加载内容
+            popBubbleView.webBubbleView = webView;
+            
+            UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleSingleTap:)];
+            tapGesture.delegate = self;
+            tapGesture.cancelsTouchesInView = NO;
+            [webView addGestureRecognizer:tapGesture];
+        } else {
+            popBubbleView.webBubbleView.hidden = NO;
+        }
+        //刷新网页气泡内容
+        [self refreshWebBubbleView:paramsDict_ withBubbleView:popBubbleView];
+        popBubbleView.webBubbleView.tag = annotation.annotId;
+    } else {//普通气泡
+        popBubbleView.webBubbleView.hidden = YES;//隐藏气泡上的网页
+        popBubbleView.bubblleBgImgView.hidden = YES;//隐藏气泡上的背景
+        
+        //背景图片
+        NormalBubbleBgImgView *norBubbleView = popBubbleView.normalBgImgView;
+        if (!norBubbleView) {
+            NormalBubbleBgImgView *normalBubbleView = [[NormalBubbleBgImgView alloc]init];
+            popBubbleView.normalBgImgView = normalBubbleView;
+            [popBubbleView addSubview:normalBubbleView];
+            //打开背景图片试图的用户交互
+            normalBubbleView.userInteractionEnabled = YES;
+            //背景气泡拆分成左右两部分
+            UIImageView *leftImg = [[UIImageView alloc]init];
+            [normalBubbleView addSubview:leftImg];
+            normalBubbleView.leftBgImgView = leftImg;
+            UIImageView *rightImg = [[UIImageView alloc]init];
+            [normalBubbleView addSubview:rightImg];
+            normalBubbleView.rightBgImgView = rightImg;
+            //添加网络插图
+            UIImageView *asyImg = [[UIImageView alloc]init];
+            asyImg.userInteractionEnabled = YES;
+            [normalBubbleView addSubview:asyImg];
+            normalBubbleView.illusImgNetwork = asyImg;
+            //添加本地插图
+            UIImageView *locImg = [[UIImageView alloc]init];
+            locImg.userInteractionEnabled = YES;
+            [normalBubbleView addSubview:locImg];
+            normalBubbleView.illusImgLocal = locImg;
+            //添加网络插图单击事件
+            ACAMButton *tap = [ACAMButton buttonWithType:UIButtonTypeCustom];
+            [tap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
+            [asyImg addSubview:tap];
+            normalBubbleView.illusNetTap = tap;
+            //添加本地插图单击事件
+            ACAMButton *loctap = [ACAMButton buttonWithType:UIButtonTypeCustom];
+            [loctap addTarget:self action:@selector(selectBubbleIllus:) forControlEvents:UIControlEventTouchDown];
+            [locImg addSubview:loctap];
+            normalBubbleView.illusLocTap = loctap;
+            //添加标题
+            UILabel *titleLab = [[UILabel alloc]init];
+            titleLab.backgroundColor = [UIColor clearColor];
+            [normalBubbleView addSubview:titleLab];
+            normalBubbleView.titleLab = titleLab;
+            //添加子标题
+            UILabel *subtitleLab = [[UILabel alloc]init];
+            subtitleLab.backgroundColor = [UIColor clearColor];
+            [normalBubbleView addSubview:subtitleLab];
+            normalBubbleView.subtitleLab = subtitleLab;
+            //添加气泡单击事件
+            ACAMButton *bubtap = [ACAMButton buttonWithType:UIButtonTypeCustom];
+            [bubtap addTarget:self action:@selector(selectBubble:) forControlEvents:UIControlEventTouchDown];
+            tap.tag = BUBBLEVIEW_CONTENTCK;
+            [normalBubbleView addSubview:bubtap];
+            normalBubbleView.bubbleTap = bubtap;
+        } else {
+            popBubbleView.normalBgImgView.hidden = NO;//显示背景
+        }
+        //刷新气泡
+        [self refreshBubbleView:annotation withBubbleView:popBubbleView];
+//        if (annotationView.bubbleView) {//若已经存在气泡则刷新气泡
+//            [self refreshBubbleView:annotation withBubble:annotationView.bubbleView];
+//        } else {//若不存在气泡则创建气泡
+//            ACBubbleView *bubble = [self allocBubbleView:annotation];
+//            annotationView.bubbleView = bubble;
+//        }
+    }
+    annotationView.bubbleView = popBubbleView;
+    popBubbleView.hidden = YES;
     annotationView.canShowCallout = NO;
+}
+- (void)refreshBubbleView:(ACGDAnnotaion *)annotaion withBubbleView:(ACBubbleView *)popBubbleView {//创建气泡视图
+    NSDictionary *contentInfo = [NSDictionary dictionaryWithDictionary:annotaion.contentDict];
+    NSDictionary *stylesInfo = annotaion.stylesDict;
+    //样式参数读取
+    NSString *aligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
+    NSString *titleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:@"#000"];
+    NSString *subTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:@"#000"];
+    float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
+    float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
+    //内容参数读取
+    NSString *illusPath = [contentInfo stringValueForKey:@"illus" defaultValue:nil];
+    NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
+    NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:@""];
+    float bubbleLong = 160;
+    NSString *bgImgPathStr = annotaion.bubbleBgImg;
+    if (bgImgPathStr.length == 0) {//若使用默认气泡背景，则根据内容文字大小自适应，最小160
+        CGSize feelSize = [title sizeWithFont:[UIFont systemFontOfSize:titleSize] constrainedToSize:CGSizeMake(400,100)];
+        bubbleLong = feelSize.width;
+        if (bubbleLong > _mapView.bounds.size.width-64) {
+            bubbleLong = _mapView.bounds.size.width - 64;
+        }
+        if (bubbleLong < 160) {
+            bubbleLong = 160;
+        }
+    }
+    //背景图片
+    NormalBubbleBgImgView *norBubbleBgView = popBubbleView.normalBgImgView;
+    popBubbleView.frame = CGRectMake(0, 0, bubbleLong, 90);
+    norBubbleBgView.frame = CGRectMake(0, 0, bubbleLong, 90);
+    
+    UIImage *imageBg = nil;
+    if (bgImgPathStr.length > 0) {//自定义气泡背景
+        imageBg = [UIImage imageWithContentsOfFile:bgImgPathStr];
+        norBubbleBgView.image = imageBg;
+        //隐藏默认气泡背景
+        norBubbleBgView.leftBgImgView.hidden = YES;
+        norBubbleBgView.rightBgImgView.hidden = YES;
+    } else {//默认气泡背景
+        //显示默认气泡背景
+        norBubbleBgView.leftBgImgView.hidden = NO;
+        norBubbleBgView.rightBgImgView.hidden = NO;
+        //右边气泡
+        NSString *leftBubble = [[NSBundle mainBundle]pathForResource:@"res_aMap/bubble_left" ofType:@"png"];
+        UIImage *leftImage = [UIImage imageWithContentsOfFile:leftBubble];
+        UIEdgeInsets inset1 = UIEdgeInsetsMake(10, 10, 16, 16);
+        leftImage = [leftImage resizableImageWithCapInsets:inset1 resizingMode:UIImageResizingModeStretch];
+        UIImageView *leftImg = norBubbleBgView.leftBgImgView;
+        leftImg.frame = CGRectMake(0, 0, bubbleLong/2.0, 90);
+        leftImg.image = leftImage;
+        //右边气泡
+        NSString *rightBubble = [[NSBundle mainBundle]pathForResource:@"res_aMap/bubble_right" ofType:@"png"];
+        UIImage *rightImage = [UIImage imageWithContentsOfFile:rightBubble];
+        UIEdgeInsets inset2 = UIEdgeInsetsMake(10, 16, 16, 10);
+        rightImage = [rightImage resizableImageWithCapInsets:inset2 resizingMode:UIImageResizingModeStretch];
+        UIImageView *rightImg = norBubbleBgView.rightBgImgView;
+        rightImg.frame = CGRectMake(bubbleLong/2.0, 0, bubbleLong/2.0, 90);
+        rightImg.image = rightImage;
+    }
+    //位置参数
+    float labelW, labelH, labelX ,labelY;
+    labelY = 18;
+    labelH = 20;
+    labelW = bubbleLong - 55;
+    //插图
+    if (illusPath.length > 0) {
+        CGRect rect;
+        if ([illusPath hasPrefix:@"http"]) {//网络图片
+            norBubbleBgView.illusImgNetwork.hidden = NO;//显示网络插图视图
+            norBubbleBgView.illusImgLocal.hidden = YES;//隐藏本地插图视图
+            UIImageView *asyImg = norBubbleBgView.illusImgNetwork;
+            NSURL *urlpath = [NSURL URLWithString:illusPath];
+            [asyImg sd_setImageWithURL:urlpath];
+            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
+                rect = CGRectMake(bubbleLong-40, labelY, 30, 40);
+                labelX = 10;
+            } else {
+                rect = CGRectMake(10, labelY, 30, 40);
+                labelX = 45;
+            }
+            asyImg.frame = rect;
+            //添加插图单击事件
+            ACAMButton *tap = norBubbleBgView.illusNetTap;
+            tap.frame = asyImg.bounds;
+            tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
+        } else {//本地插图图片
+            norBubbleBgView.illusImgNetwork.hidden = YES;//隐藏网络插图视图
+            norBubbleBgView.illusImgLocal.hidden = NO;//显示本地插图视图
+            NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
+            UIImageView *illusImg = norBubbleBgView.illusImgLocal;
+            illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
+            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
+                rect = CGRectMake(bubbleLong-40, labelY, 30, 40);
+                labelX = 10;
+            } else {
+                rect = CGRectMake(10, labelY, 30, 40);
+                labelX = 45;
+            }
+            illusImg.frame = rect;
+            //添加插图单击事件
+            ACAMButton *tap = norBubbleBgView.illusLocTap;
+            tap.frame = illusImg.bounds;
+            tap.btnId = annotaion.annotId;
+            tap.bubbleCbid = annotaion.bubbleClickCbid;
+        }
+        //添加气泡单击事件
+        ACAMButton *tapContent = norBubbleBgView.bubbleTap;
+        CGRect tapRect = CGRectMake(labelX, 10, 140, 60);
+        tapContent.frame = tapRect;
+        tapContent.btnId = annotaion.annotId;
+        tapContent.bubbleCbid = annotaion.bubbleClickCbid;
+    } else {
+        labelX = 10;
+        labelW = bubbleLong - 20;
+        //添加气泡单击事件
+        ACAMButton *tap = norBubbleBgView.bubbleTap;
+        tap.frame = norBubbleBgView.bounds;
+        tap.btnId = annotaion.annotId;
+        tap.bubbleCbid = annotaion.bubbleClickCbid;
+    }
+    if (subTitle.length == 0) {
+        labelY = 28;
+    } else {
+        labelY = 18;
+    }
+    //标题
+    UILabel *titleLab = norBubbleBgView.titleLab;
+    titleLab.frame = CGRectMake(labelX, labelY, labelW, labelH);
+    titleLab.text = title;
+    titleLab.backgroundColor = [UIColor clearColor];
+    titleLab.font = [UIFont systemFontOfSize:titleSize];
+    titleLab.textColor = [UZAppUtils colorFromNSString:titleColor];
+    //子标题
+    UILabel *subTitleLab = norBubbleBgView.subtitleLab;
+    subTitleLab.frame = CGRectMake(labelX, labelY+labelH+5, labelW, labelH);
+    subTitleLab.text = subTitle;
+    subTitleLab.backgroundColor = [UIColor clearColor];
+    subTitleLab.font = [UIFont systemFontOfSize:subtitleSize];
+    subTitleLab.textColor = [UZAppUtils colorFromNSString:subTitleColor];
+    //标题子标题位置配置
+    if (illusPath.length == 0) {
+        titleLab.textAlignment = NSTextAlignmentCenter;
+        subTitleLab.textAlignment = NSTextAlignmentCenter;
+    } else {
+        titleLab.textAlignment = NSTextAlignmentLeft;
+        subTitleLab.textAlignment = NSTextAlignmentLeft;
+    }
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(nonnull UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
+}
+
+- (void)handleSingleTap:(UITapGestureRecognizer *)sender {
+    if (sender.numberOfTapsRequired==1 && webBubbleCbid>=0) {//关闭输入框
+        NSInteger annoid = sender.view.tag;
+        [self sendResultEventWithCallbackId:webBubbleCbid dataDict:@{@"id":@(annoid)} errDict:nil doDelete:NO];
+    }
 }
 
 - (void)selectBubble:(UIButton *)btn {//点击气泡上的内容图事件
+    ACAMButton *targetBtn = (ACAMButton *)btn;
+    NSInteger setBubbleCbid = targetBtn.bubbleCbid;
     if (setBubbleCbid >= 0) {
-        ACAMButton *targetBtn = (ACAMButton *)btn;
         NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:1];
         [sendDict setObject:[NSNumber numberWithInteger:targetBtn.btnId] forKey:@"id"];
         [sendDict setObject:@"clickContent" forKey:@"eventType"];
@@ -3626,8 +4247,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)selectBubbleIllus:(UIButton *)btn {//点击气泡上的插图事件
+    ACAMButton *targetBtn = (ACAMButton *)btn;
+    NSInteger setBubbleCbid = targetBtn.bubbleCbid;
     if (setBubbleCbid >= 0) {
-        ACAMButton *targetBtn = (ACAMButton *)btn;
         NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:1];
         [sendDict setObject:[NSNumber numberWithInteger:targetBtn.btnId] forKey:@"id"];
         [sendDict setObject:@"clickIllus" forKey:@"eventType"];
@@ -3637,8 +4259,13 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 
 
 - (void)addBillboardView:(ACGDAnnotaion *)annotation withAnnotationView:(AnimatedAnnotationView *)annotationView {
+    //样式参数获取
+    NSDictionary *stylesInfo = annotation.stylesDict;
+    NSDictionary *billboardSize = [stylesInfo dictValueForKey:@"size" defaultValue:@{}];
+    float billWidth = [billboardSize floatValueForKey:@"width" defaultValue:160];
+    float billHeight = [billboardSize floatValueForKey:@"height" defaultValue:75];
     //背景图片（160*75）
-    UIView *mainBoard = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 160, 75)];
+    UIView *mainBoard = [[UIView alloc]initWithFrame:CGRectMake(0, 0, billWidth, billHeight)];
     mainBoard.backgroundColor = [UIColor clearColor];
     NSString *billImgPath = annotation.billBgImg;
     if (billImgPath.length > 0) {
@@ -3654,80 +4281,100 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //内容
     NSDictionary *contentInfo = [NSDictionary dictionaryWithDictionary:annotation.contentDict];
     NSString *illusPath = [contentInfo stringValueForKey:@"illus" defaultValue:nil];
-    //样式参数获取
-    NSDictionary *stylesInfo = annotation.stylesDict;
-    NSString *aligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
+    
+    NSString *illusaligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
     NSString *titleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:@"#000"];
     NSString *subTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:@"#000"];
     float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
     float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
+    float titleMarginT = [stylesInfo floatValueForKey:@"marginT" defaultValue:10];
+    float subtitleMarginB = [stylesInfo floatValueForKey:@"marginB" defaultValue:15];
+    NSString *alignment = [stylesInfo stringValueForKey:@"alignment" defaultValue:@"left"];
+    NSTextAlignment lableAlignment = NSTextAlignmentRight;
+    if ([alignment isEqualToString:@"left"]) {
+        lableAlignment = NSTextAlignmentLeft;
+    } else if ([alignment isEqualToString:@"center"]){
+        lableAlignment = NSTextAlignmentCenter;
+    }
     //位置参数
-    float labelW, labelH, labelX ,labelY;
-    labelY = 10;
-    labelH = 20;
-    labelW = 100;
-    //插图
+    float labelW, labelX, titleLableH ,titleLabelY, subtitleLabelY, subtitleLableH;
+    //无插图时标题的布局
+    labelX = 10;
+    labelW = billWidth - 20;
+    titleLabelY = titleMarginT;
+    titleLableH = titleSize + 2;
+    subtitleLableH = subtitleSize + 2;
+    subtitleLabelY = billHeight - subtitleMarginB - subtitleLableH;
+    //有插图时标题和插图的布局
     if (illusPath.length > 0) {
         CGRect rect;
-        if ([illusPath hasPrefix:@"http"]) {
-            AMapAsyncImageView *asyImg = [[AMapAsyncImageView alloc]init];
-            asyImg.tag = BILLBOARD_ILLUS;
-            [asyImg loadImage:illusPath];
-            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
+        NSDictionary *illusRectDict = [stylesInfo dictValueForKey:@"illusRect" defaultValue:nil];
+        BOOL hasIllusRec = NO;
+        if (illusRectDict) {
+            hasIllusRec = YES;
+        } else {
+            illusRectDict = @{};
+        }
+        float illusX = [illusRectDict floatValueForKey:@"x" defaultValue:10];
+        float illusY = [illusRectDict floatValueForKey:@"y" defaultValue:5];
+        float illusW = [illusRectDict floatValueForKey:@"w" defaultValue:35];
+        float illusH = [illusRectDict floatValueForKey:@"h" defaultValue:50];
+        rect = CGRectMake(illusX, illusY, illusW, illusH);
+        labelW = billWidth - 20 - (illusW+5);
+        if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
+            labelX = 10;
+            if (!hasIllusRec) {
                 rect = CGRectMake(115, 5, 35, 50);
-                labelX = 10;
-            } else {
-                rect = CGRectMake(10, 5, 35, 50);
-                labelX = 50;
             }
+        } else {//左插图
+            labelX = illusX + illusW + 5;//插图和文字间距5.0
+        }
+        if ([illusPath hasPrefix:@"http"]) {//网络图片
+            UIImageView *asyImg = [[UIImageView alloc]init];
+            NSURL *urlpath = [NSURL URLWithString:illusPath];
+            [asyImg sd_setImageWithURL:urlpath];
+            asyImg.tag = BILLBOARD_ILLUS;
             asyImg.frame = rect;
             [mainBoard addSubview:asyImg];
-        } else {
+        } else {//本地图片
             NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
             UIImageView *illusImg = [[UIImageView alloc]init];
             illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
             illusImg.tag = BILLBOARD_ILLUS;
-            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
-                rect = CGRectMake(115, 5, 35, 50);
-                labelX = 10;
-            } else {
-                rect = CGRectMake(10, 5, 35, 50);
-                labelX = 50;
-            }
             illusImg.frame = rect;
             [mainBoard addSubview:illusImg];
         }
-    } else {
-        labelX = 10;
-        labelW = 140;
     }
     //标题
     NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
-    UILabel *titleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, labelY, labelW, labelH)];
+    UILabel *titleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, titleLabelY, labelW, titleLableH)];
     titleLab.text = title;
     titleLab.tag = BILLBOARD_TITLE;
     titleLab.backgroundColor = [UIColor clearColor];
     titleLab.font = [UIFont systemFontOfSize:titleSize];
     titleLab.textColor = [UZAppUtils colorFromNSString:titleColor];
+    titleLab.textAlignment = lableAlignment;
     [mainBoard addSubview:titleLab];
     //子标题
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:nil];
-    UILabel *subTitleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, labelY+labelH, labelW, labelH)];
+    UILabel *subTitleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, subtitleLabelY, labelW, subtitleLableH)];
     subTitleLab.text = subTitle;
     subTitleLab.tag = BILLBOARD_SUBTITLE;
     subTitleLab.backgroundColor = [UIColor clearColor];
     subTitleLab.font = [UIFont systemFontOfSize:subtitleSize];
     subTitleLab.textColor = [UZAppUtils colorFromNSString:subTitleColor];
+    subTitleLab.textAlignment = lableAlignment;
     [mainBoard addSubview:subTitleLab];
     if (illusPath.length == 0) {
-        titleLab.textAlignment = NSTextAlignmentCenter;
-        subTitleLab.textAlignment = NSTextAlignmentCenter;
+        //titleLab.textAlignment = NSTextAlignmentCenter;
+        //subTitleLab.textAlignment = NSTextAlignmentCenter;
     }
     //添加插图单击事件
     ACAMButton *tap = [ACAMButton buttonWithType:UIButtonTypeCustom];
     tap.frame = mainBoard.bounds;
     tap.btnId = annotation.annotId;
     tap.tag = BILLBOARD_BUTTON;
+    tap.billboardCbid = annotation.addBillboardCbid;
     [tap addTarget:self action:@selector(selectBillboard:) forControlEvents:UIControlEventTouchDown];
     [mainBoard addSubview:tap];
 }
@@ -3747,69 +4394,91 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //内容
     NSDictionary *contentInfo = [NSDictionary dictionaryWithDictionary:annotation.contentDict];
     NSString *illusPath = [contentInfo stringValueForKey:@"illus" defaultValue:nil];
-    //样式参数获取
+    
+    float billWidth = mainBoard.bounds.size.width;
+    float billHeight = mainBoard.bounds.size.height;
     NSDictionary *stylesInfo = annotation.stylesDict;
-    NSString *aligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
+    NSString *illusaligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
     NSString *titleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:@"#000"];
     NSString *subTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:@"#000"];
     float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
     float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
+    float titleMarginT = [stylesInfo floatValueForKey:@"marginT" defaultValue:10];
+    float subtitleMarginB = [stylesInfo floatValueForKey:@"marginB" defaultValue:15];
+    NSString *alignment = [stylesInfo stringValueForKey:@"alignment" defaultValue:@"left"];
+    NSTextAlignment lableAlignment = NSTextAlignmentRight;
+    if ([alignment isEqualToString:@"left"]) {
+        lableAlignment = NSTextAlignmentLeft;
+    } else if ([alignment isEqualToString:@"center"]){
+        lableAlignment = NSTextAlignmentCenter;
+    }
     //位置参数
-    float labelW, labelH, labelX ,labelY;
-    labelY = 10;
-    labelH = 20;
-    labelW = 100;
-    //插图
+    float labelW, labelX, titleLableH ,titleLabelY, subtitleLabelY, subtitleLableH;
+    //无插图时标题的布局
+    labelX = 10;
+    labelW = billWidth - 20;
+    titleLabelY = titleMarginT;
+    titleLableH = titleSize + 2;
+    subtitleLableH = subtitleSize + 2;
+    subtitleLabelY = billHeight - subtitleMarginB - subtitleLableH;
+    //有插图时标题和插图的布局
     if (illusPath.length > 0) {
         CGRect rect;
-        if ([illusPath hasPrefix:@"http"]) {
-            AMapAsyncImageView *asyImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
-            [asyImg loadImage:illusPath];
-            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
-                rect = CGRectMake(115, 5, 35, 50);
-                labelX = 10;
-            } else {
-                rect = CGRectMake(10, 5, 35, 50);
-                labelX = 50;
-            }
-            asyImg.frame = rect;
+        NSDictionary *illusRectDict = [stylesInfo dictValueForKey:@"illusRect" defaultValue:nil];
+        BOOL hasIllusRec = NO;
+        if (illusRectDict) {
+            hasIllusRec = YES;
         } else {
+            illusRectDict = @{};
+        }
+        float illusX = [illusRectDict floatValueForKey:@"x" defaultValue:10];
+        float illusY = [illusRectDict floatValueForKey:@"y" defaultValue:5];
+        float illusW = [illusRectDict floatValueForKey:@"w" defaultValue:35];
+        float illusH = [illusRectDict floatValueForKey:@"h" defaultValue:50];
+        rect = CGRectMake(illusX, illusY, illusW, illusH);
+        labelW = billWidth - 20 - (illusW+5);
+        if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
+            labelX = 10;
+            if (!hasIllusRec) {
+                rect = CGRectMake(115, 5, 35, 50);
+            }
+        } else {//左插图
+            labelX = illusX + illusW + 5;//插图和文字间距5.0
+        }
+        if ([illusPath hasPrefix:@"http"]) {//网络图片
+            UIImageView *asyImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
+            NSURL *urlpath = [NSURL URLWithString:illusPath];
+            [asyImg sd_setImageWithURL:urlpath];
+            asyImg.frame = rect;
+        } else {//本地图片
             NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
             UIImageView *illusImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
             illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
-            if (aligment.length>0 && [aligment isEqualToString:@"right"]) {
-                rect = CGRectMake(115, 5, 35, 50);
-                labelX = 10;
-            } else {
-                rect = CGRectMake(10, 5, 35, 50);
-                labelX = 50;
-            }
             illusImg.frame = rect;
         }
-    } else {
-        labelX = 10;
-        labelW = 140;
     }
+
     //标题
     NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
     UILabel *titleLab = [mainBoard viewWithTag:BILLBOARD_TITLE];
-    titleLab.frame = CGRectMake(labelX, labelY, labelW, labelH);
+    titleLab.frame = CGRectMake(labelX, titleLabelY, labelW, titleLableH);
     titleLab.text = title;
     titleLab.backgroundColor = [UIColor clearColor];
     titleLab.font = [UIFont systemFontOfSize:titleSize];
+    titleLab.textAlignment = lableAlignment;
     titleLab.textColor = [UZAppUtils colorFromNSString:titleColor];
     //子标题
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:nil];
     UILabel *subTitleLab = [mainBoard viewWithTag:BILLBOARD_SUBTITLE];
-    subTitleLab.frame = CGRectMake(labelX, labelY+labelH, labelW, labelH);
+    subTitleLab.frame = CGRectMake(labelX, subtitleLabelY, labelW, subtitleLableH);
     subTitleLab.text = subTitle;
     subTitleLab.backgroundColor = [UIColor clearColor];
     subTitleLab.font = [UIFont systemFontOfSize:subtitleSize];
     subTitleLab.textColor = [UZAppUtils colorFromNSString:subTitleColor];
-    [mainBoard addSubview:subTitleLab];
+    subTitleLab.textAlignment = lableAlignment;
     if (illusPath.length == 0) {
-        titleLab.textAlignment = NSTextAlignmentCenter;
-        subTitleLab.textAlignment = NSTextAlignmentCenter;
+        //titleLab.textAlignment = NSTextAlignmentCenter;
+        //subTitleLab.textAlignment = NSTextAlignmentCenter;
     }
     //添加插图单击事件
     ACAMButton *tap = [mainBoard viewWithTag:BILLBOARD_BUTTON];
@@ -3818,8 +4487,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)selectBillboard:(ACAMButton *)btn {
+    ACAMButton *targetBtn = (ACAMButton *)btn;
+    NSInteger addBillboardCbid = targetBtn.billboardCbid;
     if (addBillboardCbid >= 0) {
-        ACAMButton *targetBtn = (ACAMButton *)btn;
         NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:1];
         [sendDict setObject:[NSNumber numberWithInteger:targetBtn.btnId] forKey:@"id"];
         [sendDict setObject:@"click" forKey:@"eventType"];
@@ -3828,7 +4498,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)doStep {
-    if (_allMovingAnno.count == 0) {
+    if (_allMovingAnno.count == 0) {//如果需要移动的标注为0，则停止计时器
         [timerAnnoMove invalidate];
         self.timerAnnoMove = nil;
         return;
@@ -3838,6 +4508,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         ACGDAnnotaion *anno = [self.allMovingAnno objectForKey:annoKey];
         [anno moveStep];
     }
+}
+
+- (UIImage*)OriginImage:(UIImage*)image scaleToSize:(CGSize)size {
+    UIGraphicsBeginImageContext(size);//size为CGSize类型，即你所需要的图片尺寸
+    [image drawInRect:CGRectMake(0,0, size.width, size.height)];
+    UIImage *scaledImage =UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return scaledImage;
 }
 
 - (UIImage *)scaleImage:(UIImage *)img {//缩放图片
@@ -3988,7 +4666,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         if ([strategy isKindOfClass:[NSString class]] && strategy.length>0) {
             [pathInfo setObject:strategy forKey:@"strategy"];
         }
-        NSLog(@"******************:%zi",path.steps.count);
+        //NSLog(@"******************:%zi",path.steps.count);
         if (path.steps.count > 0) {
             NSMutableArray *stepsAry = [NSMutableArray array];
             for (AMapStep *step in path.steps) {
@@ -4050,6 +4728,156 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         [pathAry addObject:pathInfo];
     }
     return pathAry;
+}
+#pragma mark -搜索区域
+
+- (NSMutableDictionary *)getDistrictDict:(AMapDistrictSearchResponse *)response {
+    NSMutableDictionary *returnDict = [NSMutableDictionary dictionary];
+    [returnDict setObject:@(response.count) forKey:@"count"];
+    NSMutableArray *allDistrict = [self getDistrictAry:response.districts];
+    
+    [returnDict setObject:allDistrict forKey:@"districts"];
+    return returnDict;
+}
+
+- (NSMutableArray *)getDistrictAry:(NSArray *)districts {
+    NSMutableArray *returnAry = [NSMutableArray array];
+    for (AMapDistrict *district in districts) {
+        NSMutableDictionary *disDict = [self getDistrictInfo:district];
+        [returnAry addObject:disDict];
+    }
+    return returnAry;
+}
+- (NSMutableDictionary *)getDistrictInfo:(AMapDistrict *)district {
+    NSMutableDictionary *districtDict = [NSMutableDictionary dictionary];
+    
+    ///区域编码
+    NSString     *adcode = district.adcode;
+    if (![adcode isKindOfClass:[NSString class]] || adcode.length==0) {
+        adcode = @"";
+    }
+    [districtDict setObject:adcode forKey:@"adcode"];
+    ///城市编码
+    NSString     *citycode = district.citycode;
+    if (![citycode isKindOfClass:[NSString class]] || citycode.length==0) {
+        citycode = @"";
+    }
+    [districtDict setObject:citycode forKey:@"citycode"];
+    ///行政区名称
+    NSString     *name = district.name;
+    if (![name isKindOfClass:[NSString class]] || name.length==0) {
+        name = @"";
+    }
+    [districtDict setObject:name forKey:@"name"];
+    ///级别
+    NSString     *level = district.level;
+    if (![level isKindOfClass:[NSString class]] || level.length==0) {
+        level = @"";
+    }
+    [districtDict setObject:level forKey:@"level"];
+    ///城市中心点
+    AMapGeoPoint *center = district.center;
+    NSDictionary *centerDict = @{};
+    if (center) {
+        centerDict = @{@"latitude":@(center.latitude),@"longitude":@(center.longitude)};
+    }
+    [districtDict setObject:centerDict forKey:@"center"];
+    NSArray *polylines = district.polylines;
+    if (![polylines isKindOfClass:[NSArray class]] || polylines.count<=0) {
+        polylines = @[];
+    }
+    [districtDict setObject:polylines forKey:@"polylines"];
+    
+    ///下级行政区域数组
+    NSArray<AMapDistrict *> *districts = district.districts;
+    if ([districts isKindOfClass:[NSArray class]] && districts.count>0) {
+        NSMutableArray *allDistrict = [self getDistrictAry:districts];
+        [districtDict setObject:allDistrict forKey:@"districts"];
+    } else {
+        [districtDict setObject:@[] forKey:@"districts"];
+    }
+    return districtDict;
+}
+
+- (void)handleDistrictResponse:(AMapDistrictSearchResponse *)response {
+    if (response == nil) {
+        return;
+    }
+    if (!self.allOverlays) {
+        self.allOverlays = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    NSArray *allPolyline = [self.allOverlays objectForKey:@"districtLineKey"];
+    if ([allPolyline isKindOfClass:[NSArray class]] && allPolyline.count>0) {
+        for (MAPolyline *pline in allPolyline) {
+            if (pline) {
+                [self.mapView removeOverlay:pline];
+            }
+        }
+    }
+    for (AMapDistrict *dist in response.districts) {
+        //在子区域中点添加标注
+        //MAPointAnnotation *poiAnnotation = [[MAPointAnnotation alloc] init];
+        //poiAnnotation.coordinate = CLLocationCoordinate2DMake(dist.center.latitude, dist.center.longitude);
+        //poiAnnotation.title      = dist.name;
+        //poiAnnotation.subtitle   = dist.adcode;
+        //[self.mapView addAnnotation:poiAnnotation];
+        
+        if (dist.polylines.count > 0) {
+            MAMapRect bounds = MAMapRectZero;
+            NSMutableArray *plineAry = [NSMutableArray array];
+            for (NSString *polylineStr in dist.polylines) {
+                ACDistrictLine *polyline = [self polylineForCoordinateString:polylineStr];
+                [self.mapView addOverlay:polyline];
+                [plineAry addObject:polyline];
+                bounds = MAMapRectUnion(bounds, polyline.boundingMapRect);
+            }
+            [self.allOverlays setObject:plineAry forKey:@"districtLineKey"];
+            
+            /*
+             //如果要显示带填充色的polygon，打开此开关
+             for (NSString *polylineStr in dist.polylines)
+             {
+             NSUInteger tempCount = 0;
+             CLLocationCoordinate2D *coordinates = [CommonUtility coordinatesForString:polylineStr
+             coordinateCount:&tempCount
+             parseToken:@";"];
+             
+             
+             MAPolygon *polygon = [MAPolygon polygonWithCoordinates:coordinates count:tempCount];
+             free(coordinates);
+             [self.mapView addOverlay:polygon];
+             }*/
+            
+            [self.mapView setVisibleMapRect:bounds animated:YES];
+        }
+        
+        /*
+         // 子区域
+         for (AMapDistrict *subdist in dist.districts) {
+         MAPointAnnotation *subAnnotation = [[MAPointAnnotation alloc] init];
+         subAnnotation.coordinate = CLLocationCoordinate2DMake(subdist.center.latitude, subdist.center.longitude);
+         subAnnotation.title      = subdist.name;
+         subAnnotation.subtitle   = subdist.adcode;
+         [self.mapView addAnnotation:subAnnotation];
+         }
+         */
+    }
+    
+}
+- (ACDistrictLine *)polylineForCoordinateString:(NSString *)coordinateString {
+    if (coordinateString.length == 0) {
+        return nil;
+    }
+    NSUInteger count = 0;
+    CLLocationCoordinate2D *coordinates = [self coordinatesForString:coordinateString
+                                                     coordinateCount:&count
+                                                          parseToken:@";"];
+    
+    ACDistrictLine *polyline = [ACDistrictLine polylineWithCoordinates:coordinates count:count];
+    
+    free(coordinates), coordinates = NULL;
+    
+    return polyline;
 }
 
 @end

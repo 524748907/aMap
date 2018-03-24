@@ -11,7 +11,7 @@ import com.amap.api.maps.model.Marker;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class MoveOverlay {
-	private int id;
+	private String id;
 	private Marker maker;
 	private double duration;
 	private LatLng startPoint;
@@ -21,7 +21,7 @@ public class MoveOverlay {
 	private double currRotateTime;
 	private UZModuleContext moduleContext;
 
-	public MoveOverlay(UZModuleContext moduleContext, int id, Marker maker,
+	public MoveOverlay(UZModuleContext moduleContext, String id, Marker maker,
 			double duration, LatLng endPoint) {
 		this.moduleContext = moduleContext;
 		this.id = id;
@@ -39,11 +39,11 @@ public class MoveOverlay {
 		this.moduleContext = moduleContext;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

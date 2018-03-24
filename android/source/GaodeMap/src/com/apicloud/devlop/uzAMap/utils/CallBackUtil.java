@@ -183,7 +183,7 @@ public class CallBackUtil {
 		}
 	}
 
-	public static void markerClickCallBack(UZModuleContext moduleContext, int id) {
+	public static void markerClickCallBack(UZModuleContext moduleContext, String id) {
 		JSONObject ret = new JSONObject();
 		try {
 			ret.put("id", id);
@@ -195,7 +195,7 @@ public class CallBackUtil {
 	}
 
 	public static void infoWindowClickCallBack(UZModuleContext moduleContext,
-			int id, String clickType) {
+			String id, String clickType) {
 		JSONObject ret = new JSONObject();
 		try {
 			ret.put("id", id);
@@ -207,12 +207,12 @@ public class CallBackUtil {
 	}
 
 	public static void markerDragCallBack(UZModuleContext moduleContext,
-			int id, String dragState) {
+			String id, String dragState) {
 		JSONObject ret = new JSONObject();
 		try {
 			ret.put("id", id);
 			ret.put("eventType", "drag");
-			ret.put("dragState", "dragState");
+			ret.put("dragState", dragState);
 			moduleContext.success(ret, false);
 		} catch (JSONException e) {
 			e.printStackTrace();

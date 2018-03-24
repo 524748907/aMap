@@ -9,8 +9,6 @@
     <content src="index.html" />
     <access origin="*" />
     <preference name="bounces" value="true" />
-    <preference name="customRefreshHeader" value="UIPullRefresh" />
-    <feature name="googleAnalytics">
-        <param name="trackingID" value="UA-74846358-1" />
-    </feature> 
+    <preference name="debug" value="true" />
+    <preference name="customRefreshHeader" value="UIPullRefresh" /> 
 </widget>

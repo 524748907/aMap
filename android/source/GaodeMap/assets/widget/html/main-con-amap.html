@@ -24,20 +24,33 @@
     	map.open({
 		    rect: {
 		        x: 0,
-		        y:200,
-		        w:300,
-		        h: 200
+		        y:0,
+		        w:api.frameWidth,
+		        h:api.frameHeight
 		    },
 		    showUserLocation: true,
-    		zoomLevel: 11,
+    			zoomLevel: 11,
 		    center: {
 		       lon: 116.4021310000,
 		       lat: 39.9994480000
 		    },
 		}, function(ret){
-			if(ret.status){
-		        alert('地图打开成功');
-			}
+			
+		});
+    }
+    
+    function takeSnapshotInRect(){
+    		var map = api.require('aMap');
+    		map.takeSnapshotInRect({
+		    rect: {
+		        x: 0,
+		        y: 0,
+		        w: 320,
+		        h: 300
+		    },
+		    path: 'fs://aMap/123.png'
+		}, function(ret) {
+		        alert(JSON.stringify(ret));
 		});
     }
     
@@ -52,7 +65,295 @@
 		    }
 		});
     }
+    function districtSearch(){
+		var aMap = api.require('aMap');
+			aMap.districtSearch({
+			    keyword: '北京',
+				showInMap:{}
+			}, function(ret) {
+			    if (ret.status) {
+			        alert(JSON.stringify(ret));
+			    }
+			});
+    }
+    function districtSearch2(){
+    	var map = api.require('aMap');
+		map.districtSearch({
+		    keyword: '北京',
+			showInMap:{}
+		}, function(ret){
+			alert(JSON.stringify(ret));
+		});
+    }
+	
+	// =========================================
+    function JSaddBillboard2(){
+	var aMap = api.require('aMap');
+		aMap.addBillboard({
+			id: 123456789,
+			draggable: true,
+			coords: {
+				   lon: 116.4021310000,
+				   lat: 39.9994480000
+				},
+			//bgImg: 'widget://image/aMapTest.png',
+			bgImg : 'widget://image/paopao.png',
+			content: {
+				title: '大标题大标题大标题大标题',
+				subTitle: '概述内容概述内容概述内容',
+				//illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},    
+			styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 200,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 150                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 150,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 150,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 50                         //（可选项）数字类型；插图的高；默认：50
+					},
+				titleColor: '#000',
+				titleSize: 16,
+				subTitleColor: '#999',
+				subTitleSize: 12,
+				illusAlign: 'right'
+				}
+			},
+			function(ret){
+				if(ret){
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
     
+    
+    function JSaddBillboard(){
+    	var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id: 320011,
+				draggable: true,
+				coords: {
+				   lon: 116.4021300000,
+				   lat: 39.9994480000
+				},
+				bgImg : 'widget://image/paopao-3.png',
+				content: {
+					title: '12345667',
+					//subTitle: '概述',
+					//illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 0                         //（可选项）数字类型；插图的高；默认：50
+					},
+					//marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+					//marginB: 20,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：10
+					alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function JSaddBillboard3(){
+    	var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id: 12345678911,
+				draggable: true,
+				coords: {
+				   lon: 126.4021310000,
+				   lat: 49.9994480000
+				},
+				bgImg : 'widget://image/paopao-3.png',
+				content: {
+					title: '12345667',
+					//subTitle: '概述',
+					//illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 0                         //（可选项）数字类型；插图的高；默认：50
+					},
+					//marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+					//marginB: 20,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：10
+					alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function JSaddBillboard4(){
+    	var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id: 12345678912,
+				draggable: true,
+				coords: {
+				   lon: 136.4021310000,
+				   lat: 59.9994480000
+				},
+				bgImg : 'widget://image/paopao-3.png',
+				content: {
+					title: '12345667',
+					//subTitle: '概述',
+					//illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 0                         //（可选项）数字类型；插图的高；默认：50
+					},
+					//marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+					//marginB: 20,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：10
+					alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function JSaddBillboard5(){
+    	var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id: 12345678913,
+				draggable: true,
+				coords: {
+				   lon: 146.4021310000,
+				   lat: 69.9994480000
+				},
+				bgImg : 'widget://image/paopao-3.png',
+				content: {
+					title: '12345667',
+					//subTitle: '概述',
+					//illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 0                         //（可选项）数字类型；插图的高；默认：50
+					},
+					//marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+					//marginB: 20,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：10
+					alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function addBillboard(){
+    	var aMap = api.require('aMap');
+		aMap.addBillboard({
+				id : 4,
+				draggable : true,
+				coords : {
+				   lon: 116.4021310000,
+				   lat: 39.9994480000
+				},
+				bgImg : 'widget://image/abg.jpg',
+				content : {
+					title : '大标题大标题大标题大标题',
+					subTitle : '概述内容概述内容概述内容',
+					illus : 'widget://image/aiil.jpg'
+				},
+				styles : {
+					titleColor : '#000',
+					titleSize : 12,
+					subTitleColor : '#999',
+					subTitleSize : 12,
+					illusAlign : 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+    
+    function removeAnno(){
+    	var map = api.require('aMap');
+		map.removeAnnotations({
+		    ids: [1,2,3,320011]
+		});
+    }
+    
+    function addAnno(){
+    	var map = api.require('aMap');
+		map.addAnnotations({
+		    annotations: [{
+		        id: 1, lon: 116.297, lat: 40.109,
+		        icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png']
+		    },
+		    {
+		        id: 2, lon: 116.29, lat: 40.109
+		    },
+		    {
+		        id: 3, lon: 116.298, lat: 40.11
+		    }],
+		    icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png'],
+		    draggable:true
+		}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
+    }
+    
+    // =========================================
      function showUserTrue(){
     	var map = api.require('aMap');
 		map.showUserLocation({
@@ -166,7 +467,7 @@
     function setZoomLevel(){
     	var map = api.require('aMap');
 		map.setZoomLevel({
-		    level: 11
+		    level: document.getElementById("level").value
 		});
     }
     
@@ -210,25 +511,7 @@
 		});
     }
     
-     function addAnno(){
-    	var map = api.require('aMap');
-		map.addAnnotations({
-		    annotations: [{
-		        id: 1, lon: 116.297, lat: 40.109,
-		        icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png']
-		    },
-		    {
-		        id: 2, lon: 116.29, lat: 40.109
-		    },
-		    {
-		        id: 3, lon: 116.298, lat: 40.11
-		    }],
-		    //icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png'],
-		    draggable:true
-		}, function(ret){
-		    alert(JSON.stringify(ret));
-		});
-    }
+     
     
     function addMoveAnno(){
     	var map = api.require('aMap');
@@ -304,6 +587,8 @@
 		    alert(JSON.stringify(ret));
 		});
     }
+	
+
     
     function popupBubble(){
     	var map = api.require('aMap');
@@ -315,34 +600,7 @@
     }
     
     
-    function addBillboard(){
-    	var aMap = api.require('aMap');
-		aMap.addBillboard({
-				id : 4,
-				draggable : true,
-				coords : {
-					lon : 116.233,
-					lat : 39.134
-				},
-				bgImg : 'widget://image/abg.jpg',
-				content : {
-					title : '大标题大标题大标题大标题',
-					subTitle : '概述内容概述内容概述内容',
-					illus : 'widget://image/aiil.jpg'
-				},
-				styles : {
-					titleColor : '#000',
-					titleSize : 12,
-					subTitleColor : '#999',
-					subTitleSize : 12,
-					illusAlign : 'left'
-				}
-			}, function(ret) {
-				if (ret) {
-					alert(JSON.stringify(ret));
-				}
-			});
-    }
+    
     
     function searchRoute(){
     	var map = api.require('aMap');
@@ -377,11 +635,11 @@
 			        color:'#698B22',          //（可选项）字符串类型；步行路线的线条颜色，支持rgb、rgba、#；默认：#698B22
 			    },
 			    driveLine:{                   //（可选项）JSON对象；驾车路线样式
-			        width: 6,                 //（可选项）数字类型；驾车路线的线条宽度；默认：5
+			        width: 3,                 //（可选项）数字类型；驾车路线的线条宽度；默认：5
 			        color:'#0000EE',          //（可选项）字符串类型；驾车路线的线条颜色，支持rgb、rgba、#；默认：#00868B
 			    },
 			    busLine:{                     //（可选项）JSON对象；公交路线样式
-			        width: 4,                 //（可选项）数字类型；公交路线的线条宽度；默认：4
+			        width: 3,                 //（可选项）数字类型；公交路线的线条宽度；默认：4
 			        color:'#00BFFF',          //（可选项）字符串类型；公交路线的线条颜色，支持rgb、rgba、#；默认：#00BFFF
 			    },
 			    icons: {                     //（可选项）JSON对象；路线结点标注图标
@@ -393,6 +651,61 @@
 		    api.alert({msg:JSON.stringify(ret)});
 		});
     }
+	function draw_Route() {
+			var aMap = api.require('aMap');
+			aMap.searchRoute({
+				type : 'drive',
+				policy : 'drive_fee_first',
+				start : {
+					lon : 116.403838,
+					lat : 39.914437
+				},
+				end : {
+					lon : 116.384852,
+					lat : 39.989576
+				}
+			}, function(ret, err) {
+				if (ret.status) {
+					aMap.drawRoute({
+						id : 1,
+						autoresizing : false,
+						index : 0,
+						styles : {
+							walkLine : {
+								width : 5,
+								color : '#698B22',
+								lineDash : false,
+								strokeImg : ''
+							},
+							driveLine : {
+								width : 100,
+								color : '#0000EE',
+								lineDash : false,
+								strokeImg : ''
+							},
+							busLine : {
+								width : 5,
+								color : '#00BFFF',
+								lineDash : false,
+								strokeImg : ''
+							},
+							icons : {
+								start : '',
+								end : '',
+								bus : '',
+								car : '',
+								man : ''
+							}
+						}
+					});
+				} else {
+					api.alert({
+						msg : JSON.stringify(ret)
+					});
+				}
+			});
+		}
+
     
     function removeRoute(){
     	var map = api.require('aMap');
@@ -447,15 +760,33 @@
     function searchNearby(){
     	var map = api.require('aMap');
 		map.searchNearby({
+		    keyword: '北京君太百货',
+		    lon: 116.37,
+		    lat: 39.92,
+		    radius: 2000,
+		    offset: 30,
+		    page: 2
+		},function(ret,err){
+		    if(ret.status){
+		        //alert(JSON.stringify(ret));
+		        console.log(JSON.stringify(ret));
+		    }
+		});
+    }
+    
+    function searchNearby1(){
+    		var map = api.require('aMap');
+		map.searchNearby({
 		    keyword: 'KTV',
 		    lon: 116.384767,
 		    lat: 39.989539,
 		    radius: 2000,
 		    offset: 20,
-		    page: 1
+		    page: 2
 		},function(ret,err){
 		    if(ret.status){
-		        alert(JSON.stringify(ret));
+		        //alert(JSON.stringify(ret));
+		        console.log(JSON.stringify(ret));
 		    }
 		});
     }
@@ -510,12 +841,7 @@
 		  });
     }
     
-    function removeAnno(){
-    	var map = api.require('aMap');
-		map.removeAnnotations({
-		    ids: [1,2,3,4,5,6,7]
-		});
-    }
+    
 
 	function isPolygonContantPoint() {
 			var map = api.require('aMap');
@@ -555,9 +881,14 @@
 		function addEventListenerZoom() {
 			var map = api.require('aMap');
 			map.addEventListener({
-				name : 'zoom'
+				name : 'viewChange'
 			}, function(ret) {
-				alert(JSON.stringify(ret));
+				if(ret.zoom > 9){
+					addBillboard();
+				}else{
+					removeAnno();
+				}
+				
 			});
 		};
 		
@@ -709,13 +1040,142 @@
 			var map = api.require('aMap');
 			map.clearDisk();
 		}
+		
+		function setWebBubble(){
+			var map = api.require('aMap');
+			
+			
+			map.setWebBubble({
+				id:2,
+				size : {
+					width:100,
+					hight:100
+				},
+				//url:'fs://index.html'
+				//url:'http://img6.ph.126.net',
+				url:'https://www.baidu.com/',
+				data:'漂亮MM <img src="hBiG96B8egigBULxUWcOpA==/109212290980771276.jpg">'
+			}, function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function setWebBubble1(){
+			var map = api.require('aMap');
+			
+			
+			map.setWebBubble({
+				id:1,
+				size : {
+					width:100,
+					hight:100
+				},
+				//url:'fs://index.html'
+				//url:'http://img6.ph.126.net',
+				url:'https://www.baidu.com/',
+				data:'漂亮MM <img src="hBiG96B8egigBULxUWcOpA==/109212290980771276.jpg">'
+			}, function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+		var aMapTest = null;
+		function openMapTest(){
+			aMapTest = api.require('aMapTest');
+			aMapTest.open({
+			rect: {
+				x: 0,
+				y: 0,
+				w: api.frameWidth,
+				h: api.frameHeight
+			},
+			zoomLevel: 13,
+			fixedOn: api.frameName,
+			fixed: true
+		}, function(ret, err) {
+			addEventListenerView();
+			
+		});
+		}
+		var level;
+		function addEventListenerView(){
+			aMapTest.addEventListener({
+				name: 'viewChange'
+			}, function(ret) {
+				level = ret.zoom;
+			});
+		}
+		
+		function showsIndoorMap(){
+			var map = api.require('aMap');
+			map.showsIndoorMap({
+    				isShows: true
+			});
+		}
+		
+		function showsIndoorMapOff(){
+			var map = api.require('aMap');
+			map.showsIndoorMap({
+    				isShows: false
+			});
+		}
+		
+		function isShowsIndoorMap(){
+			var aMap = api.require('aMap');
+			aMap.isShowsIndoorMap(function(ret){
+			   alert(JSON.stringify(ret));
+			});
+		}
+		
+		function setCurrentIndoorMapFloorIndex(){
+			var aMap = api.require('aMap');
+			aMap.setCurrentIndoorMapFloorIndex({
+			    floorIndex: 2
+			});
+		}
+		
+		function addWebBubbleListener(){
+			var aMap = api.require('aMap');
+			aMap.addWebBubbleListener(function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
     </script>
     
    <body>
     <div id="wrap">
         <div id="main"> 
             <div  >
+            	level: <input type="text" name="level" id="level" /><br>
+            <input type="button" onclick="openMapTest()" value="openMapTest" /><br><br>
             	<input type="button" onclick="openMap()" value="openMap" /><br><br>
+			<input type="button" onclick="takeSnapshotInRect()" value="takeSnapshotInRect" /><br><br>
+				
+			<input type="button" onclick="JSaddBillboard2()" value="JSaddBillboard2" /><br><br>
+			<input type="button" onclick="removeAnno()" value="removeAnno" /><br><br>
+            	<input type="button" onclick="JSaddBillboard()" value="JSaddBillboard" /><br><br>
+				
+            	<input type="button" onclick="JSaddBillboard3()" value="JSaddBillboard3" /><br><br>
+            	
+            	<input type="button" onclick="JSaddBillboard4()" value="JSaddBillboard4" /><br><br>
+            	
+            	<input type="button" onclick="JSaddBillboard5()" value="JSaddBillboard5" /><br><br>
+            	
+            	<input type="button" onclick="addBillboard()" value="addBillboard" /><br><br>
+            	
+            	
+				
+            	<input type="button" onclick="addAnno()" value="addAnno" /><br><br>
+            	<input type="button" onclick="setBubble()" value="setBubble" /><br><br>
+            	<input type="button" onclick="setWebBubble()" value="setwebBubble" /><br><br>
+            	<input type="button" onclick="setWebBubble1()" value="setwebBubble1" /><br><br>
+            	<input type="button" onclick="addWebBubbleListener()" value="addWebBubbleListener" /><br><br>
+            	<input type="button" onclick="districtSearch()" value="districtSearch" /><br><br>
+            	
+            	<input type="button" onclick="searchRoute()" value="searchRoute" /><br><br>
+            	<input type="button" onclick="drawRoute()" value="drawRoute" /><br><br>
+            	<input type="button" onclick="draw_Route()" value="draw_Route" /><br><br>
+				
             	<input type="button" onclick="closeMap()" value="closeMap" /><br><br>
             	<input type="button" onclick="showMap()" value="showMap" /><br><br>
             	<input type="button" onclick="hideMap()" value="hideMap" /><br><br>
@@ -748,21 +1208,16 @@
             	
             	<input type="button" onclick="getNameFromLoc()" value="getNameFromLoc" /><br><br>
             	
-            	<input type="button" onclick="addAnno()" value="addAnno" /><br><br>
             	
             	<input type="button" onclick="getAnnoCoords()" value="getAnnoCoords" /><br><br>
             	
             	<input type="button" onclick="setAnnotationCoords()" value="setAnnotationCoords" /><br><br>
             	
-            	<input type="button" onclick="setBubble()" value="setBubble" /><br><br>
             	
             	<input type="button" onclick="popupBubble()" value="popupBubble" /><br><br>
             	
-            	<input type="button" onclick="addBillboard()" value="addBillboard" /><br><br>
             	
-            	<input type="button" onclick="searchRoute()" value="searchRoute" /><br><br>
             	
-            	<input type="button" onclick="drawRoute()" value="drawRoute" /><br><br>
             	
             	<input type="button" onclick="removeRoute()" value="removeRoute" /><br><br>
             	
@@ -774,6 +1229,8 @@
             	
             	<input type="button" onclick="searchNearby()" value="searchNearby" /><br><br>
             	
+            	<input type="button" onclick="searchNearby1()" value="searchNearby1" /><br><br>
+            	
             	<input type="button" onclick="searchInPolygon()" value="searchInPolygon" /><br><br>
             	
             	<input type="button" onclick="autoComplete()" value="autoComplete" /><br><br>
@@ -782,7 +1239,7 @@
             	
             	<input type="button" onclick="moveAnno()" value="moveAnno" /><br><br>
             	
-            	<input type="button" onclick="removeAnno()" value="removeAnno" /><br><br>
+            	
             	
             	<input type="button" onclick="addLocus()" value="addLocus" /><br><br>
             	<input type="button" onclick="clearDisk()" value="clearDisk" /><br><br>
@@ -805,6 +1262,11 @@
             	<input type="button" onclick="addEventListenerZoom()" value="addEventListenerZoom" /><br><br>
             	
             	<input type="button" onclick="removeEventListener()" value="removeEventListener" /><br><br>
+			<input type="button" onclick="showsIndoorMap()" value="showsIndoorMap" /><br><br>
+			<input type="button" onclick="showsIndoorMapOff()" value="showsIndoorMapOff" /><br><br>
+			
+			<input type="button" onclick="isShowsIndoorMap()" value="isShowsIndoorMap" /><br><br>
+			<input type="button" onclick="setCurrentIndoorMapFloorIndex()" value="setCurrentIndoorMapFloorIndex" /><br><br>	
             	<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
             </div>
 

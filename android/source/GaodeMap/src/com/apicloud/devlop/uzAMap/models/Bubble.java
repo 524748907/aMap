@@ -11,7 +11,7 @@ import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import android.graphics.Bitmap;
 
 public class Bubble {
-	private int id;
+	private String id;
 	private Bitmap bgImg;
 	private String title;
 	private String subTitle;
@@ -26,7 +26,7 @@ public class Bubble {
 	public Bubble() {
 	}
 
-	public Bubble(int id, Bitmap bgImg, String title, String subTitle,
+	public Bubble(String id, Bitmap bgImg, String title, String subTitle,
 			String iconPath, int titleSize, int subTitleSize,
 			String illusAlign, int titleColor, int subTitleColor,
 			UZModuleContext moduleContext) {
@@ -43,11 +43,11 @@ public class Bubble {
 		this.moduleContext = moduleContext;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

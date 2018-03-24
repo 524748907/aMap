@@ -24,6 +24,7 @@ import com.amap.api.services.route.Doorway;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.DriveStep;
+import com.amap.api.services.route.RideRouteResult;
 import com.amap.api.services.route.RouteBusLineItem;
 import com.amap.api.services.route.RouteBusWalkItem;
 import com.amap.api.services.route.RouteSearch;
@@ -73,11 +74,11 @@ public class MapSearch implements OnRouteSearchListener {
 	private String mSearchType;
 
 	@SuppressLint("UseSparseArrays")
-	private Map<Integer, CustomBusRoute> mBusRouteOverlayMap = new HashMap<Integer, CustomBusRoute>();
+	private Map<String, CustomBusRoute> mBusRouteOverlayMap = new HashMap<String, CustomBusRoute>();
 	@SuppressLint("UseSparseArrays")
-	private Map<Integer, CustomDriveRoute> mDriveRouteOverlayMap = new HashMap<Integer, CustomDriveRoute>();
+	private Map<String, CustomDriveRoute> mDriveRouteOverlayMap = new HashMap<String, CustomDriveRoute>();
 	@SuppressLint("UseSparseArrays")
-	private Map<Integer, CustomWalkRoute> mWalkRouteOverlayMap = new HashMap<Integer, CustomWalkRoute>();
+	private Map<String, CustomWalkRoute> mWalkRouteOverlayMap = new HashMap<String, CustomWalkRoute>();
 
 	public MapSearch(Context context) {
 		this.mContext = context;
@@ -123,6 +124,13 @@ public class MapSearch implements OnRouteSearchListener {
 			}
 		}
 		failCallBack(mModuleContext);
+	}
+	
+	//骑行路径规划结果的回调方法
+	// 新接口
+	@Override
+	public void onRideRouteSearched(RideRouteResult arrideRouteResultg0, int errorCode) {
+		
 	}
 
 	private void routeCallBack(UZModuleContext moduleContext, JSONObject ret) {
@@ -179,9 +187,9 @@ public class MapSearch implements OnRouteSearchListener {
 
 	public void removeRoute(UZModuleContext moduleContext, AMap aMap) {
 		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
-		List<Integer> ids = jsParamsUtil.removeRouteIds(moduleContext);
+		List<String> ids = jsParamsUtil.removeRouteIds(moduleContext);
 		if (ids != null) {
-			for (int id : ids) {
+			for (String id : ids) {
 				if (mBusRouteOverlayMap.containsKey(id)) {
 					CustomBusRoute busRoute = mBusRouteOverlayMap.get(id);
 					if (busRoute != null) {
@@ -204,20 +212,18 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 	}
 
-	private void drawBusRoute(UZModuleContext moduleContext, AMap aMap,
-			UZModule module) {
+	private void drawBusRoute(UZModuleContext moduleContext, AMap aMap, UZModule module) {
 		if (mContext == null) {
 			return;
 		}
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		int index = moduleContext.optInt("index");
 		List<BusPath> paths = mBusRouteResult.getPaths();
 		if (paths != null) {
 			if (index < paths.size()) {
 				BusPath busPath = paths.get(index);
 				if (busPath != null) {
-					CustomBusRoute customBusRoute = getCustomBusRoute(
-							moduleContext, aMap, busPath, module);
+					CustomBusRoute customBusRoute = getCustomBusRoute(moduleContext, aMap, busPath, module);
 					mBusRouteOverlayMap.put(id, customBusRoute);
 					customBusRoute.removeFromMap();
 					customBusRoute.addToMap();
@@ -234,7 +240,7 @@ public class MapSearch implements OnRouteSearchListener {
 		if (mContext == null) {
 			return;
 		}
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		int index = moduleContext.optInt("index");
 		List<DrivePath> paths = mDriveRouteResult.getPaths();
 		if (paths != null) {
@@ -259,7 +265,7 @@ public class MapSearch implements OnRouteSearchListener {
 		if (mContext == null) {
 			return;
 		}
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		int index = moduleContext.optInt("index");
 		List<WalkPath> paths = mWalkRouteResult.getPaths();
 		if (paths != null) {
@@ -279,8 +285,7 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 	}
 
-	private CustomBusRoute getCustomBusRoute(UZModuleContext moduleContext,
-			AMap aMap, BusPath busPath, UZModule module) {
+	private CustomBusRoute getCustomBusRoute(UZModuleContext moduleContext, AMap aMap, BusPath busPath, UZModule module) {
 		CustomBusRoute customBusRoute = new CustomBusRoute(mContext, aMap,
 				busPath, mBusRouteResult.getStartPos(),
 				mBusRouteResult.getTargetPos());
@@ -307,13 +312,13 @@ public class MapSearch implements OnRouteSearchListener {
 			AMap aMap, DrivePath drivePath, UZModule module) {
 		CustomDriveRoute customDriveRoute = new CustomDriveRoute(mContext,
 				aMap, drivePath, mDriveRouteResult.getStartPos(),
-				mDriveRouteResult.getTargetPos());
+				mDriveRouteResult.getTargetPos(), passedByPoints(moduleContext));
 		customDriveRoute.setNodeIconVisibility(true);
 		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 		customDriveRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
 		customDriveRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customDriveRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
-		customDriveRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
+		customDriveRoute.setLineWidth(jsParamsUtil.driveWidth(moduleContext));
 		customDriveRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "bus")));
 		customDriveRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil
@@ -337,7 +342,7 @@ public class MapSearch implements OnRouteSearchListener {
 		customWalkRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
 		customWalkRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customWalkRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
-		customWalkRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
+		customWalkRoute.setLineWidth(jsParamsUtil.walkWidth(moduleContext));
 		customWalkRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "bus")));
 		customWalkRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil

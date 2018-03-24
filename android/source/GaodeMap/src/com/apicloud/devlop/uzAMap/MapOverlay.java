@@ -36,10 +36,10 @@ import com.uzmap.pkg.uzkit.UZUtility;
 public class MapOverlay {
 	private UzAMap mUzAMap;
 	private AMap mAMap;
-	private Map<Integer, Polyline> mLineMap = new HashMap<Integer, Polyline>();
-	private Map<Integer, Polygon> mGonMap = new HashMap<Integer, Polygon>();
-	private Map<Integer, Circle> mCircleMap = new HashMap<Integer, Circle>();
-	private Map<Integer, GroundOverlay> mGroundMap = new HashMap<Integer, GroundOverlay>();
+	private Map<String, Polyline> mLineMap = new HashMap<String, Polyline>();
+	private Map<String, Polygon> mGonMap = new HashMap<String, Polygon>();
+	private Map<String, Circle> mCircleMap = new HashMap<String, Circle>();
+	private Map<String, GroundOverlay> mGroundMap = new HashMap<String, GroundOverlay>();
 
 	public MapOverlay(UzAMap uzAMap, AMap aMap) {
 		this.mUzAMap = uzAMap;
@@ -47,7 +47,7 @@ public class MapOverlay {
 	}
 
 	public void addLine(UZModuleContext moduleContext) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		PolylineOptions polylineOptions = new PolylineOptions();
 		JSONObject styles = moduleContext.optJSONObject("styles");
 		boolean lineDash = false;
@@ -90,7 +90,7 @@ public class MapOverlay {
 	}
 
 	public void addLocus(UZModuleContext moduleContext) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		PolylineOptions polylineOptions = new PolylineOptions();
 		double borderWidth = moduleContext.optDouble("borderWidth", 5);
 		polylineOptions.width((float) borderWidth);
@@ -140,7 +140,7 @@ public class MapOverlay {
 	}
 
 	public void addCircle(UZModuleContext moduleContext) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		JSONObject styles = moduleContext.optJSONObject("styles");
 		CircleOptions circleOptions = new CircleOptions();
 		int borderColor = UZUtility.parseCssColor("#000");
@@ -170,7 +170,7 @@ public class MapOverlay {
 	}
 
 	public void addPolygon(UZModuleContext moduleContext) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		PolygonOptions polygonOptions = new PolygonOptions();
 		JSONObject styles = moduleContext.optJSONObject("styles");
 		int borderColor = UZUtility.parseCssColor("#000");
@@ -208,7 +208,7 @@ public class MapOverlay {
 	}
 
 	public void addImg(UZModuleContext moduleContext) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		if (!moduleContext.isNull("imgPath")) {
 			String imgPath = moduleContext.optString("imgPath");
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
@@ -239,7 +239,7 @@ public class MapOverlay {
 		JSONArray ids = moduleContext.optJSONArray("ids");
 		if (ids != null) {
 			for (int i = 0; i < ids.length(); i++) {
-				int id = ids.optInt(i);
+				String id = ids.optString(i);
 				Polyline polyline = mLineMap.get(id);
 				if (polyline != null) {
 					polyline.remove();

@@ -12,8 +12,10 @@
 
 @interface AnimatedAnnotationView : MAAnnotationView
 
-@property (nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) UIImageView *animationView, *mobileIcon;
 @property (nonatomic, strong) ACBubbleView *bubbleView;
 @property (nonatomic, strong) UIView *billboardView;
+
+- (void)refreshAnimatedPin:(id<MAAnnotation>)annotation;
 
 @end

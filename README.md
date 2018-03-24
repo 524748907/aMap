@@ -11,7 +11,6 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 基础类
 
 <div class="outline">
-
 [open](#open)
 [close](#close)
 [show](#show)
@@ -38,17 +37,29 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [setScaleBar](#setScaleBar)
 [setCompass](#setCompass)
 [setLogo](#setLogo)
+[takeSnapshotInRect](#takeSnapshotInRect)
 [isPolygonContainsPoint](#isPolygonContainsPoint)
 [interconvertCoords](#interconvertCoords)
 [addEventListener](#addEventListener)
 [removeEventListener](#removeEventListener)
+</div>
 
+## 室内地图
+
+<div class="outline">
+[isShowsIndoorMap](#isShowsIndoorMap)
+[showsIndoorMap](#showsIndoorMap)
+[isShowsIndoorMapControl](#isShowsIndoorMapControl)
+[showsIndoorMapControl](#showsIndoorMapControl)
+[indoorMapControlSize](#indoorMapControlSize)
+[setIndoorMapControlOrigin](#setIndoorMapControlOrigin)
+[setCurrentIndoorMapFloorIndex](#setCurrentIndoorMapFloorIndex)
+[clearIndoorMapCache](#clearIndoorMapCache)
 </div>
 
 ## 标注、气泡类
 
 <div class="outline">
-
 [addAnnotations](#addAnnotations)
 [getAnnotationCoords](#getAnnotationCoords)
 [setAnnotationCoords](#setAnnotationCoords)
@@ -60,26 +71,25 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [addMobileAnnotations](#addMobileAnnotations)
 [moveAnnotation](#moveAnnotation)
 [removeAnnotations](#removeAnnotations)
-
+[setWebBubble](#setWebBubble)
+[addWebBubbleListener](#addWebBubbleListener)
+[removeWebBubbleListener](#removeWebBubbleListener)
 </div>
 
 ## 覆盖物类
 
 <div class="outline">
-
 [addLine](#addLine)
 [addCircle](#addCircle)
 [addPolygon](#addPolygon)
 [addImg](#addImg)
 [addLocus](#addLocus)
 [removeOverlay](#removeOverlay)
-
 </div>
 
 ## 搜索类
 
 <div class="outline">
-
 [searchRoute](#searchRoute)
 [drawRoute](#drawRoute)
 [removeRoute](#removeRoute)
@@ -90,13 +100,12 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [searchNearby](#searchNearby)
 [searchInPolygon](#searchInPolygon)  
 [autocomplete](#autocomplete)  
-
+[districtSearch](#districtSearch)  
 </div>
 
 ## 离线地图类
 
 <div class="outline">
-
 [getProvinces](#getProvinces)
 [getMunicipalities](#getMunicipalities)
 [getNationWide](#getNationWide)
@@ -109,7 +118,6 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [clearDisk](#clearDisk)
 [checkNewestVersion](#checkNewestVersion)
 [reloadMap](#reloadMap)
-
 </div>
 
 # **概述**
@@ -154,7 +162,7 @@ aMap 模块封装了高德地图的原生 SDK，集成了高德地图常用基�
 
 **需要在APICloud 网站控制台编译界面选择定位权限。凡是需要使用定位功能的模块，请先选择定位权限**
 
-不能同时添加的模块：aMapLocation
+不能同时添加的模块：aMapLocation, baiduLocation
 
 ***使用此模块之前必须先配置  config 文件，配置方法如下：***
 
@@ -177,7 +185,9 @@ aMap 模块封装了高德地图的原生 SDK，集成了高德地图常用基�
     **ios_api_key**：在高德地图开放平台申请的 iOS 端 AK
     
     
-用户在使用本模块之前需要获取高德地图API Key，Key 申请的具体流程请参照 [申请Key](http://lbs.amap.com/api/ios-location-sdk/summary/#getkey)。本模块需要的 key 可以和 [aMapLBS](http://docs.apicloud.com/Client-API/Open-SDK/aMapLBS)、[aMapLocation](http://docs.apicloud.com/Client-API/Open-SDK/aMapLocation) 、[aMapNavigation](http://docs.apicloud.com/Client-API/Open-SDK/aMapNavigation) 、[aMapReportLocation](http://docs.apicloud.com/Client-API/Open-SDK/aMapReportLocation) 模块的 key 共用。
+用户在使用本模块之前需要获取高德地图API Key，Key 申请的具体流程请参照 [申请Key](http://lbs.amap.com/api/ios-location-sdk/summary/#getkey)。本模块需要的 key 可以和 [aMapLBS](//docs.apicloud.com/Client-API/Open-SDK/aMapLBS)、[aMapLocation](//docs.apicloud.com/Client-API/Open-SDK/aMapLocation) 、[aMapNavigation](//docs.apicloud.com/Client-API/Open-SDK/aMapNavigation) 、[aMapReportLocation](//docs.apicloud.com/Client-API/Open-SDK/aMapReportLocation) 模块的 key 共用。
+    
+**注意：在 iOS 上版本使用定位功能，需要在云编译时勾选 `定位（使用期间）` 或 `定位服务（始终）`**
     
 ## **模块接口**
 
@@ -403,7 +413,7 @@ iOS系统，Android系统
 
 # **getLocation**
 
-获取当前位置信息，若要支持后台定位需[配置 [config.xml](/APICloud/技术专题/app-config-manual) 文件 location 字段](http://docs.apicloud.com/APICloud/技术专题/app-config-manual#14-2)。**调用本接口需先 open，在iOS 平台上 showUserLocation 为 false 时此接口不可用**
+获取当前位置信息，若要支持后台定位需[配置 [config.xml](/APICloud/技术专题/app-config-manual) 文件 location 字段](//docs.apicloud.com/APICloud/技术专题/app-config-manual#14-2)。**调用本接口需先 open，在iOS 平台上 showUserLocation 为 false 时此接口不可用**
 
 getLocation({params}, callback(ret, err))
 
@@ -581,7 +591,10 @@ ret：
     street: '',                //字符串类型；街道名
     number: '',                //字符串类型；门牌号
     thoroughfare: '',          //字符串类型；社区
-    township: ''               //字符串类型；乡镇
+    township: '',              //字符串类型；乡镇
+    building: '',              //字符串类型；建筑
+    adcode: '',                //字符串类型；地址编号
+    citycode: ''               //字符串类型；城市编号
 }
 ```
 
@@ -701,6 +714,64 @@ isShow：
 - 类型：布尔
 - 描述：（可选项）是否显示用户位置
 - 默认值：true
+
+imagePath:
+
+- 类型：字符串
+- 描述：(可选项)当前位置显示图标的图片，要求本地路径支持fs,widget
+- 默认值：高德地图默认当前位置图标
+
+
+showsAccuracyRing：
+
+- 类型：布尔
+- 描述：（可选项）精度圈是否显示(android不支持)
+- 默认值：true
+
+
+showsHeadingIndicator：
+
+- 类型：布尔
+- 描述：（可选项）是否显示方向指示(setTrackingMode接口heading模式开启)
+- 默认值：true
+
+
+enablePulseAnnimation：
+
+- 类型：布尔
+- 描述：（可选项）内部蓝色圆点是否使用律动效果(android不支持)
+- 默认值：true
+
+fillColor：
+
+- 类型：字符串
+- 描述：（可选项）精度圈 填充颜色
+- 默认值：系统默认色
+
+strokeColor：
+
+- 类型：字符串
+- 描述：（可选项）精度圈 边线颜色
+- 默认值：系统默认色
+
+
+dotBgColor：
+
+- 类型：字符串
+- 描述：（可选项）定位点背景色(android不支持)
+- 默认值：白色
+
+dotFillColor：
+
+- 类型：字符串
+- 描述：（可选项）定位点蓝色圆点颜色(android不支持)
+- 默认值：蓝色
+
+lineWidth：
+
+- 类型：数字
+- 描述：（可选项）精度圈 边线宽度
+- 默认值：0
 
 ## 示例代码
 
@@ -1547,6 +1618,73 @@ iOS系统，Android系统
 
 可提供的1.0.0及更高版本
 
+<div id="takeSnapshotInRect"></div>
+
+# **takeSnapshotInRect**
+
+在指定区域内截图(默认会包含该区域内的标注)
+
+takeSnapshotInRect({params}, callback(ret))
+
+## params
+
+rect：
+
+- 类型：JSON 对象
+- 描述：（可选项）所截取区域的位置和大小（相对于地图区域）
+- 内部字段：
+
+```js
+{
+    x: 0,   //（可选项）数字类型；地图左上角的 x 坐标（相对于地图所在的区域）；默认：0
+    y: 0,   //（可选项）数字类型；地图左上角的 y 坐标（相对于地图所在的区域）；默认：0
+    w: 320, //（可选项）数字类型；地图的宽度；默认：地图的宽
+    h: 480  //（可选项）数字类型；地图的高度；默认：地图的高
+}
+```
+
+path：
+
+- 类型：字符串
+- 描述：截图保存路径，要求本地路径（fs://），如：fs://aMap/Snapshot.png
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{ 
+    status: true, //布尔类型；是否截图成功
+    realPath: ''	 //字符串类型；截图的绝对路径
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.takeSnapshotInRect({
+    rect: {
+        x: 0,
+        y: 0,
+        w: 320,
+        h: 300
+    },
+    path: 'fs://aMap/123.png'
+}, function(ret) {
+        alert(JSON.stringify(ret));
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
 <div id="addEventListener"></div>
 
 # **addEventListener**
@@ -1647,6 +1785,283 @@ iOS系统，Android系统
 
 可提供的1.0.0及更高版本
 
+
+<div id="isShowsIndoorMap"></div>
+
+# **isShowsIndoorMap**
+
+是否为显示室内地图状态
+
+isShowsIndoorMap(callback(ret))
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    status: false      //布尔类型；是否为显示室内地图状态
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.isShowsIndoorMap(function(ret){
+   alert(JSON.stringify(ret));
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="showsIndoorMap"></div>
+
+# **showsIndoorMap**
+
+设置是否显示室内地图
+
+showsIndoorMap({params})
+
+## params
+
+isShows:
+
+- 类型：布尔
+- 描述：（可选项）是否显示室内地图
+- 默认：false
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.showsIndoorMap({
+    isShows: true
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.3及更高版本
+
+
+
+<div id="isShowsIndoorMapControl"></div>
+
+# **isShowsIndoorMapControl**
+
+是否为显示室内地图默认控件
+
+isShowsIndoorMapControl(callback(ret))
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    status: false      //布尔类型；是否为显示室内地图默认控件状态
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.isShowsIndoorMapControl(function(ret){
+   alert(JSON.stringify(ret));
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="showsIndoorMapControl"></div>
+
+# **showsIndoorMapControl**
+
+设置是否显示室内地图默认控件
+
+showsIndoorMapControl({params})
+
+## params
+
+isShows:
+
+- 类型：布尔
+- 描述：（可选项）是否显示室内地图默认控件
+- 默认：false
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.showsIndoorMapControl({
+    isShows: true
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="indoorMapControlSize"></div>
+
+# **indoorMapControlSize**
+
+获取默认室内地图控件的最大宽高
+
+indoorMapControlSize(callback(ret))
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    size:{          //JSON对象；默认室内地图控件的最大宽高
+       width:,      //数字类型；默认室内地图控件的最大宽
+       height:      //数字类型；默认室内地图控件的最大高
+    }
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.indoorMapControlSize(function(ret){
+   alert(JSON.stringify(ret));
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="setIndoorMapControlOrigin"></div>
+
+# **setIndoorMapControlOrigin**
+
+设置默认室内地图控件位置
+
+setIndoorMapControlOrigin({params})
+
+## params
+
+point:
+
+- 类型：JSON对象
+- 描述：（可选项）左上角点位置
+- 内部字段：
+
+```JS
+{
+  x:0,    //数字类型；
+  y:0     //数字类型；
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.setIndoorMapControlOrigin({
+    point: {
+       x:10,
+       y:10
+    }
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="setCurrentIndoorMapFloorIndex"></div>
+
+# **setCurrentIndoorMapFloorIndex**
+
+设置当前室内地图楼层数
+
+setCurrentIndoorMapFloorIndex({params})
+
+## params
+
+floorIndex:
+
+- 类型：数字
+- 描述：（可选项）要设置的楼层数
+- 默认：0
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.setCurrentIndoorMapFloorIndex({
+    floorIndex: 2
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
+<div id="clearIndoorMapCache"></div>
+
+# **clearIndoorMapCache**
+
+清空室内地图缓存
+
+clearIndoorMapCache()
+
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.clearIndoorMapCache();
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.1.3及更高版本
+
+
 <div id="addAnnotations"></div>
 
 # **addAnnotations**
@@ -1711,6 +2126,8 @@ ret：
                                 //starting（开始拖动）
                                 //dragging （拖动中）
                                 //ending （拖动结束）
+                                //none （静止状态），Android平台不支持
+                                //canceling （取消拖动），Android平台不支持
 }
 ```
 
@@ -1903,7 +2320,7 @@ id：
 bgImg：
 
 - 类型：字符串
-- 描述：（可选项）弹出气泡的背景图片（160*90规格），要求本地路径（fs://、widget://），中轴线下边缘点为气泡弹出点，**若本字段为空，则 content 内的 title 长度大于105时，气泡宽度会根据 title 长度自适应**
+- 描述：（可选项）弹出气泡的背景图片（160x90规格），要求本地路径（fs://、widget://），中轴线下边缘点为气泡弹出点，**若本字段为空，则 content 内的 title 长度大于105时，气泡宽度会根据 title 长度自适应**
 - 默认值：默认气泡背景图片
 
 content：
@@ -1988,6 +2405,136 @@ iOS系统，Android系统
 
 可提供的1.0.0及更高版本
 
+<div id="setWebBubble"></div>
+
+# **setWebBubble**
+
+设置点击标注时弹出的气泡信息
+
+setWebBubble({params})
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：要设置气泡的标注 id
+
+url：
+
+- 类型：字符串
+- 描述：（可选项）弹出气泡的网页地址，用户点击标注时，模块在标注上弹出窗口（类似open一个frame，模块会用webview去加载此url的网页显示出来）,当data参数不为空时，url将做为baseUrl，data中的html引用的资源文件根路径以该url为基础。
+
+data：
+
+- 类型：字符串
+- 描述：（可选项）页面加载的数据内容，可以为html片段或者整张html文件的数据,当data为空或者不传的时候， 会将url地址作为整个加载进去
+
+size：
+
+- 类型：JSON对象
+- 描述：（可选项）气泡的大小配置
+- 内部字段
+
+```js
+{
+      width: 50,     //（可选项）数字类型；气泡的宽；默认：50
+      height: 50     //（可选项）数字类型；气泡的高；默认：50
+}
+```
+
+bg：
+
+- 类型：字符串
+- 描述：（可选项）弹出气泡的背景设置，支持rgb、rgba、#、img（要求本地路径，如：widget://、fs://）
+- 默认：rgba(0,0,0,0)
+
+
+## 示例代码
+
+```js
+	var map = api.require('aMap');
+	map.setWebBubble({
+		id:1,
+		size : {
+			width:100,		
+			height:100		
+		},			
+		bg:'rgba(0,0,0,0.6)',
+		url:'http://img6.ph.126.net',
+		data:'漂亮MM <img src="hBiG96B8egigBULxUWcOpA==/109212290980771276.jpg">'
+	});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
+
+<div id="addWebBubbleListener"></div>
+
+# **addWebBubbleListener**
+
+添加网页气泡点击监听
+
+addWebBubbleListener(callback(ret))
+
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    id: 1               //数字类型；用户点击气泡返回的id
+}
+```
+
+## 示例代码
+
+```js
+	var map = api.require('aMap');
+	map.addWebBubbleListener(function(ret){
+	    api.alert({msg:JSON.stringify(ret)});
+	});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
+
+
+<div id="removeWebBubbleListener"></div>
+
+# **removeWebBubbleListener**
+
+移除网页气泡点击监听
+
+removeWebBubbleListener(callback(ret))
+
+
+## 示例代码
+
+```js
+	var map = api.require('aMap');
+	map.removeWebBubbleListener();
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.0及更高版本
+
+
 <div id="popupBubble"></div>
 
 # **popupBubble**
@@ -2009,7 +2556,9 @@ id：
 var aMap = api.require('aMap');
 aMap.popupBubble({
     id: 2
-});
+}, function(ret){
+		    alert(JSON.stringify(ret));
+		});
 ```
 
 ## 可用性
@@ -2079,7 +2628,7 @@ coords：
 bgImg：
 
 - 类型：字符串
-- 描述：布告牌的背景图片（120*75规格），要求本地路径（fs://、widget://）
+- 描述：布告牌的背景图片，要求本地路径（fs://、widget://）
 
 content：
 
@@ -2091,7 +2640,7 @@ content：
 {
     title: '',             //（可选项）字符串类型；布告牌的标题
     subTitle: '',          //（可选项）字符串类型；布告牌的概述内容 
-    illus: ''              //（可选项）字符串类型；布告牌的配图（35*50规格），支持http://、https://、widget://、fs://等协议
+    illus: ''              //（可选项）字符串类型；布告牌的配图，支持http://、https://、widget://、fs://等协议
 }
 ```
 draggable：
@@ -2108,6 +2657,19 @@ styles：
 
 ```js
 {
+    size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+        width: 160,                 //（可选项）数组类型；布告牌的宽；默认：160
+        height: 75                  //（可选项）数组类型；布告牌的高；默认：75
+    },
+    illusRect: {                    //（可选项）JSON对象；插图大小配置
+        x: ,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+        y: ,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+        w: ,                        //（可选项）数字类型；插图的宽；默认：35
+        h:                          //（可选项）数字类型；插图的高；默认：50
+    },
+    marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+    marginB: 15,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：15
+    alignment: 'left',              //（可选项）字符串类型；标题和子标题的对齐方式：left（水平居左）、center（水平居中）、right（水平居右）；默认：left
     titleColor: '#000',             //（可选项）字符串类型；布告牌标题的文字颜色，支持 rgb、rgba、#；默认：'#000'
     titleSize: 14,                  //（可选项）数字类型；布告牌标题的文字大小；默认：16
     subTitleColor: '#000',          //（可选项）字符串类型；布告牌概述内容的文字颜色，支持 rgb、rgba、#；默认：'#000'
@@ -2354,7 +2916,7 @@ removeAnnotations({params})
 ids：
 
 - 类型：数组
-- 描述：要移除的标注或布告牌id（数字）
+- 描述：（可选项）要移除的标注或布告牌id（数字），若为空或不传，则移除所有标注
 
 ## 示例代码
 
@@ -3675,6 +4237,93 @@ aMap.autocomplete({
 iOS系统，Android系统
 
 可提供的1.0.0及更高版本
+
+
+
+<div id="districtSearch"></div>
+
+# **districtSearch**
+
+根据关键字返回行政区划数据，**无需调用 open 接口即可搜索，如果调用open打开了一个地图，则同时在地图上绘制并跳转到行政区划边界区域,是否绘制由showInMap控制**
+
+districtSearch({params}, callback(ret, err))
+
+## params
+
+keyword：
+
+- 类型：字符串
+- 描述：关键字，该字段只支持精确名称，不可以是拼音，简写，代号等，如：北京可以用，但beijing，首都 等字样是无效的；
+
+showInMap：
+
+- 类型：JSON对象
+- 描述：（可选项）搜索的区域是否同时显示在当前地图上，若不传，则不显示
+- 内部字段：
+
+```js
+{
+    type: 'arrow',            //（可选项）字符串类型；线的末端类型；默认：round；取值范围如下：
+                              //round：圆头线，在Android 上无效，显示为普通方头线条
+                              //square：方头线
+                              //arrow：带箭头的线    
+    lineDash: false,          //（可选项）布尔类型；是否绘制成虚线，当 type 为 arrow 时，本参数无效；默认：false
+    borderColor: '#000',      //（可选项）字符串类型；线的颜色，支持 rgb、rgba、#；默认值：'#000'
+    borderWidth: 3,           //（可选项）数字类型；线的宽度，默认：2
+    strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则本接口忽略 type、lineDash、borderColor 参数   
+}
+```
+
+
+## callback(ret,err)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    status: true,           //布尔型；true||false
+    districtResult: {       //JSON对象；搜索结果
+         count: 10,         //数字类型；子区域数
+         districts: [{       //JSON对象；行政区信息
+            adcode: '',     //字符串类型；区域编码
+            citycode: '',   //字符串类型；城市编码
+            name: '',       //字符串类型；行政区名称
+            level: ''       //字符串类型；级别
+            center: {       //JSON对象；城市中心点经纬度
+              latitude: ,   //数字类型；维度
+              longitude:    //数字类型；经度
+            },
+            polylines:['','','']//字符串类型；内部元素是边界线段上的点的经纬度拼接成的字符串，如：'119.309678,39.397575;119.309339,39.397613;'
+            districts:{         //JSON对象；子区域信息，内部数据接口同父级一致
+             ...
+            }]
+         }
+    }
+}
+```
+
+## 示例代码
+
+```js
+	var aMap = api.require('aMap');
+	aMap.districtSearch({
+	    keyword: '北京',
+		showInMap:{}//传空取默认值，不传则不显示边界线
+	}, function(ret) {
+	    if (ret.status) {
+	        alert(JSON.stringify(ret));
+	    }
+	});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.0.7及更高版本
 
 <div id="getProvinces"></div>
 

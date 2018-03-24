@@ -6,7 +6,19 @@
 //
 package com.apicloud.devlop.uzAMap;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.AMap.OnIndoorBuildingActiveListener;
+import com.amap.api.maps.AMap.OnMapScreenShotListener;
+import com.amap.api.maps.MapView;
+import com.amap.api.maps.model.IndoorBuildingInfo;
 import com.amap.api.maps.model.LatLng;
 import com.apicloud.devlop.uzAMap.models.MoveAnnotation;
 import com.apicloud.devlop.uzAMap.models.MoveOverlay;
@@ -14,6 +26,11 @@ import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
 import com.uzmap.pkg.uzcore.UZWebView;
 import com.uzmap.pkg.uzcore.uzmodule.UZModule;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
+import com.uzmap.pkg.uzkit.UZUtility;
+
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.util.Log;
 
 public class UzAMap extends UZModule {
 	private MapOpen mMap;
@@ -139,7 +156,17 @@ public class UzAMap extends UZModule {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
+				String zoom = String.valueOf(mapView.getMap().getCameraPosition().zoom);
+				float zoomLevel = (float) moduleContext.optDouble("level", 10);
+				//Toast.makeText(mContext, "当前的缩放级别是" + zoom + "-----要缩放的级别是" + String.valueOf(zoomLevel), Toast.LENGTH_LONG).show();
 				new MapSimple().setZoomLevel(moduleContext, mapView.getMap());
+//				float zoomLevel = (float) moduleContext.optDouble("level", 10);
+//				boolean isAnimated = moduleContext.optBoolean("animation", true);
+//				if (isAnimated) {
+//					mapView.getMap().animateCamera(CameraUpdateFactory.zoomTo(zoomLevel), 300, null);
+//				} else {
+//					mapView.getMap().moveCamera(CameraUpdateFactory.zoomTo(zoomLevel));
+//				}
 			}
 		}
 	}
@@ -288,8 +315,24 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
+				}
+				mAnnotations.addAnnotations(moduleContext);
+			}
+		}
+	}
+	
+	/**
+	 * TODO
+	 * 显示mark和气泡
+	 * @param moduleContext
+	 */
+	public void jsmethod_showAnnotations(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
 				}
 				mAnnotations.addAnnotations(moduleContext);
 			}
@@ -343,8 +386,47 @@ public class UzAMap extends UZModule {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
 							mContext);
 				}
+				mAnnotations.setWebBubbleUrl = false;
 				mAnnotations.setBubble(moduleContext);
 			}
+		}
+	}
+	
+	/**
+	 * @see 新增接口，同上，只是将布局交给开发者自定义
+	 */
+	public void jsmethod_setWebBubble(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView.getMap(),
+							mContext);
+				}
+				mAnnotations.setWebBubbleUrl = true;
+				mAnnotations.setWebBubble(moduleContext);
+			}
+		}
+	}
+	
+	public static UZModuleContext webBubbleModuleContext;
+	/**
+	 * 添加网页气泡点击监听
+	 * @param moduleContext
+	 */
+	public void jsmethod_addWebBubbleListener(UZModuleContext moduleContext) {
+		if (webBubbleModuleContext == null) {
+			webBubbleModuleContext = moduleContext;
+		}
+	}
+	
+	/**
+	 * 移除网页气泡点击监听
+	 * @param moduleContext
+	 */
+	public void jsmethod_removeWebBubbleListener(UZModuleContext moduleContext) {
+		if (webBubbleModuleContext != null) {
+			webBubbleModuleContext = null;
 		}
 	}
 
@@ -379,8 +461,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
 				}
 				mAnnotations.addBillboard(moduleContext);
 			}
@@ -402,9 +483,8 @@ public class UzAMap extends UZModule {
 
 	public void jsmethod_moveAnnotation(UZModuleContext moduleContext) {
 		if (mAnnotations != null) {
-			Map<Integer, MoveAnnotation> markerMap = mAnnotations
-					.getMoveMarkerMap();
-			int id = moduleContext.optInt("id");
+			Map<String, MoveAnnotation> markerMap = mAnnotations.getMoveMarkerMap();
+			String id = moduleContext.optString("id");
 			MoveAnnotation anno = markerMap.get(id);
 			if (anno != null) {
 				JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
@@ -626,5 +706,161 @@ public class UzAMap extends UZModule {
 			mMapOffline = new MapOffline();
 		}
 		mMapOffline.clearDisk();
+	}
+
+	/**
+	 * @param moduleContext
+	 * TODO  行政区划边界查询
+	 */
+	public void jsmethod_districtSearch(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			MapView mapView = mMap.getMapView();
+			AMap amap = mapView.getMap();
+			new MapDistrictSearch(this,amap, moduleContext);
+		}else{
+			new MapDistrictSearch(this,null, moduleContext);
+		}
+	}
+	
+	/**
+	 * 在指定区域内截图(默认会包含该区域内的标注)
+	 * @param moduleContext
+	 */
+	public void jsmethod_takeSnapshotInRect(final UZModuleContext moduleContext) {
+		if (mMap != null) {
+			MapView mapView = mMap.getMapView();
+			AMap aMap = mapView.getMap();
+			
+			JSONObject rectJson = moduleContext.optJSONObject("rect");
+			final int x = rectJson.optInt("x", 0);
+			final int y = rectJson.optInt("y", 0);
+			final int width = rectJson.optInt("w", mapView.getWidth());
+			final int height = rectJson.optInt("h", mapView.getHeight());
+			final String path = makeRealPath(moduleContext.optString("path"));
+			File file = new File(path);
+			File fileDir = file.getParentFile();
+			if (!fileDir.exists()) {
+				fileDir.mkdirs();
+			}
+			if (!file.exists()) {
+				try {
+					file.createNewFile();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			final JSONObject ret = new JSONObject();
+			aMap.getMapScreenShot(new OnMapScreenShotListener() {
+				
+				@Override
+				public void onMapScreenShot(Bitmap bitmap, int status) {
+					if (bitmap == null) {
+						return;
+					}
+					try {
+						Bitmap newBitmap = Bitmap.createBitmap(bitmap, x, y, width, height);
+						FileOutputStream fos = new FileOutputStream(path);
+						boolean b = newBitmap.compress(CompressFormat.PNG, 100, fos);
+						try {
+				              fos.flush();
+				            } catch (IOException e) {
+				              e.printStackTrace();
+				            }
+				            try {
+				              fos.close();
+				            } catch (IOException e) {
+				              e.printStackTrace();
+				            }
+				            if (b) {
+								ret.put("status", true);
+								ret.put("realPath", path);
+								moduleContext.success(ret, true);
+							}else {
+								ret.put("status", false);
+								ret.put("realPath", "");
+								moduleContext.success(ret, true);
+							}
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						try {
+							ret.put("status", false);
+							ret.put("realPath", "");
+							moduleContext.success(ret, true);
+						} catch (JSONException e1) {
+							e1.printStackTrace();
+						}
+						
+					}
+					
+				}
+				
+				@Override
+				public void onMapScreenShot(Bitmap arg0) {
+					
+					
+				}
+			});
+		}
+	}
+	
+	/**
+	 * 是否为显示室内地图状态
+	 * @param moduleContext
+	 */
+	public void jsmethod_isShowsIndoorMap(UZModuleContext moduleContext) {
+		try {
+			JSONObject result = new JSONObject();
+			result.put("status", isShows);
+			moduleContext.success(result, false);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	
+	private boolean isShows = false;
+	/**
+	 * 设置是否显示室内地图
+	 * @param moduleContext
+	 */
+	public void jsmethod_showsIndoorMap(UZModuleContext moduleContext) {
+		isShows = moduleContext.optBoolean("isShows", false);
+		if (mMap != null) {
+			AMap aMap = mMap.getMapView().getMap();
+			aMap.showIndoorMap(isShows);
+		}
+	}
+	
+	/**
+	 * 设置当前室内地图楼层数
+	 * @param moduleContext
+	 */
+	public void jsmethod_setCurrentIndoorMapFloorIndex(UZModuleContext moduleContext) {
+		int floorIndex = moduleContext.optInt("floorIndex", 0);
+		String activeFloorName = "F2";
+		int[] floor_indexs = {-1, 1, 2, 3, 4, 5, 6, 7};
+		String[] floor_names = {"B1", "F1", "F2", "F3", "F4", "F5", "F6", "F7"};
+		String poiid = "B000A6534B";
+		
+		IndoorBuildingInfo info = new IndoorBuildingInfo();
+		
+		
+		info.activeFloorIndex = floorIndex;
+		info.activeFloorName = activeFloorName;
+		info.floor_indexs = floor_indexs;
+		info.floor_names = floor_names;
+		info.poiid = poiid;
+		if (mMap != null) {
+			mMap.getMapView().getMap().setIndoorBuildingInfo(info);
+			mMap.getMapView().getMap().setOnIndoorBuildingActiveListener(new OnIndoorBuildingActiveListener() {
+				
+				@Override
+				public void OnIndoorBuilding(IndoorBuildingInfo arg0) {
+					Log.e("TAG", arg0.toString());
+					
+				}
+			});
+		}
 	}
 }

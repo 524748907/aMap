@@ -8,7 +8,11 @@
 
 #import "ACBubbleView.h"
 
+@implementation NormalBubbleBgImgView
+@end
+
 @interface ACBubbleView ()
+<CAAnimationDelegate>
 {
     UIColor *bgColor;               //背景色
     UIColor *shadowColor;           //阴影色
@@ -22,14 +26,15 @@
 
 #pragma mark Life cycle
 
-- (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
+- (id)init{
+    self = [super init];
     if(self) {
         bgColor = [UIColor clearColor];
         shadowColor = [UIColor grayColor];
         forwardAnimationDuration = 0.2f;
         backwardAnimationDuration = 0.2f;
         self.backgroundColor = [UIColor clearColor];
+        self.contentMode = UIViewContentModeRedraw;
     }
     return self;
 }

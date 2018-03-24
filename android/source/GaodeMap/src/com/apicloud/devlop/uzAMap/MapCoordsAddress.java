@@ -146,6 +146,9 @@ public class MapCoordsAddress implements OnGeocodeSearchListener {
 					ret.put("thoroughfare", roadList.get(0).getName());
 				}
 				ret.put("township", regeocodeAddress.getTownship());
+				ret.put("building", regeocodeAddress.getBuilding());
+				ret.put("adcode", regeocodeAddress.getAdCode());
+				ret.put("citycode", regeocodeAddress.getCityCode());
 				mModuleContext.success(ret, false);
 			} catch (JSONException e) {
 				e.printStackTrace();

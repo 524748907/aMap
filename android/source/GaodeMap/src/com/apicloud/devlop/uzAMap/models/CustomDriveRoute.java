@@ -7,6 +7,7 @@
 package com.apicloud.devlop.uzAMap.models;
 
 import java.io.IOException;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
@@ -14,9 +15,9 @@ import android.graphics.BitmapFactory;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.overlay.DrivingRouteOverlay;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.DrivePath;
+import com.apicloud.devlop.uzAMap.overlay.DrivingRouteOverlay;
 import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomDriveRoute extends DrivingRouteOverlay {
@@ -31,8 +32,8 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	private String drivePointImgPath;
 
 	public CustomDriveRoute(Context context, AMap aMap, DrivePath drivePath,
-			LatLonPoint start, LatLonPoint end) {
-		super(context, aMap, drivePath, start, end);
+			LatLonPoint start, LatLonPoint end, List<LatLonPoint> throughPointList) {
+		super(context, aMap, drivePath, start, end, throughPointList);
 	}
 
 	public void setBusColor(int color) {
@@ -64,7 +65,7 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	}
 
 	@Override
-	protected float getRouteWidth() {
+	public float getRouteWidth() {
 		return lineWidth;
 	}
 

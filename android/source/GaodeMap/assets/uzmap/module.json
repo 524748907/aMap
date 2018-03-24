@@ -1,6 +1,10 @@
 {
 	modules:[
 		{
+		    name:'aMapTest',
+		    class:'com.apicloud.devlop.uzAMap.test.UZGaoMap'
+		},
+		{
 		    name:'aMap',
 		    class:'com.apicloud.devlop.uzAMap.UzAMap'
 		}

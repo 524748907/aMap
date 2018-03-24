@@ -11,7 +11,7 @@ import com.amap.api.maps.model.Marker;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class MoveAnnotation {
-	private int id;
+	private String id;
 	private Marker marker;
 	private double lat;
 	private double lon;
@@ -22,7 +22,7 @@ public class MoveAnnotation {
 	public MoveAnnotation() {
 	}
 
-	public MoveAnnotation(int id, Marker marker, double lat, double lon,
+	public MoveAnnotation(String id, Marker marker, double lat, double lon,
 			Bitmap icon, boolean draggable, UZModuleContext moduleContext) {
 		this.id = id;
 		this.marker = marker;
@@ -33,11 +33,11 @@ public class MoveAnnotation {
 		this.moduleContext = moduleContext;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

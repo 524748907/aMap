@@ -1,0 +1,1408 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<title>Hello APP</title>
+		<link rel="stylesheet" type="text/css" href="../css/api.css" />
+		<style>
+			section {
+				position: relative;
+				top: 300px;
+				margin: 8px;
+				background-color: #fff;
+			}
+			h2 {
+				position: relative;
+				height: 44px;
+				line-height: 44px;
+				color: #888;
+			}
+			div {
+				position: relative;
+				height: 56px;
+				margin: 8px;
+				text-align: center;
+				font-size: 12px;
+				line-height: 56px;
+				color: #fff;
+				background-color: #354399;
+				background-clip: padding;
+				box-shadow: 0 0 1px 1px #ccc;
+				border-radius: 2px;
+			}
+			.active {
+				opacity: 0.7;
+			}
+		</style>
+	</head>
+	<body>
+		<section>
+			<h2>aMap</h2>
+		    <img  src="" alt="" width="100" height="100"/> 
+			<div tapmode="active" onclick="fnOpen()">
+				打开高德地图
+			</div>
+			<div tapmode="active" onclick="fnClose()">
+				关闭高德地图
+			</div>
+			<!--<div tapmode="active" onclick="fnShow()">
+				显示高德地图
+			</div>
+			<div tapmode="active" onclick="fnHide()">
+				隐藏高德地图
+			</div>
+			<div tapmode="active" onclick="fnSetRect()">
+				重设地图的显示区域
+			</div>
+			<div tapmode="active" onclick="fnGetLocation()">
+				获取当前位置信息
+			</div>
+			<div tapmode="active" onclick="fnStopLocation()">
+				停止定位
+			</div>-->
+			<div tapmode="active" onclick="fnGetCoordsFromName()">
+			根据地址查找经纬度
+			</div>                         
+			<div tapmode="active" onclick="fnGetNameFromCoords()">
+			根据经纬度查找地址信息
+			</div>
+			<div tapmode="active" onclick="fnGetDistance()">
+			获取地图两点之间的距离
+			</div>
+			<div tapmode="active" onclick="fnShowUserLocation()">
+			是否在地图上显示用户位置
+			</div>
+			<div tapmode="active" onclick="fnSetTrackingMode()">
+			设置跟踪类型
+			</div>
+			<div tapmode="active" onclick="fnSetCenter()">
+			根据经纬度设置高德地图中心点
+			</div>
+			<div tapmode="active" onclick="fnGetCenter()">
+			获取高德地图中心点坐标
+			</div>
+			<div tapmode="active" onclick="fnSetZoomLevel()">
+			设置高德地图缩放等级
+			</div>
+			<div tapmode="active" onclick="fnGetZoomLevel()">
+			获取地图缩放级别（0.01-20）
+			</div>
+			<div tapmode="active" onclick="fnSetMapAttr()">
+			设置高德地图相关属性
+			</div>
+			<div tapmode="active" onclick="fnSetRotation()">
+			设置高德地图旋转角度(逆时针为正向)
+			</div>
+			<div tapmode="active" onclick="fnGetRotation()">
+			获取地图当前旋转角度
+			</div>
+			<div tapmode="active" onclick="fnSetOverlook()">
+			设置地图俯视角度(范围为[0.f, 60.f])
+			</div>
+			<div tapmode="active" onclick="fnGetOverlook()">
+			获取地图当前俯视角度
+			</div>
+			<div tapmode="active" onclick="fnSetRegion()">
+			设置地图显示范围（矩形区域）
+			</div>
+			<div tapmode="active" onclick="fnGetRegion()">
+			获取地图显示范围（矩形区域）
+			</div>
+			<div tapmode="active" onclick="fnSetScaleBar()">
+			设置高德地图比例尺
+			</div>
+			<div tapmode="active" onclick="fnSetCompass()">
+			设置高德地图指南针
+			</div>
+			<div tapmode="active" onclick="fnSetLogo()">
+			设置高德地图 logo 的位置
+			</div>
+			<div tapmode="active" onclick="fnIsPolygonContainsPoint()">
+			判断已知点是否在指定的多边形区域内
+			</div>
+			<div tapmode="active" onclick="fnInterconvertCoords()">
+			经纬度坐标与地图容器像素坐标相互转换，经纬度和x，y值传一种即可。
+			</div>
+			<div tapmode="active" onclick="fnTakeSnapshotInRect()">
+			在指定区域内截图
+			</div>
+			<div tapmode="active" onclick="fnAddEventListener()">
+				监听地图相关事件
+			</div>
+			<div tapmode="active" onclick="fnRemoveEventListener()">
+				停止监听地图相关事件
+			</div>
+			<div tapmode="active" onclick="fnAddEventListener()">
+				监听地图相关事件
+			</div>
+			<div tapmode="active" onclick="fnAddAnnotations()">
+				在地图上添加标注信息
+			</div>
+			<div tapmode="active" onclick="fnGetAnnotationCoords()">
+				获取指定标注的经纬度
+			</div>
+			<div tapmode="active" onclick="fnSetAnnotationCoords()">
+				设置某个已添加标注的经纬度
+			</div>
+			<div tapmode="active" onclick="fnAnnotationExist()">
+				判断标注是否存在
+			</div>
+			<div tapmode="active" onclick="fnSetBubble()">
+				弹出的自定义气泡信息
+			</div>
+			<div tapmode="active" onclick="fnPopupBubble()">
+				弹出指定标注的气泡
+			</div>
+			<div tapmode="active" onclick="fnSetWebBubbleUrl()">
+				弹出的网页气泡信息
+			</div>
+			<div tapmode="active" onclick="fnAddWebBubbleListener()">
+				添加网页气泡点击监听
+			</div>
+			<div tapmode="active" onclick="fnRemoveWebBubbleListener()">
+				移除网页气泡点击监听
+			</div>
+			<div tapmode="active" onclick="fnCloseBubble()">
+				关闭已弹出的气泡
+			</div>
+			<div tapmode="active" onclick="fnAddBillboard()">
+				在地图上添加布告牌
+			</div>
+			<div tapmode="active" onclick="fnAddMobileAnnotations()">
+				在地图上添加可移动、旋转的标注图标
+			</div>
+			<div tapmode="active" onclick="fnMoveAnnotation()">
+				移动地图上已添加的可移动、旋转的标注图标
+			</div>
+			<div tapmode="active" onclick="fnRemoveAnnotations()">
+				移除指定 id 的标注（可移动、不可移动）或布告牌
+			</div>
+			<div tapmode="active" onclick="fnAddLine()">
+				在地图上添加线
+			</div>
+			<div tapmode="active" onclick="fnAddCircle()">
+				在地图上添加圆形
+			</div>
+			<div tapmode="active" onclick="fnAddPolygon()">
+				在地图上添加多边形
+			</div>
+				<div tapmode="active" onclick="fnAddImg()">
+				在地图上添加图片
+			</div>
+			<div tapmode="active" onclick="fnAddLocus()">
+				在地图上添加轨迹线
+			</div>
+			<div tapmode="active" onclick="fnRemoveOverlay()">
+				移除指定id得覆盖物
+			</div>
+			<div tapmode="active" onclick="fnSearchRoute()">
+				搜索路线方案
+			</div>
+			<div tapmode="active" onclick="fnDrawRoute()">
+				在地图上绘制显示 searchRoute 搜索到的指定路线
+			</div>
+			<div tapmode="active" onclick="fnRemoveRoute()">
+				移除指定 id 的路线
+			</div>
+			<div tapmode="active" onclick="fnSearchBusRoute()">
+				根据关键字搜索公交、地铁线路
+			</div>
+			<div tapmode="active" onclick="fnDrawBusRoute()">
+				根据 searchBusRoute 搜索返回的公交信息，将指定线路绘制在地图上
+			</div>
+			<div tapmode="active" onclick="fnRemoveBusRoute()">
+				移除地图上显示的公交、地铁线路
+			</div>
+			<div tapmode="active" onclick="fnSearchInCity()">
+				根据单个关键字搜索兴趣点，
+			</div>
+			<div tapmode="active" onclick="fnSearchNearby()">
+				根据单个关键字在圆形区域内搜索兴趣点
+			</div>
+			<div tapmode="active" onclick="fnSearchInPolygon()">
+				根据单个关键字在指定的多边形区域内搜索兴趣点
+			</div>
+			<div tapmode="active" onclick="fnAutocomplete()">
+				根据关键字返回建议搜索关键字
+			</div>
+			<div tapmode="active" onclick="fnDistrictSearch()">
+				根据关键字返回行政区数据
+			</div>
+			<!--<div tapmode="active" onclick="fnGetProvinces()">
+				获取省份列表
+			</div>
+			<div tapmode="active" onclick="fnGetMunicipalities()">
+				获取直辖市列表(只支持ios)
+			</div>
+			<div tapmode="active" onclick="fnGetNationWide()">
+				获取全国概要图信息(只支持ios)
+			</div>
+			<div tapmode="active" onclick="fnGetAllCities()">
+				获取全国所有离线地图城市信息
+			</div>
+			<div tapmode="active" onclick="fnGetVersion()">
+				获取离线数据的版本号(只支持ios)
+			</div>
+			<div tapmode="active" onclick="fnDownloadRegion()">
+				启动下载指定 adcode 区域的离线地图
+			</div>
+			<div tapmode="active" onclick="fnIsDownloading()">
+				检测指定 adcode 的区域是否正在下载
+			</div>
+			<div tapmode="active" onclick="fnPauseDownload()">
+				暂停下载指定 adcode 区域的离线地图
+			</div>
+			<div tapmode="active" onclick="fnCancelAllDownload()">
+				取消全部下载
+			</div>
+			<div tapmode="active" onclick="fnClearDisk()">
+				清除所有保存在磁盘上的离线地图数据, 之后调用 reloadMap 会使其立即生效
+			</div>
+			<div tapmode="active" onclick="fnCheckNewestVersion()">
+				监测新版本(只支持ios)
+			</div>
+			<div tapmode="active" onclick="fnReloadMap()">
+				将离线地图下载解压、移除后，调用此函数使离线数据生效(只支持ios)
+			</div>-->
+			
+			<!--室内地图状态-->
+			<div tapmode="active" onclick="fnIsShowsIndoorMap()">
+				是否为显示室内地图状态
+			</div>
+			<div tapmode="active" onclick="fnShowsIndoorMap()">
+				设置是否显示室内地图
+			</div>
+			<div tapmode="active" onclick="fnIsShowsIndoorMapControl()">
+				是否为显示室内地图默认控件
+			</div>
+			<div tapmode="active" onclick="fnShowsIndoorMapControl()">
+				设置是否显示室内地图默认控件
+			</div>
+			<div tapmode="active" onclick="fnIndoorMapControlSize()">
+				获取默认室内地图控件的最大宽高
+			</div>
+			<div tapmode="active" onclick="fnSetIndoorMapControlOrigin()">
+				设置默认室内地图控件位置
+			</div>
+			<div tapmode="active" onclick="fnSetCurrentIndoorMapFloorIndex()">
+				设置当前室内地图楼层数
+			</div>
+			<div tapmode="active" onclick="fnClearIndoorMapCache()">
+				清空室内地图缓存
+			</div>
+		</section>
+	</body>
+	<script type="text/javascript" src="../script/api.js"></script>
+	<script type="text/javascript">
+	
+		
+		function fnAddLocus() {
+			var aMap = api.require('aMap');
+			aMap.addLocus({
+				id : 8,
+				borderWidth : 5,
+				autoresizing : true,
+				locusData : 'widget://res/runningRecord.json'
+			});
+		};
+		function fnOpen() {
+			var aMap = api.require('aMap');
+			aMap.open({
+				rect : {
+						x : 0,
+						y : 0,
+						w : api.winWidth,
+						h : 400
+						},
+				showUserLocation : true,  //是否显示用户位置
+				zoomLevel : 11,  //缩放等级
+				center: {
+					    lon: 116.4021310000,
+		        		lat: 39.9994480000
+					    },
+				fixedOn : api.frameName,
+				fixed : true
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+					//setLocation();
+				} else {
+					alert(JSON.stringify(err));
+						}
+					});
+				};
+
+		function fnClose() {
+			var aMap = api.require('aMap');
+			aMap.close();
+		};
+		function fnShow() {
+			var aMap = api.require('aMap');
+			aMap.show();
+		};
+		function fnHide() {
+			var aMap = api.require('aMap');
+			aMap.hide();
+		};
+		function fnSetRect() {  //重新设置显示区域
+			var aMap = api.require('aMap');
+			aMap.setRect({
+				rect : {
+					x : 0,
+					y : 0,
+					w : 320,
+					h : 300
+				}
+			});
+		};
+		function fnGetLocation() {   //获取当前位置
+			var aMap = api.require('aMap');
+			aMap.getLocation({
+					autoStop: true   //获取位置后是否自动停止定位
+ 				},function(ret, err) {
+					if (ret.status) {
+						alert(JSON.stringify(ret));
+					} else {
+						alert(JSON.stringify(err));
+					}
+			});
+		};
+		function fnStopLocation() {
+			var aMap = api.require('aMap');
+			aMap.stopLocation();
+		};
+		function fnGetCoordsFromName() {  //根据地址查找经纬度
+			var aMap = api.require('aMap');
+			aMap.getCoordsFromName({
+				city : '北京',
+				address : '天安门'
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		};
+		function fnGetNameFromCoords() { //根据经纬度查地址
+			var aMap = api.require('aMap');
+			aMap.getNameFromCoords({
+				//				lon : 116.3777,
+				//				lat : 39.98345
+				lat : 39.9145300000,  //纬度 
+				lon : 116.3166000000  //经度 
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		};
+		function fnGetDistance() { //获取两点之间的距离
+			var aMap = api.require('aMap');
+			aMap.getDistance({
+				start : {   //起点
+					lon : 106.486654,
+					lat : 29.490295
+				},
+				end : {     //终点
+					lon : 106.581515,
+					lat : 29.615467
+				}
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		};
+		function fnShowUserLocation() {  //是否在地图上显示用户位置
+			var aMap = api.require('aMap');
+			aMap.showUserLocation({
+				isShow : true,
+				imagePath:'widget://image/biaozhu(2).png',
+				showsHeadingIndicator:true,
+				fillColor:'#FFF5EE',   //精度圈填充颜色   ok
+				strokeColor:'#EE4000',     //精度圈边线颜色  ok
+				dotBgColor:'#B452CD',     //android不支持  ok  只针对默认的imagePath
+ 				dotFillColor:'#98FB98',   //android不支持  ok  只针对默认的imagePath
+				lineWidth:2              //ok
+			});
+		};
+		function fnSetTrackingMode() {  //设置跟踪类型
+			var aMap = api.require('aMap');
+			aMap.setTrackingMode({
+				animation : true,  //只支持ios
+				trackingMode : 'follow'
+			});
+		};
+		function fnSetCenter() {  //根据经纬度设置中心点
+			var aMap = api.require('aMap');
+			aMap.setCenter({
+				coords : {
+					lon : 116.404,
+					lat : 39.915
+				},
+				animation : false
+			});
+		};
+		function fnGetCenter() {
+			var aMap = api.require('aMap');
+			aMap.getCenter(function(ret, err) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		};
+		function fnSetZoomLevel() {
+			var aMap = api.require('aMap');
+			aMap.setZoomLevel({
+				level : 10,
+				animation : true
+			});
+		};
+		function fnGetZoomLevel() {
+			var aMap = api.require('aMap');
+			aMap.getZoomLevel(function(ret, err) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+		};
+		function fnSetMapAttr() {
+			var aMap = api.require('aMap');
+			aMap.setMapAttr({
+				type : 'standard',  //标准地图
+				trafficOn : true,
+				zoomEnable : true,
+				scrollEnable : true,
+				building : true,
+				overlookEnabled : true,
+				rotateEnabled : true
+			});
+		};
+		function fnSetRotation() {   //设置旋转角度
+			var aMap = api.require('aMap');
+			aMap.setRotation({
+				degree : 30,
+				animation : true,
+				duration : 0.3
+			});
+		};
+		function fnGetRotation() {   //获取旋转角度
+			var aMap = api.require('aMap');
+			aMap.getRotation(function(ret) {
+				alert(JSON.stringify(ret.rotation));
+			});
+		};
+		function fnSetOverlook() {   //设置俯视角度
+			var aMap = api.require('aMap');
+			aMap.setOverlook({
+				degree : 30,
+				animation : true,
+				duration : 0.3
+			});
+		};
+		function fnGetOverlook() {   //获取俯视角度
+			var aMap = api.require('aMap');
+			aMap.getOverlook(function(ret) {
+				alert(JSON.stringify(ret.overlook));
+			});
+		};
+		function fnSetRegion() {   //设置地图显示范围
+			var aMap = api.require('aMap');
+			aMap.setRegion({
+				lbLon : 116.027143,
+				lbLat : 39.772348,
+				rtLon : 116.832025,
+				rtLat : 40.126349,
+				animation : true
+			});
+		};
+		function fnGetRegion() {   //获取地图显示范围
+			var aMap = api.require('aMap');
+			aMap.getRegion(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnSetScaleBar() {  //设置地图比例尺
+			var aMap = api.require('aMap');
+			aMap.setScaleBar({
+				show : true,
+				position : {
+					x : 100,
+					y : 100
+				}
+			});
+		};
+		function fnSetCompass() {  //设置指南针
+			var aMap = api.require('aMap');
+			aMap.setCompass({
+				show : true,
+				img : 'widget://res/compass.png',   //仅支持ios
+				position : {   //仅支持ios
+					x : 100,
+					y : 100
+				}
+			});
+		};
+		function fnSetLogo() {  //设置logo位置
+			var aMap = api.require('aMap');
+			aMap.setLogo({
+				position : 'right'
+			});
+		};
+		function fnIsPolygonContainsPoint() {
+			var aMap = api.require('aMap');
+			aMap.isPolygonContainsPoint({
+				point : {
+					lon : 116.39432327,
+					lat : 39.98963192
+				},
+				points : [{
+					lon : 116.39432327,
+					lat : 39.98963192
+				}, {
+					lon : 116.49432328,
+					lat : 39.98963192
+				}, {
+					lon : 116.39432327,
+					lat : 39.88933191
+				}]
+			}, function(ret) {
+				alert(ret.status);
+			});
+		};
+		function fnInterconvertCoords() {
+			var aMap = api.require('aMap');
+			aMap.interconvertCoords({
+				lon : 116.351,
+				lat : 39.283
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		var img1
+		function fnTakeSnapshotInRect(){
+		img1 = document.getElementsByTagName('img')[0];
+		var aMap = api.require('aMap');
+			aMap.takeSnapshotInRect({
+			    rect: {
+			        x: 10,
+			        y: 50,
+			        w: 320,
+			        h: 300
+			    },
+			    path: 'fs://aMap/333.png',
+			}, function(ret) {
+					img1.src = ret.realPath,
+			        alert(JSON.stringify(ret));
+			});
+		 
+		}
+		function fnAddEventListener() {
+			var aMap = api.require('aMap');
+			aMap.addEventListener({
+				name : 'zoom'
+			}, function(ret) {
+				alert(JSON.stringify(ret));
+				//console.log("zoom"+JSON.stringify(ret));
+				//fnMoveAnnotation(ret);
+				
+			});
+		};
+		function fnRemoveEventListener() {
+			var aMap = api.require('aMap');
+			aMap.removeEventListener({
+				name : 'click'
+			});
+		};
+		function fnAddAnnotations() {
+			var aMap = api.require('aMap');
+			aMap.addAnnotations({
+				annotations : [{
+					id : 1,
+					lon : 116.297,
+					lat : 40.109,
+					icons:['widget://image/biaozhu.png']
+				}, {
+					id : 2,
+					lon : 116.29,
+					lat : 40.109,
+					icons:['widget://image/biaozhu(1).png']
+				}, {
+					id : 3,
+					lon : 116.298,
+					lat : 40.11,
+					icons:['widget://image/biaozhu(2).png']
+				}, {
+					id : 4,
+					lon : 116.299,
+					lat : 40.111,
+					icons:['widget://image/biaozhu(1).png']
+				}, {
+					id : 5,
+					lon : 116.30,
+					lat : 40.112,
+					icons:['widget://image/biaozhu(1).png']
+				}],
+				//icons : ['widget://image/biaozhu.png','widget://image/biaozhu(1).png','widget://image/biaozhu(2).png'],
+				draggable : true,
+				timeInterval : 2.0
+			}, function(ret) {
+				if (ret.eventType == 'click') {
+					alert(ret.id);
+				}
+			});
+		};
+		function fnGetAnnotationCoords() {
+			var aMap = api.require('aMap');
+			aMap.getAnnotationCoords({
+				id : 2
+			}, function(ret) {
+				if (ret) {
+					api.alert({
+						msg : JSON.stringify(ret)
+					});
+				}
+			});
+		};
+		function fnSetAnnotationCoords() {
+			var aMap = api.require('aMap');
+			aMap.setAnnotationCoords({
+				id : 3,
+				lon : 116.39,
+				lat : 40.209
+			});
+		};
+		function fnAnnotationExist() {
+			var aMap = api.require('aMap');
+			aMap.annotationExist({
+				id : 2
+			}, function(ret) {
+				if (ret.status) {
+					api.alert({
+						msg : '存在'
+					});
+				}
+			});
+		};
+		function fnSetBubble() {
+			var aMap = api.require('aMap');
+			aMap.setBubble({
+				id : 1,
+				bgImg : 'widget://image/qidian.png',
+				content : {
+					title : '大标题',
+					subTitle : '概述内容',
+					illus : //'widget://image/delete.png'
+					'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles : {
+					titleColor : '#000',
+					titleSize : 16,
+					subTitleColor : '#999',
+					subTitleSize : 12,
+					illusAlign : 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		
+		function fnSetWebBubbleUrl(){
+			var map = api.require('aMap');
+			map.setWebBubble({
+				id:2,
+				size : {
+					width:100,		//泡泡宽，默认值50
+					hight:100		//泡泡高，默认值50
+				},			
+								//url:'fs://index.html'
+				//url:'http://img6.ph.126.net',
+				url:'https://www.baidu.com/',
+				data:'漂亮MM < img src="hBiG96B8egigBULxUWcOpA==/109212290980771276.jpg">',
+				bg:'#999'
+			}, function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function fnAddWebBubbleListener(){
+		var aMap = api.require('aMap');
+			aMap.addWebBubbleListener(function(ret){
+			    api.alert({msg:"添加气泡点击监听:"+JSON.stringify(ret)});
+			});
+		}
+		
+		function fnRemoveWebBubbleListener(){
+		var aMap = api.require('aMap');
+		aMap.removeWebBubbleListener();
+		}
+		
+		function fnPopupBubble() {
+			var aMap = api.require('aMap');
+			aMap.popupBubble({
+				id : 1
+			});
+		};
+		function fnCloseBubble() {
+			var aMap = api.require('aMap');
+			aMap.closeBubble({
+				id : 2
+			});
+		};
+		function fnAddBillboard() {
+			var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id : 5,
+				draggable : true,
+				coords : {
+//					lon : 116.297,
+//					lat : 40.109
+					lon: 116.4021310000,
+					lat: 39.9994480000
+				},
+				bgImg : 'widget://image/qipao.png',
+				content : {
+					title : '12345667',
+					subTitle : '概述内容',
+					//illus : 'http://ico.ooopic.com/ajax/iconpng/?id=145044.pn',
+					//illus:'widget://image/che.png'
+				},
+				draggable:false,
+				styles : {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+			        width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+			        height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+			    },
+			    illusRect: {                    //（可选项）JSON对象；插图大小配置
+			        x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+			        y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+			        w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+			        h: 0                         //（可选项）数字类型；插图的高；默认：50
+			    },
+//			        marginT:5,
+//			        marginB:5,
+			        alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		
+		//李洪亮的添加布告牌case
+	function JSaddBillboard(){
+    	var aMap = api.require('aMap');
+			aMap.addBillboard({
+				id: 4,
+				draggable: true,
+				coords: {
+				   lon: 116.4021310000,
+				   lat: 39.9994480000
+				},
+				bgImg : 'widget://image/address1.png',
+				content: {
+					title: '167',
+					subTitle: '概述',
+					illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles: {
+					size: {                         //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
+						width: 95,                 //（可选项）数组类型；布告牌的宽；默认：160
+						height: 55                  //（可选项）数组类型；布告牌的高；默认：75
+					},
+					illusRect: {                    //（可选项）JSON对象；插图大小，若不传，则模块配合 illusAlign 参数自适应，若本参数有值则忽略 illusAlign 参数
+						x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
+						y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
+						w: 0,                        //（可选项）数字类型；插图的宽；默认：35
+						h: 0                         //（可选项）数字类型；插图的高；默认：50
+					},
+					//marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
+					//marginB: 20,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：10
+					alignment: 'center',              //（可选项）字符串类型；标题和子标题的对齐方式：left（居左）、center（居中）、right（居右）；默认：left
+					titleColor: '#000',
+					titleSize: 16,
+					subTitleColor: '#999',
+					subTitleSize: 12,
+					illusAlign: 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+    }
+		function fnAddMobileAnnotations() {
+			var aMap = api.require('aMap');
+			aMap.addMobileAnnotations({
+				annotations : [{
+					id : 10,
+					lon : 116.297,
+					lat : 40.109,
+					icon : 'widget://image/biaozhu1.png',
+					draggable : true
+				}, {
+					id : 11,
+					lon : 116.98,
+					lat : 40.109,
+					icon : 'widget://image/biaozhu2.png',
+					draggable : true
+				}, {
+					id : 12,
+					lon : 115.30,
+					lat : 40.109,
+					icon : 'widget://image/biaozhu3.png',
+					draggable : true
+				}, {
+					id : 13,
+					lon : 116.297,
+					lat : 39.109,
+					icon : 'widget://image/qidian.png',
+					draggable : true
+				}, {
+					id : 14,
+					lon : 116.98,
+					lat : 39.109,
+					icon : 'widget://image/sx.png',
+					draggable : true
+				}, {
+					id : 15,
+					lon : 115.30,
+					lat : 39.109,
+					icon : 'widget://image/mdd.png',
+					draggable : true
+				}]
+			});
+		};
+		function fnMoveAnnotation(ret) {
+		console.log("回调MoveAnnotation");
+			var aMap = api.require('aMap');
+			for (var i = 0; i < 6; i++) {
+				aMap.moveAnnotation({
+					id : 10 + i,
+					duration : 6,
+					end : {
+						lon : 116.3843839609304,
+						lat : 39.98964439091298
+//						lon : ret.lon,
+//						lat : ret.lat
+					}
+				}, function(ret, err) {
+					//alert(ret.id + '移动结束')
+					console.log(ret.id + "移动结束");
+				});
+			}
+		};
+		function fnRemoveAnnotations() {
+			var aMap = api.require('aMap');
+			aMap.removeAnnotations({
+				//ids : [11,12,13]
+			});
+		};
+		function fnSearchRoute() {
+			var aMap = api.require('aMap');
+				aMap.searchRoute({
+				    id: 1,
+				    type: 'drive',
+				    policy: 'drive_time_first',
+				    start: {
+				        lon: 116.403838,
+				        lat: 39.914437
+				    },
+				    end: {
+				        lon: 116.384852,
+				        lat: 39.989576
+				    },
+				    city: '北京',
+				    nightflag: false,
+				    waypoints: []
+				}, function(ret, err) {
+				    if (ret.status) {
+				        api.alert({ msg: JSON.stringify(ret) });
+				    }
+				});
+		};
+		function fnDrawRoute() {
+			var aMap = api.require('aMap');
+				aMap.searchRoute({
+				    type: 'drive',
+				    policy: 'drive_fee_first',
+				    start: {
+				        lon: 116.403838,
+				        lat: 39.914437
+				    },
+				    end: {
+				        lon: 116.384852,
+				        lat: 39.989576
+				    }
+				}, function(ret, err) {
+				    if (ret.status) {
+				        aMap.drawRoute({
+				            id: 1,
+				            autoresizing: false,
+				            index: 0,
+				            styles: {
+				                walkLine: {
+				                    width: 3,
+				                    color: '#698B22',
+				                    lineDash: false,
+				                    strokeImg: ''
+				                },
+				                driveLine: {
+				                    width: 6,
+				                    color: '#0000EE',
+				                    lineDash: false,
+				                    strokeImg: ''
+				                },
+				                busLine: {
+				                    width: 4,
+				                    color: '#00BFFF',
+				                    lineDash: false,
+				                    strokeImg: ''
+				                },
+				                icons: {
+				                    start: '',
+				                    end: '',
+				                    bus: '',
+				                    car: '',
+				                    man: ''
+				                }
+				            }
+				        });
+				    } else {
+				        api.alert({ msg: JSON.stringify(ret) });
+				    }
+				});
+		};
+		function fnRemoveRoute() {
+			var aMap = api.require('aMap');
+			aMap.removeRoute({
+				ids : [1, 2, 3]
+			});
+		};
+		function fnSearchBusRoute() {
+			var aMap = api.require('aMap');
+			aMap.searchBusRoute({
+				city : '北京',
+				line : '110',
+				offset : 20,
+				page : 1
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnDrawBusRoute() {
+			var aMap = api.require('aMap');
+			aMap.searchBusRoute({
+				city : '北京',
+				line : '110',
+				offset : 20,
+				page : 1
+			}, function(ret, err) {
+				if (ret.status) {
+					aMap.drawBusRoute({
+						id : 1,
+						autoresizing : true,
+						index : 0,
+						styles : {
+							line : {
+								width : 4,
+								color : '#00BFFF',
+								lineDash : false,
+								strokeImg : 'fs://arrow.png'
+							},
+							icons : {
+								start : '',
+								end : '',
+								bus : ''
+							}
+						}
+					});
+				}
+			});
+		};
+		function fnRemoveBusRoute() {
+			var aMap = api.require('aMap');
+			aMap.removeBusRoute({
+				ids : [1, 2, 3]
+			});
+		};
+		function fnSearchInCity() {
+			var aMap = api.require('aMap');
+			aMap.searchInCity({
+				city : '北京',
+				keyword : '学校',
+				offset : 20,
+				page : 1,
+				sortrule : 0
+			}, function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnSearchNearby() {
+			var aMap = api.require('aMap');
+			aMap.searchNearby({
+				keyword : 'KTV',
+				lon : 116.384767,
+				lat : 39.989539,
+				radius : 2000,
+				offset : 20,
+				page : 1,
+				sortrule : 0
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnSearchInPolygon() {
+			var aMap = api.require('aMap');
+			aMap.searchInPolygon({
+				keyword : '图书馆',
+				points : [{
+					lat : 34.55648,
+					lon : 112.47723
+				}, {
+					lat : 34.13144,
+					lon : 112.87723
+				}, {
+					lat : 34.13144,
+					lon : 112.47723
+				}],
+				offset : 20,
+				page : 1,
+				sortrule : 0
+			}, function(ret, err) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnAutocomplete() {
+			var aMap = api.require('aMap');
+			aMap.autocomplete({
+				keyword : '北京',
+				city : '北京'
+			}, function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		
+		function fnDistrictSearch(){
+		var aMap = api.require('aMap');
+			aMap.districtSearch({
+			    keyword: '北京',
+				showInMap:{
+//				  type: 'arrow',       
+//				  lineDash: false,          //（可选项）布尔类型；是否绘制成虚线，当 type 为 arrow 时，本参数无效；默认：false
+//				  borderColor: '#000',      //（可选项）字符串类型；线的颜色，支持 rgb、rgba、#；默认值：'#000'
+//				  borderWidth: 3,           //（可选项）数字类型；线的宽度，默认：2
+				 // strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则本接口忽略 type、lineDash、borderColor 参数   
+				}
+			}, function(ret) {
+			    if (ret.status) {
+			        //alert(JSON.stringify(ret));
+			        console.log("返回区域:"+ JSON.stringify(ret));
+			    }
+			});
+		}
+		
+		
+		function fnGetProvinces() {
+			var aMap = api.require('aMap');
+			aMap.getProvinces(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnGetMunicipalities() {
+			var aMap = api.require('aMap');
+			aMap.getMunicipalities(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnGetNationWide() {
+			var aMap = api.require('aMap');
+			aMap.getNationWide(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnGetAllCities() {
+			var aMap = api.require('aMap');
+			aMap.getAllCities(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnGetVersion() {
+			var aMap = api.require('aMap');
+			aMap.getVersion(function(ret) {
+				if (ret.status) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		function fnDownloadRegion() {
+			var aMap = api.require('aMap');
+			aMap.downloadRegion({
+				adcode : '110000',
+				shouldContinueWhenAppEntersBackground : true
+			}, function(ret) {
+				//alert(JSON.stringify(ret));
+			});
+		};
+		function fnIsDownloading() {
+			var aMap = api.require('aMap');
+			aMap.isDownloading({
+				adcode : '110000'
+			}, function(ret) {
+				if (ret.status) {
+					alert('正在下载');
+				}
+			});
+		};
+		function fnPauseDownload() {
+			var aMap = api.require('aMap');
+			aMap.pauseDownload({
+				adcode : '110000'
+			});
+		};
+		function fnCancelAllDownload() {
+			var aMap = api.require('aMap');
+			aMap.cancelAllDownload();
+		};
+		function fnClearDisk() {
+			var aMap = api.require('aMap');
+			aMap.clearDisk();
+		};
+		function fnCheckNewestVersion() {
+			var aMap = api.require('aMap');
+			aMap.checkNewestVersion(function(ret) {
+				if (ret.status) {
+					alert('有新版本');
+				} else {
+					alert('无新版本');
+				}
+			});
+		};
+		function fnReloadMap() {
+			var aMap = api.require('aMap');
+			aMap.reloadMap();
+		};
+		function fnAddLine() {
+			var aMap = api.require('aMap');
+			aMap.addLine({
+				id : 1,
+				styles : {
+					type : 'arrow',
+					borderColor : '#FF0000',
+					borderWidth : 3,
+					lineDash : true,
+					strokeImg : ''
+				},
+				points : [{
+					lon : 116.297,
+					lat : 40.109
+				}, {
+					lon : 116.298,
+					lat : 40.109
+				}]
+			});
+		};
+		
+		function fnAddCircle(){
+		fnRemoveOverlay();
+		var aMap = api.require('aMap');
+			aMap.addCircle({
+			    id: 2,
+			    center: {
+			        lon: 116.4021310000,
+		        	lat: 39.9994480000
+			    },
+			    radius: 5000,
+			    styles: {
+			        borderColor: '#FFA500',
+			        borderWidth: 1,
+			        lineDash: false,
+			        fillColor: 'rgba(250, 128, 10, 0.3)'
+			    }
+			});
+		}
+		
+		function fnAddPolygon(){
+		var aMap = api.require('aMap');
+			aMap.addPolygon({
+			    id: 4,
+			    styles: {
+			        borderColor: '#FF0000',
+			        borderWidth: 3,
+			        lineDash:false,
+			        fillColor:'#ff0'
+			    },
+			    points: [{
+			        lon: 116.297, lat: 40.109
+			    },
+			    {
+			        lon: 116.298, lat: 40.109
+			    },
+			    {
+			        lon: 116.298, lat: 40.11
+			    }]
+			});
+		}
+		
+		function fnAddImg(){
+		var aMap = api.require('aMap');
+				aMap.addImg({
+				    id: 5,
+				    imgPath: 'widget://image/11.png',
+				    lbLon: 116.297,
+				    lbLat: 40.109,
+				    rtLon: 116.298,
+				    rtLat: 40.11
+				});
+		}
+		
+		function fnRemoveOverlay(){
+		var aMap = api.require('aMap');
+			aMap.removeOverlay({
+			    ids: [2]
+			});
+		}
+		
+	//红包拿来项目代码	
+	function setLocation(){
+	var longitude
+	var latitude
+	var aMap = api.require('aMap');
+		aMap.getLocation(function(ret, err) {
+		    if (ret.status) {				
+				longitude = ret.lon;
+				latitude = ret.lat;
+				}
+			});					
+			setCenterLocation(longitude, latitude);
+		}
+		
+	
+	function setCenterLocation(lon, lat){
+	var aMap = api.require('aMap');
+	   aMap.setCenter({
+		    coords: {
+		        lon: lon,
+		        lat: lat
+		    }
+		});
+		
+		aMap.removeOverlay({
+		    ids: [1]
+		});
+		
+		aMap.addCircle({
+		    id: 1,
+		    center: {
+		        lon: lon,
+		        lat: lat
+		    },
+		    radius: 500,
+		    styles: {
+		        borderColor: '#FFA500',
+		        borderWidth: 1,
+		        lineDash: false,
+		        fillColor: 'rgba(250, 128, 10, 0.3)'
+		    }
+		});
+	}
+	
+	function fnIsShowsIndoorMap(){
+	var aMap = api.require('aMap');
+		aMap.isShowsIndoorMap(function(ret){
+		   alert(JSON.stringify(ret));
+		});
+	}
+	
+	function fnShowsIndoorMap(){
+	var aMap = api.require('aMap');
+		aMap.showsIndoorMap({
+		    isShows: true
+		});
+	}
+	
+	function fnIsShowsIndoorMapControl(){
+	var aMap = api.require('aMap');
+		aMap.isShowsIndoorMapControl(function(ret){
+		   alert(JSON.stringify(ret));
+		});
+	}
+	
+	function fnShowsIndoorMapControl(){
+	var aMap = api.require('aMap');
+		aMap.showsIndoorMapControl({
+		    isShows: false
+		});
+	}
+	
+	function fnIndoorMapControlSize(){
+	var aMap = api.require('aMap');
+		aMap.indoorMapControlSize(function(ret){
+		   alert(JSON.stringify(ret));
+		});
+	}
+	
+	function fnSetIndoorMapControlOrigin(){
+	var aMap = api.require('aMap');
+		aMap.setIndoorMapControlOrigin({
+		    point: {
+		       x:10,
+		       y:10
+		    }
+		});
+	}
+	
+	function fnSetCurrentIndoorMapFloorIndex(){
+	var aMap = api.require('aMap');
+		aMap.setCurrentIndoorMapFloorIndex({
+		    floorIndex: 2
+		});
+	}
+	
+	function fnClearIndoorMapCache(){
+	var aMap = api.require('aMap');
+		aMap.clearIndoorMapCache();
+	}
+	</script>
+</html>

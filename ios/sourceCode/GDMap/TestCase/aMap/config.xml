@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<widget id="aMap20170901" version="1.0.0">
+  <name>amap</name>
+  <description>api demo for api.</description>
+  <author email="developer@apicloud.com" href="http://www.apicloud.com">Developer</author>
+  <content src="index.html"/>
+  <preference name="windowBackground" value="image/bg.png"/>
+  <preference name="autoLaunch" value="true"/>
+  <preference name="autoUpdate" value="true"/>
+  <preference name="smartUpdate" value="true"/>
+  <preference name="debug" value="true"/>
+  <access origin="*"/>
+  <feature name="aMap">
+      <param name="android_api_key" value="Mca5doRPkCcjeGc7H0rR66tO" />
+      <param name="ios_api_key" value="c0126fbfec6b9385ee1a6ba2568e8559" />
+  </feature>
+  <feature name="googleMap">
+      <param name="ios_api_key" value="AIzaSyCnVLXdkYlVtDggUq04A4NB5DV1pzR7UmU" />
+  </feature>
+  <feature name="aMapLBS">
+      <param name="android_api_key" value="Mca5doRPkCcjeGc7H0rR66tO" />
+      <param name="ios_api_key" value="e4b68dd81d254e404d3bdaf57affe820" />
+  </feature>
+  <feature name="aMapNavigation">
+      <param name="android_api_key" value="Mca5doRPkCcjeGc7H0rR66tO" />
+      <param name="ios_api_key" value="e4b68dd81d254e404d3bdaf57affe820" />
+  </feature>
+</widget>

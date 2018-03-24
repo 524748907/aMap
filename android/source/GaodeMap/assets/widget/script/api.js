@@ -1,6 +1,6 @@
 /*
- * APP3C JavaScript Library
- * Copyright (c) 2014 app3c.com
+ * APICloud JavaScript Library
+ * Copyright (c) 2014 apicloud.com
  */
 (function(window){
     var u = {};
@@ -14,30 +14,33 @@
     };
     function parseArguments(url, data, fnSuc, dataType) {
         if (typeof(data) == 'function') {
-        	dataType = fnSuc;
-        	fnSuc = data;
-        	data = undefined;
+            dataType = fnSuc;
+            fnSuc = data;
+            data = undefined;
         }
         if (typeof(fnSuc) != 'function') {
-        	dataType = fnSuc;
-        	fnSuc = undefined;
-        };
+            dataType = fnSuc;
+            fnSuc = undefined;
+        }
         return {
             url: url,
             data: data,
             fnSuc: fnSuc,
             dataType: dataType
-        }
-    };
+        };
+    }
     u.trim = function(str){
         if(String.prototype.trim){
-            return str == null ? "" : String.prototype.trim.call(str);
+            return str == null ? "": String.prototype.trim.call(str);
         }else{
             return str.replace(/(^\s*)|(\s*$)/g, "");
         }
     };
     u.trimAll = function(str){
         return str.replace(/\s*/g,'');
+    };
+    u.isElement = function(obj){
+        return !!(obj && obj.nodeType == 1);
     };
     u.isArray = function(obj){
         if(Array.isArray){
@@ -46,20 +49,38 @@
             return obj instanceof Array;
         }
     };
+    u.isEmptyObject = function(obj){
+        if(JSON.stringify(obj) === '{}'){
+            return true;
+        }
+        return false;
+    };
     u.addEvt = function(el, name, fn, useCapture){
-        var useCapture = useCapture || false;
+        if(!u.isElement(el)){
+            console.warn('$api.addEvt Function need el param, el param must be DOM Element');
+            return;
+        }
+        useCapture = useCapture || false;
         if(el.addEventListener) {
             el.addEventListener(name, fn, useCapture);
         }
     };
     u.rmEvt = function(el, name, fn, useCapture){
-        var useCapture = useCapture || false;
+        if(!u.isElement(el)){
+            console.warn('$api.rmEvt Function need el param, el param must be DOM Element');
+            return;
+        }
+        useCapture = useCapture || false;
         if (el.removeEventListener) {
             el.removeEventListener(name, fn, useCapture);
         }
     };
     u.one = function(el, name, fn, useCapture){
-        var useCapture = useCapture || false;
+        if(!u.isElement(el)){
+            console.warn('$api.one Function need el param, el param must be DOM Element');
+            return;
+        }
+        useCapture = useCapture || false;
         var that = this;
         var cb = function(){
             fn && fn();
@@ -94,6 +115,10 @@
     };
     u.first = function(el, selector){
         if(arguments.length === 1){
+            if(!u.isElement(el)){
+                console.warn('$api.first Function need el param, el param must be DOM Element');
+                return;
+            }
             return el.children[0];
         }
         if(arguments.length === 2){
@@ -102,6 +127,10 @@
     };
     u.last = function(el, selector){
         if(arguments.length === 1){
+            if(!u.isElement(el)){
+                console.warn('$api.last Function need el param, el param must be DOM Element');
+                return;
+            }
             var children = el.children;
             return children[children.length - 1];
         }
@@ -116,6 +145,10 @@
         return this.domAll(el, ':not('+ selector +')');
     };
     u.prev = function(el){
+        if(!u.isElement(el)){
+            console.warn('$api.prev Function need el param, el param must be DOM Element');
+            return;
+        }
         var node = el.previousSibling;
         if(node.nodeType && node.nodeType === 3){
             node = node.previousSibling;
@@ -123,6 +156,10 @@
         }
     };
     u.next = function(el){
+        if(!u.isElement(el)){
+            console.warn('$api.next Function need el param, el param must be DOM Element');
+            return;
+        }
         var node = el.nextSibling;
         if(node.nodeType && node.nodeType === 3){
             node = node.nextSibling;
@@ -130,6 +167,10 @@
         }
     };
     u.closest = function(el, selector){
+        if(!u.isElement(el)){
+            console.warn('$api.closest Function need el param, el param must be DOM Element');
+            return;
+        }
         var doms, targetDom;
         var isSame = function(doms, el){
             var i = 0, len = doms.length;
@@ -156,12 +197,34 @@
 
         return traversal(el, selector);
     };
+    u.contains = function(parent,el){
+        var mark = false;
+        if(el === parent){
+            mark = true;
+            return mark;
+        }else{
+            do{
+                el = el.parentNode;
+                if(el === parent){
+                    mark = true;
+                    return mark;
+                }
+            }while(el === document.body || el === document.documentElement);
+
+            return mark;
+        }
+
+    };
     u.remove = function(el){
         if(el && el.parentNode){
             el.parentNode.removeChild(el);
         }
     };
     u.attr = function(el, name, value){
+        if(!u.isElement(el)){
+            console.warn('$api.attr Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length == 2){
             return el.getAttribute(name);
         }else if(arguments.length == 3){
@@ -170,11 +233,19 @@
         }
     };
     u.removeAttr = function(el, name){
+        if(!u.isElement(el)){
+            console.warn('$api.removeAttr Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length === 2){
             el.removeAttribute(name);
         }
     };
     u.hasCls = function(el, cls){
+        if(!u.isElement(el)){
+            console.warn('$api.hasCls Function need el param, el param must be DOM Element');
+            return;
+        }
         if(el.className.indexOf(cls) > -1){
             return true;
         }else{
@@ -182,6 +253,10 @@
         }
     };
     u.addCls = function(el, cls){
+        if(!u.isElement(el)){
+            console.warn('$api.addCls Function need el param, el param must be DOM Element');
+            return;
+        }
         if('classList' in el){
             el.classList.add(cls);
         }else{
@@ -192,6 +267,10 @@
         return el;
     };
     u.removeCls = function(el, cls){
+        if(!u.isElement(el)){
+            console.warn('$api.removeCls Function need el param, el param must be DOM Element');
+            return;
+        }
         if('classList' in el){
             el.classList.remove(cls);
         }else{
@@ -202,18 +281,26 @@
         return el;
     };
     u.toggleCls = function(el, cls){
+        if(!u.isElement(el)){
+            console.warn('$api.toggleCls Function need el param, el param must be DOM Element');
+            return;
+        }
        if('classList' in el){
             el.classList.toggle(cls);
         }else{
             if(u.hasCls(el, cls)){
-                u.addCls(el, cls);
-            }else{
                 u.removeCls(el, cls);
+            }else{
+                u.addCls(el, cls);
             }
         }
-        return el; 
+        return el;
     };
-    u.val = function(el, val){ 
+    u.val = function(el, val){
+        if(!u.isElement(el)){
+            console.warn('$api.val Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length === 1){
             switch(el.tagName){
                 case 'SELECT':
@@ -244,25 +331,45 @@
                     break;
             }
         }
-        
+
     };
     u.prepend = function(el, html){
+        if(!u.isElement(el)){
+            console.warn('$api.prepend Function need el param, el param must be DOM Element');
+            return;
+        }
         el.insertAdjacentHTML('afterbegin', html);
         return el;
     };
     u.append = function(el, html){
+        if(!u.isElement(el)){
+            console.warn('$api.append Function need el param, el param must be DOM Element');
+            return;
+        }
         el.insertAdjacentHTML('beforeend', html);
         return el;
     };
     u.before = function(el, html){
+        if(!u.isElement(el)){
+            console.warn('$api.before Function need el param, el param must be DOM Element');
+            return;
+        }
         el.insertAdjacentHTML('beforebegin', html);
         return el;
     };
     u.after = function(el, html){
+        if(!u.isElement(el)){
+            console.warn('$api.after Function need el param, el param must be DOM Element');
+            return;
+        }
         el.insertAdjacentHTML('afterend', html);
         return el;
     };
     u.html = function(el, html){
+        if(!u.isElement(el)){
+            console.warn('$api.html Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length === 1){
             return el.innerHTML;
         }else if(arguments.length === 2){
@@ -271,6 +378,10 @@
         }
     };
     u.text = function(el, txt){
+        if(!u.isElement(el)){
+            console.warn('$api.text Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length === 1){
             return el.textContent;
         }else if(arguments.length === 2){
@@ -279,14 +390,13 @@
         }
     };
     u.offset = function(el){
-        var sl, st;
-        if(document.documentElement){
-            sl = document.documentElement.scrollLeft;
-            st = document.documentElement.scrollTop;
-        }else{
-            sl = document.body.scrollLeft;
-            st = document.body.scrollTop;
+        if(!u.isElement(el)){
+            console.warn('$api.offset Function need el param, el param must be DOM Element');
+            return;
         }
+        var sl = Math.max(document.documentElement.scrollLeft, document.body.scrollLeft);
+        var st = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+
         var rect = el.getBoundingClientRect();
         return {
             l: rect.left + sl,
@@ -296,11 +406,19 @@
         };
     };
     u.css = function(el, css){
+        if(!u.isElement(el)){
+            console.warn('$api.css Function need el param, el param must be DOM Element');
+            return;
+        }
         if(typeof css == 'string' && css.indexOf(':') > 0){
             el.style && (el.style.cssText += ';' + css);
         }
     };
     u.cssVal = function(el, prop){
+        if(!u.isElement(el)){
+            console.warn('$api.cssVal Function need el param, el param must be DOM Element');
+            return;
+        }
         if(arguments.length === 2){
             var computedStyle = window.getComputedStyle(el, null);
             return computedStyle.getPropertyValue(prop);
@@ -357,17 +475,37 @@
         }
     };
 
-   
+
     /*by king*/
     u.fixIos7Bar = function(el){
+        if(!u.isElement(el)){
+            console.warn('$api.fixIos7Bar Function need el param, el param must be DOM Element');
+            return;
+        }
         var strDM = api.systemType;
         if (strDM == 'ios') {
             var strSV = api.systemVersion;
-            var numSV = parseInt(strSV,10);   
+            var numSV = parseInt(strSV,10);
             var fullScreen = api.fullScreen;
             var iOS7StatusBarAppearance = api.iOS7StatusBarAppearance;
             if (numSV >= 7 && !fullScreen && iOS7StatusBarAppearance) {
                 el.style.paddingTop = '20px';
+            }
+        }
+    };
+    u.fixStatusBar = function(el){
+        if(!u.isElement(el)){
+            console.warn('$api.fixStatusBar Function need el param, el param must be DOM Element');
+            return;
+        }
+        var sysType = api.systemType;
+        if(sysType == 'ios'){
+            u.fixIos7Bar(el);
+        }else if(sysType == 'android'){
+            var ver = api.systemVersion;
+            ver = parseFloat(ver);
+            if(ver >= 4.4){
+                el.style.paddingTop = '25px';
             }
         }
     };
@@ -397,18 +535,18 @@
             }
             if(title){
                 opts.title = title;
-            };
+            }
             if(text){
                 opts.text = text;
-            };
+            }
             show(opts, time);
         }
         if(title){
             opts.title = title;
-        };
+        }
         if(text){
             opts.text = text;
-        };
+        }
         time = time || 500;
         show(opts, time);
     };
@@ -419,19 +557,19 @@
         argsToJson.url && (json.url = argsToJson.url);
         argsToJson.data && (json.data = argsToJson.data);
         if(argsToJson.dataType){
-            var type = toLowerCase(argsToJson.dataType);
+            var type = argsToJson.dataType.toLowerCase();
             if (type == 'text'||type == 'json') {
                 json.dataType = type;
             }
         }else{
             json.dataType = 'json';
-        };
+        }
         json.method = 'post';
         api.ajax(json,
             function(ret,err){
                 if (ret) {
                     fnSuc && fnSuc(ret);
-                };
+                }
             }
         );
     };
@@ -442,28 +580,32 @@
         argsToJson.url && (json.url = argsToJson.url);
         //argsToJson.data && (json.data = argsToJson.data);
         if(argsToJson.dataType){
-            var type = toLowerCase(argsToJson.dataType);
+            var type = argsToJson.dataType.toLowerCase();
             if (type == 'text'||type == 'json') {
                 json.dataType = type;
             }
         }else{
             json.dataType = 'text';
-        };
+        }
         json.method = 'get';
         api.ajax(json,
             function(ret,err){
                 if (ret) {
                     fnSuc && fnSuc(ret);
-                };
+                }
             }
         );
     };
 
-/*end*/  
-    
+    u.intoHeader = function(obj){
+        api.openWin({
+            name: obj.name,
+            url: obj.path
+        });
+    }
+/*end*/
+
 
     window.$api = u;
 
 })(window);
-
-

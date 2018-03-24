@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,width=device-width,initial-scale=1.0'/>
+        <link rel='stylesheet' type='text/css' href='../css/bootstrap.min.css' />
+        <link rel='stylesheet' href='../css/github.css'>
+		<style type='text/css'>
+		  .diy-btn-group-test {margin : 10px 0px 0px 0px;}
+          body{-webkit-user-select:none;}
+		</style>
+    </head>
+    <body>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">open 打开高德地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.open({
+                rect: {
+                    x: 0,
+                    y: 0,
+                    w: 320,
+                    h: 320
+                },
+                showUserLocation: true,
+                zoomLevel: 11,
+                center: {
+                    lon: 116.4021310000,
+                    lat: 39.9994480000
+                },
+                fixedOn:api.frameName,
+                fixed:true
+            }, function(ret){
+                if(ret.status){
+                
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">在高德地图上截图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.takeSnapshotInRect({
+                rect: {
+                    x: 0,
+                    y: 0,
+                    w: 100,
+                    h: 100
+                },
+                path:"fs://aMap/123.png"
+            }, function(ret){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addAnnotations 在地图上添加大头针</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            
+            var annoArray = [{
+            id:1,
+            lon:116.39432327,
+            lat:39.98963192,
+            icons:["widget://res/baiduPin.png"]
+            },{
+            id:2,
+            lon: 116.49432328,
+            lat: 39.98963192,
+            icons:["widget://res/baiduLocation.png"]
+            },{
+            id:3,
+            lon: 116.39432327,
+            lat: 39.88933191,
+            icons:[
+            "widget://image/animatedTrain/animatedTrain_1.png",
+            "widget://image/animatedTrain/animatedTrain_2.png",
+            "widget://image/animatedTrain/animatedTrain_3.png",
+            "widget://image/animatedTrain/animatedTrain_4.png",
+            ]
+            }];
+            
+            map.addAnnotations({
+            annotations:annoArray,
+            draggable:true
+            },function(ret,err){
+            if(ret.eventType == 'click'){
+            api.alert({msg:JSON.stringify(ret)});
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setBubble 设置大头针上气泡的类型</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setBubble({
+            id: 1,
+            //bgImg: 'widget://image/baidu_bubble_bg.png',
+            content: {
+            title: '大标题',
+            subTitle: '概述内容',
+            //illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+            },
+            styles: {
+            titleColor: '#ff0000',
+            titleSize: 18,
+            subTitleColor: '#98FB98',
+            subTitleSize: 16,
+            illusAlign: 'right'
+            }
+            }, function(ret){
+            if(ret){
+            alert(JSON.stringify(ret));
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addBillboard 设置添加布告牌</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addBillboard({
+                id: 4,
+                draggable: true,
+                coords: {
+                    lon:116.29432327,
+                    lat:39.98963192
+                },
+                bgImg: 'widget://res/billboard.png',
+                content: {
+                    title: '大标题',
+                    subTitle: '概述',
+                    illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+                },
+                styles: {
+                    size:{
+                        width:230,
+                        heith:80
+                    },
+                    illusRect:{
+                        x:90,
+                        y:5,
+                        w:80,
+                        h:50
+                    },
+                    marginT: 10,
+                    marginB: 30,
+                    alignment: 'left',
+                    titleColor: '#000',
+                    titleSize: 14,
+                    subTitleColor: '#98FB98',
+                    subTitleSize: 12,
+                    illusAlign: 'right'
+                }
+            }, function(ret){
+                if(ret){
+                //alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchNearby 搜索附近</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchNearby({
+            keyword: 'KTV',
+            lon: 116.384767,
+            lat: 39.989539,
+            radius: 2000,
+            offset: 20,
+            page: 1,
+            sortrule: 0
+            },function(ret,err){
+            if(ret.status){
+            alert(JSON.stringify(ret));
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addLine 在地图上添加线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            
+            var points=[];
+            for(var i=0;i<1000;i++){
+                points.push({
+                   lon: 116.297+i*0.001, lat: 40.109
+                });
+            }
+            
+            var map = api.require('aMap');
+            map.addLine({
+                id: 1,
+                styles: {
+                    type: 'arrow',
+                    borderColor: '#FF0000',
+                    borderWidth: 5,
+                    lineDash: true
+                },
+                points:points
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addEventListener 监听</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addEventListener({
+            name: 'zoom'
+            },function(ret){
+            if(ret.status){
+            alert(JSON.stringify(ret));
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addEventListener 监听</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addEventListener({
+            name: 'viewChange'
+            },function(ret){
+            if(ret.status){
+            alert(JSON.stringify(ret));
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addLocus 添加轨迹</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addLocus({
+                id: 1,
+                borderWidth: 5,
+                locusData:'widget://res/runningRecord.json'
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">removeOverlay 移除指定id的覆盖物</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.removeOverlay({
+                ids: [1, 2, 3, 4, 5]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getOverlook 获取地图俯视角度</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getOverlook(function(ret){
+                alert(ret.overlook);
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getRotation 获取地图旋转角度</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getRotation(function(ret){
+                alert(ret.rotation);
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addAnnotations 在地图上添加大头针</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            
+            var annoArray = [{
+                id:1,
+                lon:116.39432327,
+                lat:39.98963192
+            },{
+                id:2,
+                lon: 116.49432328,
+                lat: 39.98963192,
+                icons:["widget://image/baiduLocation.png"]
+            },{
+                id:3,
+                lon: 116.39432327,
+                lat: 39.88933191,
+                icons:[
+                    "widget://image/animatedTrain/animatedTrain_1.png",
+                    "widget://image/animatedTrain/animatedTrain_2.png",
+                    "widget://image/animatedTrain/animatedTrain_3.png",
+                    "widget://image/animatedTrain/animatedTrain_4.png",
+                ]
+            }];
+            
+            map.addAnnotations({
+                annotations:annoArray,
+                draggable:true
+            },function(ret,err){
+                if(ret.eventType == 'click'){
+                    api.alert({msg:JSON.stringify(ret)});
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setBubble 设置大头针上气泡的类型</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setBubble({
+                id: 1,
+                //bgImg: 'widget://image/baidu_bubble_bg.png',
+                content: {
+                    title: '大标题',
+                    subTitle: '概述内容',
+                    //illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+                },
+                styles: {
+                    titleColor: '#ff0000',
+                    titleSize: 18,
+                    subTitleColor: '#98FB98',
+                    subTitleSize: 16,
+                    illusAlign: 'right'
+                }
+            }, function(ret){
+                if(ret){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getLocation 开始定位</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var aMap = api.require('aMap');
+            aMap.getLocation({
+                autoStop:false
+            },function(ret, err){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getLocation 开始定位</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var aMap = api.require('aMap');
+            aMap.stopLocation();
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">showUserLocation 设置是否在地图上显示用户位置</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.showUserLocation({
+            isShow:true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getCoordsFromName 根据地址查找经纬度</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getCoordsFromName({
+                city: '天津',
+                address: '滨江道'
+            },function(ret,err){
+            if (ret.status){
+                var msg = "经度: " + ret.lon +
+                "\n 纬度: " + ret.lat;
+                api.alert({
+                    title:'搜索结果',
+                    msg: msg
+                });
+            } else {
+                api.alert({
+                    title: '错误代码',
+                    msg: err.code
+                });
+            }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setScaleBar 设置比例尺</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setScaleBar({
+                show:true,
+                position: {
+                    x: 100,
+                    y: 100
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setLogo 设置logo</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setLogo({
+               position: 'right'
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchNearby 搜索附近</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchNearby({
+                keyword: 'KTV',
+                lon: 116.384767,
+                lat: 39.989539,
+                radius: 2000,
+                offset: 20,
+                page: 1,
+                sortrule: 0
+            },function(ret,err){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchInCity 搜索城市里的key</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchInCity({
+                city: '北京',
+                keyword: '学校',
+                offset: 20,
+                page: 1,
+                sortrule: 0
+            },function(ret){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchInPolygon 搜索区域</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchInPolygon({
+                keyword: '图书馆',
+                points:[{
+                    lat: 34.55648,
+                    lon: 112.47723
+                },{
+                    lat: 34.13144,
+                    lon: 112.87723
+                },{
+                    lat: 34.13144,
+                    lon: 112.47723
+                }],
+                offset: 20,
+                page: 1,
+                sortrule: 0
+            },function(ret,err){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">autocomplete 搜索提示</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.autocomplete({
+                keyword: '北京',
+                city: '北京'
+            },function(ret){
+                if(ret.status){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchBusRoute 搜索公交线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchBusRoute({
+                city: '北京',
+                line: '110',
+                offset: 20,
+                page: 1
+            },function(ret){
+                alert(JSON.stringify(ret));
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">drawBusRoute 画公交线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchBusRoute({
+                city: '北京',
+                line: '110',
+                offset: 20,
+                page: 1
+            },function(ret){
+                if(ret.status){
+                    map.drawBusRoute({
+                        id: 1,
+                        autoresizing: true,
+                        index: 0,
+                        styles: {
+                            line:{
+                                    width: 4,
+                                    color:'#00BFFF',
+                                    lineDash:false,
+                                    strokeImg:'widget://res/arrowTexture.png'
+                             },
+                             icons: {
+                                    start: '',
+                                    end: '',
+                                    bus: ''
+                              }
+                        }
+                     });
+                  }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">removeBusRoute 移除公交</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.removeBusRoute({
+              ids:[1]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">searchRoute 搜索路线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchRoute({
+                type: 'drive',
+                strategy: 'drive_time_first',
+                start: {
+                    lon: 116.460888,
+                    lat: 39.890267
+                },
+                end: {
+                    lon: 116.351956,
+                    lat: 39.989872
+                }
+            }, function(ret, err){
+                if(ret.status){
+                    api.alert({msg:JSON.stringify(ret)});
+                } else {
+                    api.alert({msg:JSON.stringify(err)});
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">drawRoute 添加路线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.searchRoute({
+                type: 'drive',
+                strategy: 'drive_time_first',
+                start: {
+                    lon: 116.460888,
+                    lat: 39.890267
+                },
+                end: {
+                    lon: 116.351956,
+                    lat: 39.989872
+                }
+            }, function(ret, err){
+                if(ret.status){
+                    map.drawRoute({
+                        id: 1,
+                        autoresizing:true,
+                        index: 0,
+                        styles: {
+                            walkLine:{
+                                width: 3,
+                                color:'#698B22',
+                                lineDash:false,
+                                strokeImg:''
+                            },
+                            driveLine:{
+                                width: 6,
+                                color:'#0000EE',
+                                lineDash:false,
+                                strokeImg: 'widget://res/arrowTexture.png'
+                            },
+                            busLine:{
+                                width: 4,
+                                color:'#00BFFF',
+                                lineDash:false,
+                                strokeImg:''
+                            },
+                            icons: {
+                                start: '',
+                                end: '',
+                                bus: '',                  
+                                car: '',                  
+                                man: ''                   
+                            }
+                        }
+                    });
+                } else {
+                    api.alert({msg:JSON.stringify(err)});
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">removeRoute 移除指定id的路线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.removeRoute({
+               ids:[1]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addImg 在地图上添加图片</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addImg({
+                id: 5,
+                imgPath: 'widget://image/cover.png',
+                lbLon: 116.39432327,
+                lbLat: 39.88933191,
+                rtLon: 116.49432328,
+                rtLat: 39.98963192,
+                alpha: 1.0
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addPolygon 在地图上添加多边形</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addPolygon({
+                id: 4,
+                styles: {
+                    borderColor: '#FF0000',
+                    borderWidth: 3,
+                    fillColor:'rgba(1,0.8,0,0.5)',
+                    lineDash:true
+                },
+                points: [{
+                    lon:116.39432327,
+                    lat:39.98963192
+                },{
+                    lon: 116.49432328,
+                    lat: 39.98963192
+                },{
+                    lon: 116.39432327,
+                    lat: 39.88933191
+                }]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">removeOverlay 移除指定id的覆盖物</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.removeOverlay({
+              ids: [1, 2, 3, 4, 5]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addCircle 在地图上添加圆形</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addCircle({
+                id: 2,
+                center: {
+                    lon: 116.39432327,
+                    lat: 39.98963192
+                },
+                radius: 500,
+                styles: {
+                    borderColor: '#FF0000',
+                    borderWidth: 3,
+                    lineDash: true,
+                    fillColor: 'rgba(1,0.8,0,0.8)'
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addLine 在地图上添加线</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addLine({
+                id: 1,
+                styles: {
+                    type: 'square',
+                    borderColor: '#FF0000',
+                    borderWidth: 20,
+                    lineDash: false,
+                    strokeImg: 'widget://res/arrowTexture.png'
+                },
+                points: [{
+                   lon: 116.297, lat: 40.109
+                },
+                {
+                   lon: 116.298, lat: 39.109
+                }]
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addMobileAnnotations 添加可移动的图标</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addMobileAnnotations({
+                annotations: [{
+                    id: 10,
+                    lon: 116.297,
+                    lat: 40.109,
+                    icon:'widget://image/bMap_car1.png',
+                    draggable: true
+                },{
+                    id: 11,
+                    lon: 116.98,
+                    lat: 40.109,
+                    icon:'widget://image/bMap_car2.png',
+                    draggable: true
+                },{
+                    id: 12,
+                    lon: 115.30,
+                    lat: 40.109,
+                    icon:'widget://image/bMap_car3.png',
+                    draggable: true
+                },{
+                    id: 13,
+                    lon: 116.297,
+                    lat: 39.109,
+                    icon:'widget://image/bMap_car1.png',
+                    draggable: true
+                },{
+                    id: 14,
+                    lon: 116.98,
+                    lat: 39.109,
+                    icon:'widget://image/bMap_car2.png',
+                    draggable: true
+                },{
+                    id: 15,
+                    lon: 115.30,
+                    lat: 39.109,
+                    icon:'widget://image/bMap_car3.png'
+                }]
+            },function(ret){
+                if (ret.dragState == 'ending') {
+                    alert(ret.id+'拖动结束');
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">moveAnnotation 移动图标</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            for (var i=0; i<6; i++) {
+                map.moveAnnotation({
+                    id: 10+i,
+                    duration: 6,
+                    end:{
+                        lon:116.3843839609304,
+                        lat:39.98964439091298
+                    }
+                }, function(ret, err){
+                   alert(ret.id + '移动结束')
+                });
+            }
+                </pre>
+                </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addBillboard 设置添加布告牌</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addBillboard({
+                id: 4,
+                draggable: true,
+                coords: {
+                    lon:116.39432327,
+                    lat:39.98963192
+                },
+                bgImg: 'widget://image/baidu_bubble_bg.png',
+                content: {
+                    title: '大标题大标题大标题大标题',
+                    subTitle: '概述内容概述内容概述内容概述内容',
+                    illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+                },
+                styles: {
+                    titleColor: '#000',
+                    titleSize: 14,
+                    subTitleColor: '#98FB98',
+                    subTitleSize: 12,
+                    illusAlign: 'right'
+                }
+            }, function(ret){
+                if(ret){
+                    //alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">removeAnnotations 移除指定id的大头针或布告牌</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.removeAnnotations({
+            ids:[1,2,3,4,10,11,12,13,14,15] // 数组,所有要移除的大头针或布告牌的id.
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setBubble 设置大头针上气泡的类型</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setBubble({
+                id: 2,
+                //bgImg: 'widget://image/baidu_bubble_bg.png',
+                content: {
+                    title: '大标题大标题大标题大标题大标题大标题',
+                    subTitle: '概述内容概述内容概述内容概述内容概述内容',
+                    illus: 'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+                },
+                styles: {
+                    titleColor: '#ff0000',
+                    titleSize: 18,
+                    subTitleColor: '#98FB98',
+                    subTitleSize: 16,
+                    illusAlign: 'right'
+                }
+            }, function(ret){
+                if(ret){
+                    alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">popup 弹出标注上的气泡</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.popupBubble({
+              id: 2
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">annotationExist 在地图上添加大头针</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map. annotationExist({
+              id: 1
+            }, function(ret){
+              if(ret.status){
+                api.alert({msg:'存在'});
+              }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getAnnotationCoords 获取气泡坐标</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getAnnotationCoords({
+                id: 1
+            }, function(ret){
+                if(ret){
+                  api.alert({msg:JSON.stringify(ret)});
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setAnnotationCoords 设置气泡坐标</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setAnnotationCoords({
+                id: 1,
+                lon: 116.39,
+                lat: 40.209
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setMapAttr 设置属性</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setMapAttr({
+                type: 'standard',
+                trafficOn: false,
+                zoomEnable: true,
+                scrollEnable: true,
+                building: true,
+                rotateOverlookEnabled: true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addEventListener 监听</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addEventListener({
+               name: 'trackingMode'
+            },function(ret){
+               if(ret.status){
+                  alert(JSON.stringify(ret));
+               }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">addEventListener 监听</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.addEventListener({
+               name: 'click'
+            },function(ret){
+               if(ret.status){
+                  alert(JSON.stringify(ret));
+               }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setCompass 设置指南针</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setCompass({
+                show: true,
+                img: 'widget://res/compass.png',
+                position: {
+                    x:100,
+                    y:100
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">isPolygonContantPoint 判断</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.isPolygonContantPoint({
+                point: {
+                    lon:116.39432327,
+                    lat:39.98963192
+                },
+                points: [{
+                    lon:116.39432327,
+                    lat:39.98963192
+                },{
+                    lon: 116.49432328,
+                    lat: 39.98963192
+                },{
+                    lon: 116.39432327,
+                    lat: 39.88933191
+                }]
+            },function(ret){
+               alert(ret.status);
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">interconvertCoords 判断</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.interconvertCoords({
+                lon: 116.351,
+                lat: 39.283,
+                x:100,
+                y:100
+            }, function(ret, err){
+                if(ret.status){
+                   alert(JSON.stringify(ret));
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getZoomLevel 获取缩放级别</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getZoomLevel(function(ret){
+              alert(JSON.stringify(ret.level));
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">showUserLocation 设置是否在地图上显示用户位置</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.showUserLocation({
+              isShow:true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setTrackingMode 设置跟踪类型</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setTrackingMode({
+                trackingMode:'heading' // 跟踪类型,可选: none,标准模式; follow, 跟踪模式; compass, 罗盘模式.
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getDistance 获取两点之间的距离</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getDistance({
+                start: {
+                    lon: 106.486654,
+                    lat: 29.490295
+                },
+                end: {
+                    lon: 106.581515,
+                    lat: 29.615467
+                }
+            },function(ret){
+                if(ret.status){
+                  api.alert({msg:ret.distance});
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getNameFromCoords 根据经纬度查找地址信息</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getNameFromCoords({
+                lon:116.403906,
+                lat:39.915175
+            },function(ret,err){
+              if (ret) {
+                api.alert({msg:JSON.stringify(ret)});
+              } else {
+                api.alert({msg:JSON.stringify(err)});
+              }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setCenter 设置高德地图中心点</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setCenter({
+                coords:{
+                    lon:116.38429, // 经度
+                    lat:39.98958 // 纬度
+                }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setZoomLevel 设置高德地图缩放等级</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setZoomLevel({
+            level:13 // 地图比例尺级别,当前手机可用 3 - 18级.
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">hide 设置是否隐藏地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            
+            map.hide();
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">show 设置是否隐藏地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            
+            map.show();
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">close 关闭地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            
+            map.close();
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setTraffic 设置交通路况图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setTraffic({
+                traffic: true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setHeatMap 设置热力图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setHeatMap({
+                heatMap: true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setBuilding 设置3d楼块图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setBuilding({
+               building: true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">getRegion 设置高德地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.getRegion(function(ret){
+              if(ret.status){
+                alert(JSON.stringify(ret));
+              }
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setRegion 设置高德地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setRegion({
+                lbLon: 116.39432327,
+                lbLat: 39.88933191,
+                rtLon: 116.49432328,
+                rtLat: 39.98963192,
+                animation: true
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setRotation 设置高德地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setRotation({
+              degree: 100
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">setOverlook 设置高德地图</h3>
+    </div>
+    <div class="panel-body">
+        <pre class="pre-scrollable">
+            var map = api.require('aMap');
+            map.setOverlook({
+               degree: 30
+            });
+        </pre>
+    </div>
+    <div class="panel-footer">
+        <div class="btn-group btn-group-justified">
+            <div class="btn-group">
+                <button role="run" type="button" class="btn btn-primary">运行</button>
+            </div>
+            <div class="btn-group">
+                <button  role="edit" type="button" class="btn btn-info">编辑</button>
+            </div>
+            <div class="btn-group">
+                <button  role="restore" type="button" class="btn btn-warning">还原</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+    <script src="../script/jquery-1.11.1.min.js"></script>
+    <script src='../script/highlight.pack.js'></script>
+    <script src='../script/demo2.js'></script>
+</html>

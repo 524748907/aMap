@@ -11,5 +11,7 @@
 @interface ACAMButton : UIButton
 
 @property (nonatomic, assign) NSInteger btnId;
+@property (nonatomic, assign) NSInteger bubbleCbid;//点击气泡的按钮的回调id
+@property (nonatomic, assign) NSInteger billboardCbid;//点击布告牌上的按钮的回调id
 
 @end

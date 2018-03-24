@@ -18,5 +18,12 @@
     // Drawing code
 }
 */
++ (instancetype)buttonWithType:(UIButtonType)buttonType {
+    ACAMButton *btnSelf = [super buttonWithType:buttonType];
+    if (btnSelf) {
+        btnSelf.bubbleCbid = -1;
+    }
+    return [super buttonWithType:buttonType];
+}
 
 @end

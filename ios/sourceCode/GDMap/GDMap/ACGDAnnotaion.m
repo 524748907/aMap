@@ -59,8 +59,8 @@ static CLLocationCoordinate2D interpolateCoordinate(CLLocationCoordinate2D from,
     [self setCoordinate:coords];
     if (self.timeOffset >= moveDuration) {
         self.timeOffset = 0;
-        if ([self.delegate respondsToSelector:@selector(didMoving:)]) {
-            [self.delegate didMoving:self];
+        if ([self.delegate respondsToSelector:@selector(didMovingAnimationFinished:)]) {
+            [self.delegate didMovingAnimationFinished:self];
         }
     }
 }

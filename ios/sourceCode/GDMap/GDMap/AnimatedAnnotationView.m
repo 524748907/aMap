@@ -19,61 +19,78 @@
 
 @implementation AnimatedAnnotationView
 
-@synthesize imageView = _imageView;
-@synthesize animatedImages = _animatedImages;
-@synthesize interval = _interval;
-@synthesize bubbleView = _bubbleView;
-@synthesize billboardView = _billboardView;
+//@synthesize imageView = _imageView;
+//@synthesize animatedImages = _animatedImages;
+//@synthesize interval = _interval;
+//@synthesize bubbleView = _bubbleView;
+//@synthesize billboardView = _billboardView;
 
 #pragma mark - Life Cycle -
 
 - (id)initWithAnnotation:(id<MAAnnotation>)annotation reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithAnnotation:annotation reuseIdentifier:reuseIdentifier];
     if (self) {
-        ACGDAnnotaion *animatedAnnotation = (ACGDAnnotaion *)self.annotation;
-        if (![animatedAnnotation isKindOfClass:[ACGDAnnotaion class]]) {
-            return self;
-        }
-        if (animatedAnnotation.pinIcons.count > 1) {
-            self.interval = animatedAnnotation.interval;
-            self.animatedImages = [NSMutableArray arrayWithCapacity:1];
+        [self refreshAnimatedPin:annotation];
+    }
+    return self;
+}
+
+- (void)refreshAnimatedPin:(id<MAAnnotation>)annotation {
+    ACGDAnnotaion *animatedAnnotation = (ACGDAnnotaion *)annotation;
+    if (![animatedAnnotation isKindOfClass:[ACGDAnnotaion class]]) {
+        return ;
+    }
+    if (animatedAnnotation.pinIcons.count > 1) {
+        self.interval = animatedAnnotation.interval;
+        if (!self.animatedImages) {
+            self.animatedImages = [NSMutableArray array];
             for (NSString *path in animatedAnnotation.pinIcons) {
                 UIImage *imgn = [UIImage imageWithContentsOfFile:path];
                 if (imgn) {
                     [self.animatedImages addObject:imgn];
                 }
             }
-            float kWidth = 66;
-            float kHeight = 108;
-            UIImage *firstPinImg = [self.animatedImages firstObject];
-            kWidth = firstPinImg.size.width/2.0;
-            kHeight = firstPinImg.size.height/2.0;
-            [self setBounds:CGRectMake(0.f, 0.f, kWidth, kHeight)];
-            [self setBackgroundColor:[UIColor clearColor]];
-            self.imageView = [[UIImageView alloc] initWithFrame:self.bounds];
-            [self addSubview:self.imageView];
+        } else {
+            [self.animatedImages removeAllObjects];
+            for (NSString *path in animatedAnnotation.pinIcons) {
+                UIImage *imgn = [UIImage imageWithContentsOfFile:path];
+                if (imgn) {
+                    [self.animatedImages addObject:imgn];
+                }
+            }
         }
+        float kWidth = 66;
+        float kHeight = 108;
+        UIImage *firstPinImg = [self.animatedImages firstObject];
+        kWidth = firstPinImg.size.width/2.0;
+        kHeight = firstPinImg.size.height/2.0;
+        [self setBounds:CGRectMake(0.f, 0.f, kWidth, kHeight)];
+        [self setBackgroundColor:[UIColor clearColor]];
+        if (!self.animationView) {
+            self.animationView = [[UIImageView alloc] initWithFrame:self.bounds];
+            [self addSubview:self.animationView];
+        }
+        [self updateAnimationView];
     }
-    return self;
 }
 
 #pragma mark - Utility
 
-- (void)updateImageView {
-    if ([self.imageView isAnimating]) {
-        [self.imageView stopAnimating];
+- (void)updateAnimationView {
+    if ([self.animationView isAnimating]) {
+        [self.animationView stopAnimating];
     }
-    self.imageView.animationImages = self.animatedImages;
-    self.imageView.animationDuration = self.interval;
-    self.imageView.animationRepeatCount = 0;
-    [self.imageView startAnimating];
+    self.animationView.animationImages = self.animatedImages;
+    self.animationView.animationDuration = self.interval;
+    self.animationView.animationRepeatCount = 0;
+    [self.animationView startAnimating];
 }
 
 #pragma mark - Override -
 
 - (void)setAnnotation:(id<MAAnnotation>)annotation {
     [super setAnnotation:annotation];
-    [self updateImageView];
+    [self updateAnimationView];
 }
 
 - (void)setBubbleView:(ACBubbleView *)bubbleView {

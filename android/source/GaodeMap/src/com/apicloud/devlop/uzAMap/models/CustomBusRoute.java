@@ -12,9 +12,9 @@ import android.graphics.BitmapFactory;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.overlay.BusRouteOverlay;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
+import com.apicloud.devlop.uzAMap.overlay.BusRouteOverlay;
 import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomBusRoute extends BusRouteOverlay {

@@ -33,21 +33,24 @@
 
 - (void) loadImage:(NSString *)imageURL withPlaceholdImage:(UIImage *)placeholdImage {
     self.image = placeholdImage;
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0ul);
+    __weak typeof (self) weakSelf = self;
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
     dispatch_async(queue, ^{
-        UIImage *image = [self getImageInCacheWithURLStr:imageURL];
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            if (image) {
-                self.image = image;
-			    if (self.needClip) {
-					CGPoint center = self.center;
-					self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, image.size.width, image.size.height);
-					self.center = center;
-				}
-			} else {
-                [self downloadImage:imageURL];
-			}
-        });
+        UIImage *image = [weakSelf getImageInCacheWithURLStr:imageURL];
+        if (image) {
+            weakSelf.image = image;
+            if (weakSelf.needClip) {
+                CGPoint center = self.center;
+                weakSelf.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, image.size.width, image.size.height);
+                weakSelf.center = center;
+            }
+        } else {
+            [weakSelf downloadImage:imageURL];
+        }
+        
+        //dispatch_async(dispatch_get_main_queue(), ^{
+        //    
+        //});
     });
 }
 
@@ -71,24 +74,26 @@
     [self.request setCompletionBlock:^(void){
 		asyImg.request.delegate = nil;
         asyImg.request = nil;
-		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0ul);
+		dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
 		dispatch_async(queue, ^{
 			UIImage *image = [asyImg getImageInCacheWithURLStr:imageURL];
-			dispatch_sync(dispatch_get_main_queue(), ^{
-				if (image) {
-					if (asyImg.needClip) {
-						CGPoint center = asyImg.center;
-						asyImg.frame = CGRectMake(asyImg.frame.origin.x, asyImg.frame.origin.y, image.size.width, image.size.height);
-						asyImg.center = center;
-					}
-					asyImg.alpha = 0;
-					[UIView beginAnimations:nil context:NULL];
-					[UIView setAnimationDuration:0.5];
-					asyImg.image = image;
-					asyImg.alpha = 1.0;
-					[UIView commitAnimations];
-				}
-            });
+            if (image) {
+                if (asyImg.needClip) {
+                    CGPoint center = asyImg.center;
+                    asyImg.frame = CGRectMake(asyImg.frame.origin.x, asyImg.frame.origin.y, image.size.width, image.size.height);
+                    asyImg.center = center;
+                }
+                asyImg.alpha = 0;
+                [UIView beginAnimations:nil context:NULL];
+                [UIView setAnimationDuration:0.5];
+                asyImg.image = image;
+                asyImg.alpha = 1.0;
+                [UIView commitAnimations];
+            }
+            
+            //dispatch_sync(dispatch_get_main_queue(), ^{
+            //    
+            //});
 		});}];
     [self.request setFailedBlock:^(void){
         [asyImg.request cancel];

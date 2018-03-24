@@ -79,8 +79,7 @@ public class MapSimple {
 		if (aMap != null) {
 			float zoomLevel = (float) moduleContext.optDouble("level", 10);
 			boolean isAnimated = moduleContext.optBoolean("animation", true);
-			changeCamera(aMap, CameraUpdateFactory.zoomTo(zoomLevel),
-					isAnimated, null);
+			changeCamera(aMap, CameraUpdateFactory.zoomTo(zoomLevel),isAnimated, null);
 		}
 	}
 
@@ -224,6 +223,7 @@ public class MapSimple {
 			boolean isAnimated, CancelableCallback callback) {
 		if (isAnimated) {
 			aMap.animateCamera(update, 300, callback);
+			//aMap.moveCamera(update);
 		} else {
 			aMap.moveCamera(update);
 		}

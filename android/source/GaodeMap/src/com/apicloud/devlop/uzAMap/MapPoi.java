@@ -58,7 +58,7 @@ public class MapPoi implements OnPoiSearchListener {
 		double lat = moduleContext.optDouble("lat");
 		int radius = moduleContext.optInt("radius", 3000);
 		int page = moduleContext.optInt("page", 1);
-		page = page - 1 < 0 ? 0 : page - 1;
+		//page = page - 1 < 0 ? 0 : page - 1;
 		int pageSize = moduleContext.optInt("offset", 20);
 		SearchBound searchBound = new SearchBound(new LatLonPoint(lat, lon),
 				radius);
@@ -164,6 +164,7 @@ public class MapPoi implements OnPoiSearchListener {
 					poi.put("address", poiItem.getSnippet());
 					poi.put("tel", poiItem.getTel());
 					poi.put("distance", poiItem.getDistance());
+					poi.put("indoorData", "floor:" + poiItem.getIndoorData().getFloor() + "-- floorName:" + poiItem.getIndoorData().getFloorName() + "--- poiId:" + poiItem.getIndoorData().getPoiId());//
 					LatLonPoint latLonPoint = poiItem.getLatLonPoint();
 					if (latLonPoint != null) {
 						poi.put("lat", latLonPoint.getLatitude());

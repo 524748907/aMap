@@ -20,7 +20,12 @@ typedef enum {
 @interface ACGDAnnotaion : MAPointAnnotation
 
 @property (nonatomic, assign) AnnotationType type;      //annotation的类型
-@property (nonatomic, assign) NSInteger annotId,clickCbId;        //annotation的id
+@property (nonatomic, assign) NSInteger annotId;        //annotation的id
+@property (nonatomic, assign) NSInteger clickCbId;      //annotation点击回调id
+@property (nonatomic, assign) NSInteger bubbleClickCbid;//annotation气泡点击回调id
+@property (nonatomic, assign) NSInteger moveAnnoCbid;   //可移动的标注回调id
+@property (nonatomic, assign) NSInteger addBillboardCbid;//添加布告牌标注的回调id
+@property (nonatomic, assign) NSInteger moveAnnoEndCbid;//标注移动结束的回调id
 @property (nonatomic, strong) NSArray *pinIcons;        //annotation的icon图标
 @property (nonatomic, assign) BOOL draggable;           //annotation是否可拖动
 @property (nonatomic, assign) float interval;           //annotation标注动画时间
@@ -28,6 +33,7 @@ typedef enum {
 @property (nonatomic, strong) NSString *bubbleBgImg, *billBgImg, *mobileBgImg;//annotation的气泡的背景图片
 @property (nonatomic, strong) NSDictionary *contentDict;//annotation的气泡的内如文本信息
 @property (nonatomic, strong) NSDictionary *stylesDict; //annotation的气泡的样式信息
+@property (nonatomic, strong) NSDictionary *webBubbleDict; //加载网页的的气泡的样式信息
 
 //可移动的标注
 @property (nonatomic, assign) float currentAngle;   //annotation的图标当前旋转角度（与x轴正向之间的角度）
@@ -45,6 +51,6 @@ typedef enum {
 
 @optional
 - (void)willMoving:(ACGDAnnotaion *)anno;
-- (void)didMoving:(ACGDAnnotaion *)anno;
+- (void)didMovingAnimationFinished:(ACGDAnnotaion *)anno;
 
 @end

@@ -89,33 +89,33 @@ public class JsParamsUtil {
 	public double openCenterLat(UZModuleContext moduleContext) {
 		JSONObject center = moduleContext.optJSONObject("center");
 		if (center != null) {
-			return center.optDouble("lat");
+			return center.optDouble("lat");//add 默认值  at 2017年9月6日 15:41:33
 		}
-		return 0;
+		return 39.908482;
 	}
 
 	public double openCenterLon(UZModuleContext moduleContext) {
 		JSONObject center = moduleContext.optJSONObject("center");
 		if (center != null) {
-			return center.optDouble("lon");
+			return center.optDouble("lon");//add 默认值  at 2017年9月6日 15:41:33
 		}
-		return 0;
+		return 116.397707;
 	}
 
 	public double centerLat(UZModuleContext moduleContext) {
 		JSONObject center = moduleContext.optJSONObject("coords");
 		if (center != null) {
-			return center.optDouble("lat");
+			return center.optDouble("lat");//add 默认值  at 2017年9月6日 15:41:33
 		}
-		return 0;
+		return 39.908482;
 	}
 
 	public double centerLon(UZModuleContext moduleContext) {
 		JSONObject center = moduleContext.optJSONObject("coords");
 		if (center != null) {
-			return center.optDouble("lon");
+			return center.optDouble("lon");//add 默认值  at 2017年9月6日 15:41:33
 		}
-		return 0;
+		return 116.397707;
 	}
 
 	public double zoomLevel(UZModuleContext moduleContext) {
@@ -281,7 +281,7 @@ public class JsParamsUtil {
 			for (int i = 0; i < annotations.length(); i++) {
 				Annotation annotation = new Annotation();
 				jsonObject = annotations.optJSONObject(i);
-				int id = jsonObject.optInt("id");
+				String id = jsonObject.optString("id");
 				double lat = jsonObject.optDouble("lat");
 				double lon = jsonObject.optDouble("lon");
 				boolean draggable = jsonObject.optBoolean("draggable", false);
@@ -328,7 +328,7 @@ public class JsParamsUtil {
 			MoveAnnotation annotation = null;
 			for (int i = 0; i < array.length(); i++) {
 				object = array.optJSONObject(i);
-				int id = object.optInt("id");
+				String id = object.optString("id");
 				double lat = object.optDouble("lat");
 				double lon = object.optDouble("lon");
 				String iconPath = object.optString("icon");
@@ -344,7 +344,7 @@ public class JsParamsUtil {
 	}
 
 	public Bubble bubble(UZModuleContext moduleContext, UzAMap aMap) {
-		int id = moduleContext.optInt("id");
+		String id = moduleContext.optString("id");
 		String bgImgStr = moduleContext.optString("bgImg");
 		Bitmap bgImg = getBitmap(aMap.makeRealPath(bgImgStr));
 		JSONObject content = moduleContext.optJSONObject("content");
@@ -457,12 +457,12 @@ public class JsParamsUtil {
 		return false;
 	}
 
-	public List<Integer> removeOverlayIds(UZModuleContext moduleContext) {
-		List<Integer> list = new ArrayList<Integer>();
+	public List<String> removeOverlayIds(UZModuleContext moduleContext) {
+		List<String> list = new ArrayList<String>();
 		JSONArray ids = moduleContext.optJSONArray("ids");
 		if (ids != null && ids.length() > 0) {
 			for (int i = 0; i < ids.length(); i++) {
-				list.add(ids.optInt(i));
+				list.add(ids.optString(i));
 			}
 			return list;
 		}
@@ -668,12 +668,12 @@ public class JsParamsUtil {
 		return moduleContext.optBoolean("autoresizing", true);
 	}
 
-	public List<Integer> removeRouteIds(UZModuleContext moduleContext) {
+	public List<String> removeRouteIds(UZModuleContext moduleContext) {
 		JSONArray ids = moduleContext.optJSONArray("ids");
 		if (ids != null) {
-			List<Integer> idList = new ArrayList<Integer>();
+			List<String> idList = new ArrayList<String>();
 			for (int i = 0; i < ids.length(); i++) {
-				idList.add(ids.optInt(i));
+				idList.add(ids.optString(i));
 			}
 			return idList;
 		}

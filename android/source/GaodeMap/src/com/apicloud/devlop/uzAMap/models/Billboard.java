@@ -9,29 +9,32 @@ package com.apicloud.devlop.uzAMap.models;
 import android.view.View;
 
 import com.amap.api.maps.model.Marker;
+import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class Billboard {
-	private int id;
+	private String id;
 	private double lat;
 	private double lon;
 	private boolean draggable;
 	private Marker marker;
 	private View view;
+	private UZModuleContext moduleContext;
 
-	public Billboard(int id, double lat, double lon, boolean draggable,
-			Marker marker) {
+	public Billboard(String id, double lat, double lon, boolean draggable,
+			Marker marker, UZModuleContext moduleContext) {
 		this.id = id;
 		this.lat = lat;
 		this.lon = lon;
 		this.draggable = draggable;
 		this.marker = marker;
+		this.moduleContext = moduleContext;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
@@ -73,5 +76,13 @@ public class Billboard {
 
 	public void setView(View view) {
 		this.view = view;
+	}
+
+	public UZModuleContext getModuleContext() {
+		return moduleContext;
+	}
+
+	public void setModuleContext(UZModuleContext moduleContext) {
+		this.moduleContext = moduleContext;
 	}
 }

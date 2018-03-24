@@ -14,8 +14,8 @@ import android.graphics.BitmapFactory;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.overlay.BusLineOverlay;
 import com.amap.api.services.busline.BusLineItem;
+import com.apicloud.devlop.uzAMap.overlay.BusLineOverlay;
 import com.uzmap.pkg.uzkit.UZUtility;
 
 public class CustomBusLineOverLay extends BusLineOverlay {

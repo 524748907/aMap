@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.text.TextUtils;
+
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
@@ -24,6 +27,7 @@ import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 public class MapShowUser implements AMapLocationListener {
 	private Context mContext;
@@ -35,14 +39,16 @@ public class MapShowUser implements AMapLocationListener {
 			Context context) {
 		mContext = context;
 		boolean isShow = moduleContext.optBoolean("isShow", true);
+		String imagePath = moduleContext.makeRealPath(moduleContext.optString("imagePath", ""));
 		if (aMap != null) {
-			init();
+			//init();
 			if (mLocMarker != null) {
 				mLocMarker.remove();
 			}
-			if (isShow) {
-				showUserLocation(aMap, context);
-			}
+//			if (isShow) {
+//				showUserLocation(aMap, isShow, context);
+//			}
+			showUserLocation(aMap, isShow, context, moduleContext);
 		}
 	}
 
@@ -67,7 +73,7 @@ public class MapShowUser implements AMapLocationListener {
 			AMap aMap = mMap.getMapView().getMap();
 			init();
 			addLocMarker(aMap);
-			aMap.setMyLocationStyle(createLocationStyle(context));
+			//aMap.setMyLocationStyle(createLocationStyle(context));
 		}
 	}
 	
@@ -79,12 +85,13 @@ public class MapShowUser implements AMapLocationListener {
 		mLocationClient.startLocation();
 	}
 
-	public void showUserLocation(AMap aMap, Context context) {
+	public void showUserLocation(AMap aMap, boolean isShow, Context context, UZModuleContext moduleContext) {
 		mContext = context;
 		if (aMap != null) {
-			init();
-			addLocMarker(aMap);
-			aMap.setMyLocationStyle(createLocationStyle(context));
+			//init();
+			//addLocMarker(aMap);
+			aMap.setMyLocationStyle(createLocationStyle(context, isShow, moduleContext));
+			aMap.setMyLocationEnabled(true);
 		}
 	}
 
@@ -106,15 +113,42 @@ public class MapShowUser implements AMapLocationListener {
 				.icons(giflist).period(50));
 	}
 
-	private MyLocationStyle createLocationStyle(Context context) {
+	private MyLocationStyle createLocationStyle(Context context, boolean isShow, UZModuleContext moduleContext) {
 		BitmapDescriptor bitmapDescriptor = null;
-		int pointId = -1;
-		pointId = UZResourcesIDFinder.getResDrawableID("mo_amap_loc_icon");
-		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),
-				pointId);
-		bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(bitmap);
+		String imagePath = moduleContext.makeRealPath(moduleContext.optString("imagePath", ""));
+		if (TextUtils.isEmpty(imagePath)) {
+			int pointId = -1;
+			pointId = UZResourcesIDFinder.getResDrawableID("mo_amap_point5");
+			Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), pointId);
+			bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(bitmap);
+		}else {
+			Bitmap bitmap = UZUtility.getLocalImage(imagePath);
+			bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(bitmap);
+		}
+		
 		MyLocationStyle myLocationStyle = new MyLocationStyle();
-		myLocationStyle.myLocationIcon(bitmapDescriptor);
+		boolean showsAccuracyRing = moduleContext.optBoolean("showsAccuracyRing", true);
+		
+		String fillColor = moduleContext.optString("fillColor");
+		String strokeColor = moduleContext.optString("strokeColor");
+		if (!TextUtils.isEmpty(strokeColor)) {
+			myLocationStyle.strokeColor(Color.parseColor(strokeColor));
+		}
+		if (!TextUtils.isEmpty(fillColor)) {
+			myLocationStyle.radiusFillColor(Color.parseColor(fillColor));
+		}
+		int lineWidth = moduleContext.optInt("lineWidth", 0);
+		myLocationStyle.strokeWidth(lineWidth);
+		
+		
+		boolean showsHeadingIndicator = moduleContext.optBoolean("showsHeadingIndicator", true);
+		if (showsHeadingIndicator) {
+			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE);
+		}else {
+			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
+		}
+		
+		myLocationStyle = myLocationStyle.myLocationIcon(bitmapDescriptor).showMyLocation(isShow);
 		return myLocationStyle;
 	}
 
