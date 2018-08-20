@@ -74,11 +74,16 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [setWebBubble](#setWebBubble)
 [addWebBubbleListener](#addWebBubbleListener)
 [removeWebBubbleListener](#removeWebBubbleListener)
+[addMoveAnimation](#addMoveAnimation)
+[cancelMoveAnimation](#cancelMoveAnimation)
 </div>
 
 ## 覆盖物类
 
 <div class="outline">
+[addHeatMap](#addHeatMap)
+[refreshHeatMap](#refreshHeatMap)
+[addMultiPoint](#addMultiPoint)
 [addLine](#addLine)
 [addCircle](#addCircle)
 [addPolygon](#addPolygon)
@@ -107,6 +112,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 
 <div class="outline">
 [getProvinces](#getProvinces)
+[getCitiesByProvince](#getCitiesByProvince)
 [getMunicipalities](#getMunicipalities)
 [getNationWide](#getNationWide)
 [getAllCities](#getAllCities)
@@ -119,6 +125,20 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [checkNewestVersion](#checkNewestVersion)
 [reloadMap](#reloadMap)
 </div>
+
+## 经纬度坐标转换、轨迹纠偏
+
+<div class="outline">
+[convertCoordinate](#convertCoordinate)
+[processedTrace](#processedTrace)
+[cancelProcessedTrace](#cancelProcessedTrace)
+</div>
+
+
+# 论坛示例
+
+为帮助用户更好更快的使用模块，论坛维护了一个[示例](https://community.apicloud.com/bbs/thread-34877-1-1.html)，示例中包含示例代码、知识点讲解、注意事项等，供您参考。
+
 
 # **概述**
 
@@ -240,6 +260,12 @@ showUserLocation：
 - 类型：布尔
 - 描述：（可选项）是否在地图上显示用户位置
 - 默认值：true
+
+isGestureScaleByMapCenter:
+
+- 类型：布尔
+- 描述：(可选项) 设置是否以地图中心点缩放 (ios不支持)
+- 默认值：false
 
 fixedOn：
 
@@ -497,7 +523,8 @@ getCoordsFromName({params}, callback(ret, err))
 city：
 
 - 类型：字符串
-- 描述：所要搜索的地址所在的城市，cityname（中文或中文全拼）、citycode、adcode
+- 描述：（可选项）所要搜索的地址所在的城市，cityname（中文或中文全拼）、citycode、adcode
+- 注意：如果address是完整的地址，本参数可不传。若传必须传城市，不可带省，如：济南；不能传山东济南
 
 address：
 
@@ -536,8 +563,8 @@ err：
 ```js
 var aMap = api.require('aMap');
 aMap.getCoordsFromName({
-    city: '北京',
-    address: '天安门'
+    city: '济南',
+    address: '济南市市中区趵突泉南路1号趵突泉公园内'
 }, function(ret, err) {
     if (ret.status) {
         alert(JSON.stringify(ret));
@@ -2084,6 +2111,7 @@ annotations：
     lon: 116.233,              //数字类型；图标标注所在位置的经度
     lat: 39.134,               //数字类型；图标标注所在位置的纬度
     icons: 'widget://',        //（可选项）数组类型；指定的标注图标路径组成的数组，若包含多张图片，则此标注显示为多图联动的 gif 动画效果，要求本地路径（fs://、widget://），若不传则显示公用的 icons 图标
+    selectedIcons:             // (可选项) 数组类型；点击标注后的图标路径，若包含多张图片，则此标注显示为多图联动的 gif 动画效果，要求本地路径（fs://、widget://），若不传则显示公用的selectedIcons，如果公用的selectedIcons也不传，则点击时不切换图标
     draggable: true            //（可选项）布尔类型；所添加的标注是否可被拖动，若不传则以公用的 draggable 为准
 }]
 ```
@@ -2094,6 +2122,10 @@ icons：
 - 描述：（可选项）指定的标注图标路径组成的数组，若包含多张图片，则此标注显示为多图联动的 gif ，要求本地路径（fs://、widget://）
 - 默认值：红色大头针
 
+selectedIcons：
+
+- 类型：数组
+- 描述：(可选项) 指定的标注图标路径组成的数组，若包含多张图片，则此标注显示为多图联动的 gif ，要求本地路径（fs://、widget://），
 
 draggable：
 
@@ -2630,6 +2662,7 @@ bgImg：
 - 类型：字符串
 - 描述：布告牌的背景图片，要求本地路径（fs://、widget://）
 
+
 content：
 
 - 类型：JSON 对象
@@ -2680,6 +2713,22 @@ styles：
                                     //right（图片居右）
 }
 ```
+
+selectedStyles：
+
+- 类型：JSON 对象
+- 描述：布告牌选中后的样式
+- 内部字段：
+
+```js
+{
+    bgImg:'',                       //（可选项）字符串类型；选中后的布告牌背景图片，要求本地路径（fs://、widget：//）；默认：同未选中时值相同
+    titleColor: '#000',             //（可选项）字符串类型；选中后的布告牌标题的文字颜色，支持 rgb、rgba、#；默认：同未选中时值相同
+    subTitleColor: '#000',          //（可选项）字符串类型；选中后的布告牌概述内容的文字颜色，支持 rgb、rgba、#；默认：同未选中时值相同
+    illus: ''                       //（可选项）字符串类型；选中后的布告牌的配图；默认：同未选中时值相同
+}
+```
+
 
 ## callback(ret)
 
@@ -2933,6 +2982,342 @@ iOS系统，Android系统
 
 可提供的1.0.0及更高版本
 
+
+<div id="addMoveAnimation"></div>
+
+# **addMoveAnimation**
+
+给地图上的标注添加移动动画
+
+注意：
+
+第一个添加的动画以当前位置为起始点，沿传入的coordinates点移动，否则以上一个动画终点为起始点
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：要移动的标注的 id 
+
+duration：
+
+- 类型：数字
+- 描述：（可选项）移动动画的时间，单位为秒（s）
+- 默认值：3.0（s）
+
+coordinates：
+
+- 类型：数组
+- 描述：动画移动经过点坐标集合
+- 内部字段：
+
+```js
+{
+    lon: 116.581515,    //数字类型；经度
+    lat: 29.615467      //数字类型；纬度
+}
+```
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    isFinished: true        //布尔类型；是否结束
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.addMoveAnimation({
+    id: 10,
+    duration: 6,
+    coordinates: [{
+        lon: 116.3843839609304,
+        lat: 39.98964439091298
+    }]
+}, function(ret) {
+    alert(ret.id + '移动结束')
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
+
+<div id="cancelMoveAnimation"></div>
+
+# **cancelMoveAnimation**
+
+取消地图上的标注移动动画
+
+
+cancelMoveAnimation({params})
+
+## params
+
+id：
+
+- 类型：字符串
+- 描述：要移除的标注或布告牌id（数字）
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.cancelMoveAnimation({
+    id: 1
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
+
+
+<div id="addHeatMap"></div>
+
+# **addHeatMap**
+
+在地图上添加热力点图层
+
+addHeatMap({params})
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：热力点图层的id，**不可与覆盖物类其它接口添加得图层 id 一样**
+
+
+data：
+
+- 类型：字符串/数组类型
+- 描述：为字符串类型时表示热力点信息文件路径，要求本地路径（widget://、fs://）；若传数组类型则表示直接将热力点数据传给模块
+- 内部字段：
+
+```js
+[{
+	longitude:,      //数字类型；经度
+	latitude:,       //数字类型；纬度
+	intensity:''     //数字类型；强度
+}]
+```
+
+styles：
+
+- 类型：JSON 对象
+- 描述：（可选项）直线的样式
+- 内部字段：
+
+```js
+{
+    radius: ,             //（可选项）数字类型；热力图半径，范围:0-100 screen point；默认：12
+    opacity: ,            //（可选项）数字类型；透明度，范围：0-1；默认：0.6
+    allowRetinaAdapting: ,//（可选项）布尔类型；是否开启高清热力图，默认：false；（android不支持）
+    gradient: {           //（可选项）JSON对象；渐变色彩及其点配置，colors和points 一一对应
+       colors: [],        //（可选项）数组类型；渐变色组；默认：['#ff0000','#0000FF','#008000']
+       points: []         //（可选项）数组类型；渐变点：默认：[0.3,0.6,0.9]
+    }
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.addHeatMap({
+    id: 1,
+    styles: {
+        radius: ,
+        opacity:,
+        allowRetinaAdapting:,
+        gradient: {
+           colors:[“#ff0000”,””，“”],
+           points:[0.30.60.9]
+        }
+    },
+    data:‘widget://res/points.txt’ 
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
+
+
+<div id="refreshHeatMap"></div>
+
+# **refreshHeatMap**
+
+刷新在地图上添加热力点图层
+
+refreshHeatMap({params})
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：热力点图层的id
+
+styles：
+
+- 类型：JSON 对象
+- 描述：（可选项）直线的样式
+- 内部字段：
+
+```js
+{
+    radius: ,             //（可选项）数字类型；热力图半径，范围:0-100 screen point；默认：12
+    opacity: ,            //（可选项）数字类型；透明度，范围：0-1；默认：0.6
+    allowRetinaAdapting: ,//（可选项）布尔类型；是否开启高清热力图，默认：No；(android不支持)
+    gradient: {           //（可选项）JSON对象；渐变色彩及其点配置，colors和points 一一对应
+       colors: [],        //（可选项）数组类型；渐变色组；默认：['#ff0000','#0000FF','#008000']
+       points: []         //（可选项）数组类型；渐变点：默认：[0.3,0.6,0.9]
+    }
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.refreshHeatMap({
+    id: 1,
+    styles: {
+        radius: ,
+        opacity:,
+        allowRetinaAdapting:,
+        gradient: {
+           colors:[],
+           points:[]
+        }
+    }
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
+
+
+<div id="addMultiPoint"></div>
+
+# **addMultiPoint**
+
+在地图上添加点聚合图层
+
+addMultiPoint({params},callback(ret))
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：点聚合图层的id，**不可与覆盖物类其它接口添加得图层 id 一样**
+
+
+path：
+
+- 类型：字符串
+- 描述：聚合点信息文件路径，要求本地路径（widget://、fs://）
+- 内部字段：
+
+```js
+[{
+	longitude:,      //数字类型；经度
+	latitude:,       //数字类型；纬度
+	title:'',        //字符串类型；标题
+	subtitle:'',     //字符串类型；子标题
+	customID:''      //字符串类型；自定义id
+}]
+```
+
+styles：
+
+- 类型：JSON 对象
+- 描述：（可选项）直线的样式
+- 内部字段：
+
+```js
+{
+    icon: '',     //（可选项）字符串类型；聚点图标路径，要求本地路径（fs://、widget://）
+    pointSize: {  //（可选项）JSON对象；聚点图标的大小，不传则默认图片大小(android不支持)
+       w: ,       //（可选项）数字类型；宽度；默认：10
+       h:         //（可选项）数字类型；高度：默认：10
+    }, 
+    anchor: {     //（可选项）JSON对象；聚点图标的锚点位置，左上角为 (0,0) 右下角为 (1,1)
+       x: ,       //（可选项）数字类型；x坐标，范围[0-1]；默认：0.5
+       y:         //（可选项）数字类型；y坐标，范围[0-1]；默认：0.5
+    }  
+}
+```
+
+##callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    eventType: 'click' ,//字符串类型；交互事件类型
+    point: {
+		longitude:,       //数字类型；经度
+		latitude:,        //数字类型；纬度
+		title:'',         //字符串类型；标题
+		subtitle:'',      //字符串类型；子标题
+		customID:''       //字符串类型；自定义id
+	}
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.addMultiPoint({
+    id: 1,
+    styles: {
+        icon: 'arrow',
+        pointSize: {
+           w:,
+           h:
+        },
+        anchor: {
+           x:,
+           y:
+        },
+    },
+    path:‘widget://res/points.txt’ 
+},function(ret){
+	api.alert({msg:JSON.stringify(ret)});
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
+
 <div id="addLine"></div>
 
 # **addLine**
@@ -2946,7 +3331,7 @@ addLine({params})
 id：
 
 - 类型：数字
-- 描述：线的 id
+- 描述：线的 id，**不可与覆盖物类其它接口添加得图层 id 一样**
 
 styles：
 
@@ -3021,7 +3406,7 @@ addCircle({params})
 id：
 
 - 类型：数字
-- 描述：圆形的 id，**不可与 addLine 接口内的 id 相同**
+- 描述：圆形的 id，**不可与覆盖物类其它接口添加得图层 id 一样**
 
 center：
 
@@ -3095,7 +3480,7 @@ addPolygon({params})
 id：
 
 - 类型：数字
-- 描述：多边形的 id，**不可与 addLine、addCircle、addArc 接口内的 id 相同**
+- 描述：多边形的 id，**不可与覆盖物类其它接口添加得图层 id 一样**
 
 styles：
 
@@ -3169,7 +3554,7 @@ addImg({params})
 id：
 
 - 类型：数字
-- 描述：图片 id，**不可与 addLine、addCircle、addArc、addPolygon 接口内的 id 相同**
+- 描述：图片 id，**不可与覆盖物类其它接口添加得图层 id 一样**
 
 imgPath：
 
@@ -3229,7 +3614,7 @@ addLocus({params})
 id：
 
 - 类型：数字
-- 描述：线的 id，**不可与 addLine、addCircle、addArc、addPolygon、addImg接口内的 id 相同**
+- 描述：线的 id，**不可与覆盖物类其它接口添加得图层 id 一样**
 
 borderWidth：
 
@@ -3251,7 +3636,7 @@ locusData：
 
 ```js
 [{
-    longtitude: "116.297",     //字符串类型；经度
+    longitude: "116.297",     //字符串类型；经度
     latitude: "40.109"         //字符串类型；纬度
     rgba: 'rgba(123,234,12,1)' //字符串类型；颜色值
 }]
@@ -4212,8 +4597,8 @@ ret：
        name: '',            //字符串类型；提示点的名字
        adcode: '',          //字符串类型；提示点所在区域编码
        district: '',        //字符串类型；提示的所属区域
-       lat: ,               //数字类型；提示点纬度,Android 平台上忽略本参数
-       lon:                 //数字类型；提示点经度,Android 平台上忽略本参数
+       lat: ,               //数字类型；提示点纬度
+       lon:                 //数字类型；提示点经度
     }]                       
 }
 ```
@@ -4345,10 +4730,9 @@ ret：
 {
     status: true,           //布尔型；true||false
     provinces : [           //数组类型；返回全国省份的信息
-    [{                      //数组类型；返回组成该省份的各个城市信息 
+    {                       //JSON对象；返回组成该省份的信息 
         name: '',           //字符串类型；区域名称
         adcode: '',         //字符串类型；区域编码
-        cityCode:  ,        //字符串类型；城市编码，android 平台暂不支持本字段
         jianpin: '',        //字符串类型；区域简拼
         pinyin: '',         //字符串类型；区域拼音
         size: ,             //数字类型；该区域离线包数据大小，单位：byte
@@ -4358,7 +4742,7 @@ ret：
                             // 1：缓存状态
                             // 2：已安装
                             // 3：已过期  
-    },{}...],[{},{}...]...
+    },{},{},{}...
     ]                      
 }
 ```
@@ -4379,6 +4763,77 @@ aMap.getProvinces(function(ret) {
 iOS系统，Android系统
 
 可提供的1.0.0及更高版本
+
+
+<div id="getCitiesByProvince"></div>
+
+# **getCitiesByProvince**
+
+获取各个省份包括的城市列表，**无需调用 open 接口**
+
+getCitiesByProvince(callback(ret, err))
+
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    status: true,           //布尔型；true||false
+    provinces : [           //数组类型；返回全国各省份城市信息
+    {
+       province:{           //JSON对象；返回组成该省份的信息 
+        name: '',           //字符串类型；区域名称
+        adcode: '',         //字符串类型；区域编码
+        jianpin: '',        //字符串类型；区域简拼
+        pinyin: '',         //字符串类型；区域拼音
+        size: ,             //数字类型；该区域离线包数据大小，单位：byte
+        downloadSize: ,     //数字类型；已下载离线包数据大小，单位：byte，android 平台暂不支持本字段
+        status:             //数字类型；城市离线数据状态，取值范围如下：
+                            // 0：不存在
+                            // 1：缓存状态
+                            // 2：已安装
+                            // 3：已过期  
+       },
+       cities:[             //数组类型；返回组成该省份的各个城市信息 
+       {
+        name: '',           //字符串类型；区域名称
+        adcode: '',         //字符串类型；区域编码
+        cityCode:  ,        //字符串类型；城市编码
+        jianpin: '',        //字符串类型；区域简拼
+        pinyin: '',         //字符串类型；区域拼音
+        size: ,             //数字类型；该区域离线包数据大小，单位：byte
+        downloadSize: ,     //数字类型；已下载离线包数据大小，单位：byte，android 平台暂不支持本字段
+        status:             //数字类型；城市离线数据状态，取值范围如下：
+                            // 0：不存在
+                            // 1：缓存状态
+                            // 2：已安装
+                            // 3：已过期  
+       },{}...]
+    },{},{}...]                      
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.getCitiesByProvince(function(ret) {
+    if (ret.status) {
+        alert(JSON.stringify(ret));
+    }
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.8及更高版本
 
 <div id="getMunicipalities"></div>
 
@@ -4818,3 +5273,199 @@ aMap.reloadMap();
 iOS系统
 
 可提供的1.0.0及更高版本
+
+
+<div id="convertCoordinate"></div>
+
+# **convertCoordinate**
+
+其它坐标系经纬度转换为高德地图经纬度
+
+convertCoordinate({params},callback(ret))
+
+
+## params
+
+type:
+
+- 类型：字符串
+- 描述：（可选项）经纬度坐标类型
+- 默认：GPS
+- 取值范围：
+	- GPS：gps坐标
+	- baidu：百度坐标
+	- mapBar：mapbar坐标
+	- mapABC：mapABC坐标
+	- sosoMap：soso地图坐标
+	- aliYun：阿里云地图坐标
+	- google：谷歌地图坐标
+
+location：
+
+- 类型：JSON对象
+- 描述：经纬度
+- 内部字段：
+
+```js
+{
+   lat: ,      //数字类型：纬度
+   lon:        //数字类型：经度
+}
+```
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+   lat: ,      //数字类型：纬度
+   lon:        //数字类型：经度                
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.convertCoordinate({
+   type:'GPS',
+   location:{
+     lat:,
+     lon:
+   }
+},function(ret){
+	api.alert({msg:JSON.stringify(ret)});
+});
+```
+
+## 可用性
+
+iOS系统，android系统
+
+可提供的1.1.8及更高版本
+
+<div id="processedTrace"></div>
+
+# **processedTrace**
+
+开始纠偏轨迹
+
+processedTrace({params},callback(ret,err))
+
+
+## params
+
+type:
+
+- 类型：字符串
+- 描述：（可选项）轨迹坐标类型
+- 默认：aMap
+- 取值范围：
+	- aMap: 高德地图坐标
+	- GPS：gps坐标
+	- 
+	- baidu：百度坐标
+	- mapBar：mapbar坐标
+	- mapABC：mapABC坐标
+	- sosoMap：soso地图坐标
+	- aliYun：阿里云地图坐标
+	- google：谷歌地图坐标
+
+path：
+
+- 类型：字符串
+- 描述：经纬度轨迹点信息文件路径，要求本地路径（widget://、fs://）
+- 内部字段：
+
+```js
+[{
+   "loctime":1470297096917,    //数字类型；时间，单位毫秒
+   "longitude":116.47284,      //数字类型；经度坐标
+   "latitude":39.99493,        //数字类型；纬度坐标
+   "speed":0,                  //数字类型；速度，单位km/h
+   "bearing":0                 //数字类型；角度, 标识移动方向，单位度
+}]
+```
+
+savePath：
+
+- 类型：字符串
+- 描述：（可选项）纠偏后的经纬度轨迹点信息文件保存路径，要求本地路径（fs://）
+- 默认：若不传则使用模块默认路径
+
+## callback(ret,err)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+   status: true,      //布尔类型；是否纠偏成功
+   path:  ‘’          //字符串类型；纠偏后的轨迹点信息文件保存路径，格式如下所示：
+                      [{"longitude":116,"latitude":34},{}...]              
+}
+```
+
+err：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+   code: true,       //布尔类型；错误码
+   msg:  ‘’          //字符串类型；错误信息               
+}
+```
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.processedTrace({
+   type:'GPS',
+   path:'',
+   savePath:''
+},function(ret,err) {
+	api.alert({msg:JSON.stringify(ret)});
+});
+```
+
+## 可用性
+
+iOS系统，android系统
+
+可提供的1.1.8及更高版本
+
+<div id="cancelProcessedTrace"></div>
+
+# **cancelProcessedTrace**
+
+取消轨迹纠偏
+
+cancelProcessedTrace()
+
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.cancelProcessedTrace();
+```
+
+## 可用性
+
+iOS系统，android系统
+
+可提供的1.1.8及更高版本
+
+
+# 论坛示例
+
+为帮助用户更好更快的使用模块，论坛维护了一个[示例](https://community.apicloud.com/bbs/thread-34877-1-1.html)，示例中包含示例代码、知识点讲解、注意事项等，供您参考。 
+
