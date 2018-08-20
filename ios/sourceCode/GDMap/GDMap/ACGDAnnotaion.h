@@ -17,7 +17,7 @@ typedef enum {
 
 @protocol CanMovingAnimationDelegate;
 
-@interface ACGDAnnotaion : MAPointAnnotation
+@interface ACGDAnnotaion : MAAnimatedAnnotation
 
 @property (nonatomic, assign) AnnotationType type;      //annotation的类型
 @property (nonatomic, assign) NSInteger annotId;        //annotation的id
@@ -27,10 +27,13 @@ typedef enum {
 @property (nonatomic, assign) NSInteger addBillboardCbid;//添加布告牌标注的回调id
 @property (nonatomic, assign) NSInteger moveAnnoEndCbid;//标注移动结束的回调id
 @property (nonatomic, strong) NSArray *pinIcons;        //annotation的icon图标
+@property (nonatomic, strong) NSArray *selPinIcons;        //annotation的选中后的icon图标
 @property (nonatomic, assign) BOOL draggable;           //annotation是否可拖动
 @property (nonatomic, assign) float interval;           //annotation标注动画时间
 @property (nonatomic, assign) BOOL haveBubble;          //annotation是否点击弹出气泡
-@property (nonatomic, strong) NSString *bubbleBgImg, *billBgImg, *mobileBgImg;//annotation的气泡的背景图片
+@property (nonatomic, copy) NSString *bubbleBgImg, *billBgImg, *mobileBgImg;//annotation的气泡的背景图片
+@property (nonatomic, assign) BOOL billboardSelected;
+@property (nonatomic, strong) NSDictionary *selectedBillStyle; //选中后的布告牌的样式
 @property (nonatomic, strong) NSDictionary *contentDict;//annotation的气泡的内如文本信息
 @property (nonatomic, strong) NSDictionary *stylesDict; //annotation的气泡的样式信息
 @property (nonatomic, strong) NSDictionary *webBubbleDict; //加载网页的的气泡的样式信息

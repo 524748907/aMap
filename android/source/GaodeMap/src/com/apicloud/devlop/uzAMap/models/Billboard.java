@@ -19,6 +19,7 @@ public class Billboard {
 	private Marker marker;
 	private View view;
 	private UZModuleContext moduleContext;
+	private Bubble bubble;
 
 	public Billboard(String id, double lat, double lon, boolean draggable,
 			Marker marker, UZModuleContext moduleContext) {
@@ -85,4 +86,13 @@ public class Billboard {
 	public void setModuleContext(UZModuleContext moduleContext) {
 		this.moduleContext = moduleContext;
 	}
+
+	public Bubble getBubble() {
+		return bubble;
+	}
+
+	public void setBubble(Bubble bubble) {
+		this.bubble = bubble;
+	}
+	
 }

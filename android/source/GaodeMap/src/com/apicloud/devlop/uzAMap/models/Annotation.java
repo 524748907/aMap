@@ -23,6 +23,8 @@ public class Annotation {
 	private boolean draggable;
 	private double timeInterval;
 	private UZModuleContext moduleContext;
+	private List<Bitmap> selectIcons;
+	private List<String> selectIconsPath;
 
 	public Annotation() {
 	}
@@ -109,4 +111,22 @@ public class Annotation {
 	public void setIconsPath(List<String> iconsPath) {
 		this.iconsPath = iconsPath;
 	}
+
+	public List<Bitmap> getSelectIcons() {
+		return selectIcons;
+	}
+
+	public void setSelectIcons(List<Bitmap> selectIcons) {
+		this.selectIcons = selectIcons;
+	}
+
+	public List<String> getSelectIconsPath() {
+		return selectIconsPath;
+	}
+
+	public void setSelectIconsPath(List<String> selectIconsPath) {
+		this.selectIconsPath = selectIconsPath;
+	}
+	
+	
 }

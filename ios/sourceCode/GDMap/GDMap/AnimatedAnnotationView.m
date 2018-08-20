@@ -34,7 +34,7 @@
     }
     return self;
 }
-
+//刷新动态图
 - (void)refreshAnimatedPin:(id<MAAnnotation>)annotation {
     ACGDAnnotaion *animatedAnnotation = (ACGDAnnotaion *)annotation;
     if (![animatedAnnotation isKindOfClass:[ACGDAnnotaion class]]) {
@@ -42,9 +42,14 @@
     }
     if (animatedAnnotation.pinIcons.count > 1) {
         self.interval = animatedAnnotation.interval;
+        //如果是选中状态
+        NSArray *imageDataSource = animatedAnnotation.pinIcons;
+        if (self.isSelected) {
+            imageDataSource = animatedAnnotation.selPinIcons;
+        }
         if (!self.animatedImages) {
             self.animatedImages = [NSMutableArray array];
-            for (NSString *path in animatedAnnotation.pinIcons) {
+            for (NSString *path in imageDataSource) {
                 UIImage *imgn = [UIImage imageWithContentsOfFile:path];
                 if (imgn) {
                     [self.animatedImages addObject:imgn];
@@ -52,7 +57,7 @@
             }
         } else {
             [self.animatedImages removeAllObjects];
-            for (NSString *path in animatedAnnotation.pinIcons) {
+            for (NSString *path in imageDataSource) {
                 UIImage *imgn = [UIImage imageWithContentsOfFile:path];
                 if (imgn) {
                     [self.animatedImages addObject:imgn];

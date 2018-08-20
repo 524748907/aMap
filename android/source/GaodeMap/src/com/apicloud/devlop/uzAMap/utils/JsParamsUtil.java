@@ -265,6 +265,7 @@ public class JsParamsUtil {
 			List<Annotation> annotationList = new ArrayList<Annotation>();
 			JSONObject jsonObject = null;
 			JSONArray icons = null;
+			JSONArray selectIcons = null;
 			JSONArray allIcons = null;
 			allIcons = moduleContext.optJSONArray("icons");
 			List<Bitmap> allIconList = new ArrayList<Bitmap>();
@@ -277,6 +278,17 @@ public class JsParamsUtil {
 					allIconPathList.add(aMap.makeRealPath(iconPath));
 				}
 			}
+			JSONArray allSelectedIcons = moduleContext.optJSONArray("selectedIcons");
+			List<Bitmap> allSelectedBitmap = new ArrayList<Bitmap>();
+			List<String> allSelectedIconList = new ArrayList<String>();
+			if (allSelectedIcons != null) {
+				String iconPath = null;
+				for(int j = 0; j < allSelectedIcons.length(); j++) {
+					iconPath = allSelectedIcons.optString(j);
+					allSelectedBitmap.add(getBitmap(aMap.makeRealPath(iconPath)));
+					allSelectedIconList.add(aMap.makeRealPath(iconPath));
+				}
+			}
 			boolean allDraggable = moduleContext.optBoolean("draggable", false);
 			for (int i = 0; i < annotations.length(); i++) {
 				Annotation annotation = new Annotation();
@@ -286,6 +298,7 @@ public class JsParamsUtil {
 				double lon = jsonObject.optDouble("lon");
 				boolean draggable = jsonObject.optBoolean("draggable", false);
 				icons = jsonObject.optJSONArray("icons");
+				selectIcons = jsonObject.optJSONArray("selectedIcons");
 				if (icons != null) {
 					List<Bitmap> iconList = new ArrayList<Bitmap>();
 					List<String> iconPathList = new ArrayList<String>();
@@ -300,6 +313,21 @@ public class JsParamsUtil {
 				} else {
 					annotation.setIcons(allIconList);
 					annotation.setIconsPath(allIconPathList);
+				}
+				if (selectIcons != null) {
+					List<Bitmap> selecticonList = new ArrayList<Bitmap>();
+					List<String> selecticonPathList = new ArrayList<String>();
+					String iconPath = null;
+					for(int k = 0; k < selectIcons.length(); k++) {
+						iconPath = selectIcons.optString(k);
+						selecticonList.add(getBitmap(aMap.makeRealPath(iconPath)));
+						selecticonPathList.add(aMap.makeRealPath(iconPath));
+					}
+					annotation.setSelectIcons(selecticonList);
+					annotation.setSelectIconsPath(selecticonPathList);
+				}else {
+					annotation.setSelectIcons(allSelectedBitmap);
+					annotation.setSelectIconsPath(allSelectedIconList);
 				}
 				annotation.setId(id);
 				annotation.setLat(lat);
@@ -371,6 +399,7 @@ public class JsParamsUtil {
 		}
 		int titleColor = UZUtility.parseCssColor(titleColorStr);
 		int subTitleColor = UZUtility.parseCssColor(subTitleColorStr);
+		
 		return new Bubble(id, bgImg, title, subTitle, iconPath, titleSize,
 				subTitleSize, illusAlign, titleColor, subTitleColor,
 				moduleContext);

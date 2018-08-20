@@ -22,6 +22,13 @@ public class Bubble {
 	private int titleColor;
 	private int subTitleColor;
 	private UZModuleContext moduleContext;
+	
+	private String billboard_selected_bgImg;
+	private int billboard_selected_titleColor;
+	private int billboard_selected_subTitleColor;
+	private String billboard_selected_illus;
+	private String billboard_bgImg;
+	
 
 	public Bubble() {
 	}
@@ -130,4 +137,46 @@ public class Bubble {
 	public void setModuleContext(UZModuleContext moduleContext) {
 		this.moduleContext = moduleContext;
 	}
+
+	public String getBillboard_selected_bgImg() {
+		return billboard_selected_bgImg;
+	}
+
+	public void setBillboard_selected_bgImg(String billboard_selected_bgImg) {
+		this.billboard_selected_bgImg = billboard_selected_bgImg;
+	}
+
+	public int getBillboard_selected_titleColor() {
+		return billboard_selected_titleColor;
+	}
+
+	public void setBillboard_selected_titleColor(int billboard_selected_titleColor) {
+		this.billboard_selected_titleColor = billboard_selected_titleColor;
+	}
+
+	public int getBillboard_selected_subTitleColor() {
+		return billboard_selected_subTitleColor;
+	}
+
+	public void setBillboard_selected_subTitleColor(int billboard_selected_subTitleColor) {
+		this.billboard_selected_subTitleColor = billboard_selected_subTitleColor;
+	}
+
+	public String getBillboard_selected_illus() {
+		return billboard_selected_illus;
+	}
+
+	public void setBillboard_selected_illus(String billboard_selected_illus) {
+		this.billboard_selected_illus = billboard_selected_illus;
+	}
+
+	public String getBillboard_bgImg() {
+		return billboard_bgImg;
+	}
+
+	public void setBillboard_bgImg(String billboard_bgImg) {
+		this.billboard_bgImg = billboard_bgImg;
+	}
+	
+	
 }

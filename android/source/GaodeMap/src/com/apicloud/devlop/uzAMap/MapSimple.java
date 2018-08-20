@@ -22,6 +22,7 @@ import com.amap.api.maps.AMapOptions;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
+import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
@@ -187,21 +188,32 @@ public class MapSimple {
 	private void setZoomEnable(UZModuleContext moduleContext, AMap aMap) {
 		boolean zoomEnable = moduleContext.optBoolean("zoomEnable", true);
 		if (aMap != null) {
-			aMap.getUiSettings().setZoomGesturesEnabled(zoomEnable);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setZoomGesturesEnabled(zoomEnable);
+			}
+			
 		}
 	}
 
 	private void setScrollEnable(UZModuleContext moduleContext, AMap aMap) {
 		boolean scrollEnable = moduleContext.optBoolean("scrollEnable", true);
 		if (aMap != null) {
-			aMap.getUiSettings().setScrollGesturesEnabled(scrollEnable);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setScrollGesturesEnabled(scrollEnable);
+			}
 		}
 	}
 
 	private void setRotateEnable(UZModuleContext moduleContext, AMap aMap) {
 		boolean rotateEnable = moduleContext.optBoolean("rotateEnabled", true);
 		if (aMap != null) {
-			aMap.getUiSettings().setRotateGesturesEnabled(rotateEnable);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setRotateGesturesEnabled(rotateEnable);
+			}
+			
 		}
 	}
 
@@ -209,7 +221,10 @@ public class MapSimple {
 		boolean overlookEnabled = moduleContext.optBoolean("overlookEnabled",
 				true);
 		if (aMap != null) {
-			aMap.getUiSettings().setTiltGesturesEnabled(overlookEnabled);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setTiltGesturesEnabled(overlookEnabled);
+			}
 		}
 	}
 
@@ -265,30 +280,43 @@ public class MapSimple {
 	public void setScaleBar(UZModuleContext moduleContext, AMap aMap) {
 		if (aMap != null) {
 			boolean isShow = moduleContext.optBoolean("show", false);
-			aMap.getUiSettings().setScaleControlsEnabled(isShow);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setScaleControlsEnabled(isShow);
+			}
+			
 		}
 	}
 
 	public void setCompass(UZModuleContext moduleContext, AMap aMap) {
 		if (aMap != null) {
 			boolean isShow = moduleContext.optBoolean("show", false);
-			aMap.getUiSettings().setCompassEnabled(isShow);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				uiSettings.setCompassEnabled(isShow);
+			}
+			
 		}
 	}
 
 	public void setLogo(UZModuleContext moduleContext, AMap aMap) {
 		if (aMap != null) {
 			String position = moduleContext.optString("position", "right");
-			if (position.equals("left")) {
-				aMap.getUiSettings().setLogoPosition(
-						AMapOptions.LOGO_POSITION_BOTTOM_LEFT);
-			} else if (position.equals("center")) {
-				aMap.getUiSettings().setLogoPosition(
-						AMapOptions.LOGO_POSITION_BOTTOM_CENTER);
-			} else {
-				aMap.getUiSettings().setLogoPosition(
-						AMapOptions.LOGO_POSITION_BOTTOM_RIGHT);
+			UiSettings uiSettings = aMap.getUiSettings();
+			if (uiSettings != null) {
+				if (position.equals("left")) {
+					uiSettings.setLogoPosition(
+							AMapOptions.LOGO_POSITION_BOTTOM_LEFT);
+				} else if (position.equals("center")) {
+					uiSettings.setLogoPosition(
+							AMapOptions.LOGO_POSITION_BOTTOM_CENTER);
+				} else {
+					uiSettings.setLogoPosition(
+							AMapOptions.LOGO_POSITION_BOTTOM_RIGHT);
+					
+				}
 			}
+			
 		}
 	}
 

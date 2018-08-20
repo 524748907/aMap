@@ -16,6 +16,9 @@ import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.maps.UiSettings;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
 import com.uzmap.pkg.uzcore.UZCoreUtil;
@@ -48,8 +51,15 @@ public class MapOpen {
 				@Override
 				public void onViewAttachedToWindow(View v) {
 					MapSimple mapSimple = new MapSimple();
-					mMapView.getMap().getUiSettings()
-							.setZoomControlsEnabled(false);
+					if (mMapView.getMap() != null) {
+						UiSettings uiSettings = mMapView.getMap().getUiSettings();
+						if (uiSettings != null) {
+							uiSettings.setZoomControlsEnabled(false);
+							boolean isGestureScaleByMapCenter = moduleContext.optBoolean("isGestureScaleByMapCenter", false);
+							uiSettings.setGestureScaleByMapCenter(isGestureScaleByMapCenter);
+						}
+					}
+					
 					mapSimple.setCenterOpen(moduleContext, mMapView.getMap());
 					boolean isShowUserLoc = moduleContext.optBoolean(
 							"showUserLocation", true);
@@ -70,6 +80,12 @@ public class MapOpen {
 
 	public void closeMap(UzAMap uzAMap) {
 		uzAMap.removeViewFromCurWindow(mMapView);
+		AMapLocationClient client = mShowUser.getAMapLocationClient();
+		if (client != null) {
+			client.stopLocation();
+		}
+		
+		mMapView.onPause();
 		mMapView.onDestroy();
 		mMapView = null;
 	}

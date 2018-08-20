@@ -49,6 +49,7 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 	public void stopLocation() {
 		if (mLocationClient != null) {
 			mLocationClient.stopLocation();
+			//mLocationClient.onDestroy();
 		}
 	}
 

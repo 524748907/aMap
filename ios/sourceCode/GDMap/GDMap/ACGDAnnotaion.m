@@ -24,7 +24,7 @@ static CLLocationCoordinate2D interpolateCoordinate(CLLocationCoordinate2D from,
 
 @synthesize type;
 @synthesize annotId, clickCbId;
-@synthesize pinIcons;
+@synthesize pinIcons, selPinIcons;
 @synthesize draggable, haveBubble;
 @synthesize interval;
 @synthesize bubbleBgImg, billBgImg, mobileBgImg;

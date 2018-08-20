@@ -129,6 +129,8 @@ public class MapPoi implements OnPoiSearchListener {
 				tipJson.put("name", tip.getName());
 				tipJson.put("adcode", tip.getAdcode());
 				tipJson.put("district", tip.getDistrict());
+				tipJson.put("lat", tip.getPoint() != null ? tip.getPoint().getLatitude() : -1);
+				tipJson.put("lon", tip.getPoint() != null ? tip.getPoint().getLongitude() : -1);
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();

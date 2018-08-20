@@ -94,6 +94,14 @@ public class MapShowUser implements AMapLocationListener {
 			aMap.setMyLocationEnabled(true);
 		}
 	}
+	
+	public AMapLocationClient getAMapLocationClient() {
+		return mLocationClient;
+	}
+	
+	public void setAMapLocationClient(AMapLocationClient client) {
+		this.mLocationClient = client;
+	}
 
 	private void addLocMarker(AMap aMap) {
 		ArrayList<BitmapDescriptor> giflist = new ArrayList<BitmapDescriptor>();

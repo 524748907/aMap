@@ -7,7 +7,6 @@
 //
 
 #import "GDMap.h"
-//#import <AMapNaviKit/MAMapKit.h>
 #import <MAMapKit/MAMapKit.h>
 #import <AMapFoundationKit/AMapFoundationKit.h>
 #import "NSDictionaryUtils.h"
@@ -15,8 +14,6 @@
 #import <CoreLocation/CoreLocation.h>
 #import "ACGDAnnotaion.h"
 #import "AnimatedAnnotationView.h"
-//#import "AMapAsyncImageView.h"
-//#import "ACAMButton.h"
 #import "UIImageView+WebCache.h"
 #import <AMapSearchKit/AMapSearchKit.h>
 #import "MANaviRoute.h"
@@ -51,7 +48,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 #define ANNOTATION_MOBILETAG     1060
 
 @interface GDMap ()
-<MAMapViewDelegate, CanMovingAnimationDelegate, AMapSearchDelegate,UIGestureRecognizerDelegate> {
+<MAMapViewDelegate, CanMovingAnimationDelegate, AMapSearchDelegate,UIGestureRecognizerDelegate, MAMultiPointOverlayRendererDelegate> {
     MAMapView *_mapView;
     BOOL firstShowLocation;
     //定位
@@ -64,7 +61,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSMutableDictionary *_allMovingAnno;//可移动的标注集合
     //覆盖物类
     NSMutableDictionary *_allOverlays;
-    NSDictionary *overlayStyles;//覆盖物样式
+    NSDictionary *overlayStyles, *multiPointStyles;//覆盖物样式
+    NSInteger multiPointCbid;
     //添加路线类
     AMapSearchAPI *_mapSearch;
     NSInteger searcRouteCbid;
@@ -83,6 +81,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSInteger getLoctionByAddrCbid, getAddrByLocationCbid;
     //网页气泡
     NSInteger webBubbleCbid;
+    //选中的billboard
+    ACGDAnnotaion *currentSelectedBillboard;
 }
 
 @property (nonatomic, strong) MAMapView *mapView;
@@ -97,7 +97,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 @property (nonatomic, strong) NSArray *allBusLines;               //搜索到的所有公交路线
 @property (nonatomic, strong) NSMutableDictionary *allBusRoutes;  //所有添加的公交路线
 @property (nonatomic, strong) NSDictionary *districtLineDict;     //边界线样式
-@property (nonatomic, strong) UIImage *placeholdImage;            //标注占位图片
+@property (nonatomic, strong) UIImage *placeholdImage;            //标注占位图(空图片)
+@property (nonatomic, strong) NSOperation *queryOperation;
 
 @end
 
@@ -118,6 +119,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 #pragma mark - lifeCycle -
 
 - (void)dealloc {
+    [self cancelProcessedTrace:nil];
     if (timerAnnoMove) {
         [timerAnnoMove invalidate];
         self.timerAnnoMove = nil;
@@ -134,6 +136,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)dispose {
+    [self cancelProcessedTrace:nil];
     [self close:nil];
 }
 
@@ -230,7 +233,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     float viewH = [rectInfo floatValueForKey:@"h" defaultValue:self.mapView.bounds.size.height];
     CGRect defaultRect = CGRectMake(orgX, orgY, viewW, viewH);
 
-    UIImage *snapshot = [self.mapView takeSnapshotInRect:defaultRect];
     NSString *imgPath = [paramsDict_ stringValueForKey:@"path" defaultValue:@""];
     if (imgPath.length == 0) {
         return;
@@ -242,19 +244,22 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (![fileManager fileExistsAtPath:pathStr]) {        //创建路径
         [fileManager createDirectoryAtPath:pathStr withIntermediateDirectories:YES attributes:nil error:nil];
     }
-    NSData *data = nil;
-    if ([extention isEqualToString:@"JPG"] || [extention isEqualToString:@"JPEG"]) {
-        data = UIImageJPEGRepresentation(snapshot, 1.0);
-    } else {
-        data = UIImagePNGRepresentation(snapshot);
-    }
-    BOOL status = NO;
-    if (data) {
-      status = [fileManager createFileAtPath:imgPath contents:data attributes:nil];
-    }
-    //回调
+    __weak typeof(self) weakSelf = self;
     NSInteger SnapshotCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
-    [self sendResultEventWithCallbackId:SnapshotCbid dataDict:@{@"status":@(status),@"realPath":imgPath} errDict:nil doDelete:YES];
+    [self.mapView takeSnapshotInRect:defaultRect withCompletionBlock:^(UIImage *resultImage, NSInteger state) {
+        NSData *data = nil;
+        if ([extention isEqualToString:@"JPG"] || [extention isEqualToString:@"JPEG"]|| [extention isEqualToString:@"jpg"] || [extention isEqualToString:@"jpeg"]) {
+            data = UIImageJPEGRepresentation(resultImage, 1.0);
+        } else {
+            data = UIImagePNGRepresentation(resultImage);
+        }
+        BOOL status = NO;
+        if (data) {
+            status = [fileManager createFileAtPath:imgPath contents:data attributes:nil];
+        }
+        //回调
+        [weakSelf sendResultEventWithCallbackId:SnapshotCbid dataDict:@{@"status":@(status),@"realPath":imgPath} errDict:nil doDelete:YES];
+    }];
 }
 
 - (void)close:(NSDictionary *)parmasDict_ {
@@ -318,13 +323,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (!_mapView) {
         return;
     }
+//    NSDictionary *rectInfo = [paramsDict_ dictValueForKey:@"rect" defaultValue:@{}];
+//    float orgX = [rectInfo floatValueForKey:@"x" defaultValue:_mapView.frame.origin.x];
+//    float orgY = [rectInfo floatValueForKey:@"y" defaultValue:_mapView.frame.origin.y];
+//    float viewW = [rectInfo floatValueForKey:@"w" defaultValue:_mapView.bounds.size.width];
+//    float viewH = [rectInfo floatValueForKey:@"h" defaultValue:_mapView.bounds.size.height];
+//    CGRect newRect = CGRectMake(orgX, orgY, viewW, viewH);
     UIView *superView = [self.mapView superview];
-    NSDictionary *rectInfo = [paramsDict_ dictValueForKey:@"rect" defaultValue:@{}];
-    float orgX = [rectInfo floatValueForKey:@"x" defaultValue:superView.frame.origin.x];
-    float orgY = [rectInfo floatValueForKey:@"y" defaultValue:superView.frame.origin.y];
-    float viewW = [rectInfo floatValueForKey:@"w" defaultValue:superView.bounds.size.width];
-    float viewH = [rectInfo floatValueForKey:@"h" defaultValue:superView.bounds.size.height];
-    CGRect newRect = CGRectMake(orgX, orgY, viewW, viewH);
+    CGRect newRect = [paramsDict_ rectValueForKey:@"rect" defaultValue:_mapView.frame relativeToSuperView:superView];
     [_mapView setFrame:newRect];
 }
 
@@ -371,7 +377,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         return;
     }
     if (![city isKindOfClass:[NSString class]] || city.length==0) {
-        return;
+        //return;
     }
     //搜索实例对象
     if (![self initSearchClass]) {
@@ -899,6 +905,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         }
         iconPaths = newPinIcons;
     }
+    //选择后的
+    NSArray *selIconPaths = [paramsDict_ arrayValueForKey:@"selectedIcons" defaultValue:nil];
+    if (selIconPaths.count > 0) {
+        NSMutableArray *newSelPinIcons = [NSMutableArray arrayWithCapacity:1];
+        for (NSString *iconPath in selIconPaths) {
+            NSString *realPath = [self getPathWithUZSchemeURL:iconPath];
+            [newSelPinIcons addObject:realPath];
+        }
+        selIconPaths = newSelPinIcons;
+    }
     BOOL draggable = [paramsDict_ boolValueForKey:@"draggable" defaultValue:NO];
     BOOL timeInterval = [paramsDict_ floatValueForKey:@"timeInterval" defaultValue:3.0];
     NSArray *annoAry = [paramsDict_ arrayValueForKey:@"annotations" defaultValue:nil];
@@ -918,12 +934,21 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         }
         NSArray *pinIcons = [annoInfo arrayValueForKey:@"icons" defaultValue:nil];
         if (pinIcons.count > 0) {
-            NSMutableArray *newPinIcons = [NSMutableArray arrayWithCapacity:1];
+            NSMutableArray *newPinIcons = [NSMutableArray array];
             for (NSString *iconPath in pinIcons) {
                 NSString *realPath = [self getPathWithUZSchemeURL:iconPath];
                 [newPinIcons addObject:realPath];
             }
             pinIcons = newPinIcons;
+        }
+        NSArray *selPinIcons = [annoInfo arrayValueForKey:@"selectedIcons" defaultValue:nil];
+        if (selPinIcons.count > 0) {
+            NSMutableArray *newSelPinIcons = [NSMutableArray array];
+            for (NSString *iconPath in selPinIcons) {
+                NSString *realPath = [self getPathWithUZSchemeURL:iconPath];
+                [newSelPinIcons addObject:realPath];
+            }
+            selPinIcons = newSelPinIcons;
         }
         ACGDAnnotaion *annotation = [[ACGDAnnotaion alloc] init];
         CLLocationCoordinate2D coor;
@@ -937,6 +962,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             annotation.pinIcons = pinIcons;
         } else {
             annotation.pinIcons = iconPaths;
+        }
+        if (selPinIcons.count > 0) {
+            annotation.selPinIcons = selPinIcons;
+        } else {
+            annotation.selPinIcons = selIconPaths;
         }
         if ([annoInfo objectForKey:@"draggable"]) {
             annotation.draggable = [annoInfo boolValueForKey:@"draggable" defaultValue:NO];
@@ -1126,6 +1156,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     if (![bgImgStr isKindOfClass:[NSString class]] || bgImgStr.length==0) {
         return;
     }
+    NSDictionary *selectedDict = [paramsDict_ dictValueForKey:@"selectedStyles" defaultValue:nil];
     NSDictionary *contentInfo = [paramsDict_ dictValueForKey:@"content" defaultValue:@{}];
     NSDictionary *styleInfo = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
     
@@ -1137,6 +1168,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     annotation.coordinate = coor;
     annotation.annotId = [setID integerValue];
     annotation.billBgImg = bgImgStr;
+    annotation.selectedBillStyle = selectedDict;
     annotation.addBillboardCbid = addBillboardCbid;
     annotation.draggable = [paramsDict_ boolValueForKey:@"draggable" defaultValue:NO];
     annotation.contentDict = contentInfo;
@@ -1302,7 +1334,234 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
+- (void)addMoveAnimation:(NSDictionary *)paramsDict_ {
+    NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![setID isKindOfClass:[NSString class]] || setID.length==0) {
+        return;
+    }
+    ACGDAnnotaion *targetAnno = nil;
+    NSArray *annos = [self.mapView annotations];
+    for (ACGDAnnotaion *annoElem in annos) {
+        if (![annoElem isKindOfClass:[ACGDAnnotaion class]]) {
+            continue;
+        }
+        if (annoElem.annotId == [setID integerValue]) {
+            targetAnno = annoElem;
+            break;
+        }
+    }
+    if (!targetAnno) {
+        return;
+    }
+    NSInteger addMoveAnimCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    float duration = [paramsDict_ floatValueForKey:@"duration" defaultValue:3.0];
+    NSArray *coordinates = [paramsDict_ arrayValueForKey:@"coordinates" defaultValue:@[]];
+    if (coordinates.count == 0) {
+        return;
+    }
+    NSInteger arrCount = coordinates.count;
+    CLLocationCoordinate2D *coordinateArr = (CLLocationCoordinate2D*)malloc(arrCount * sizeof(CLLocationCoordinate2D));
+    for (int i = 0; i < arrCount; i++) {
+        NSDictionary *data = coordinates[i];
+        coordinateArr[i].longitude = [data[@"lon"] doubleValue];
+        coordinateArr[i].latitude  = [data[@"lat"] doubleValue];
+    }
+    __weak typeof(self) weakSelf = self;
+    [targetAnno addMoveAnimationWithKeyCoordinates:coordinateArr count:arrCount withDuration:duration withName:nil completeCallback:^(BOOL isFinished) {
+        free(coordinateArr);
+        [weakSelf sendResultEventWithCallbackId:addMoveAnimCbid dataDict:@{@"isFinished":@(isFinished)} errDict:nil doDelete:NO];
+    }];
+}
+
+
+- (void)cancelMoveAnimation:(NSDictionary *)paramsDict_ {
+    NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![setID isKindOfClass:[NSString class]] || setID.length==0) {
+        return;
+    }
+    ACGDAnnotaion *targetAnno = nil;
+    NSArray *annos = [self.mapView annotations];
+    for (ACGDAnnotaion *annoElem in annos) {
+        if (![annoElem isKindOfClass:[ACGDAnnotaion class]]) {
+            continue;
+        }
+        if (annoElem.annotId == [setID integerValue]) {
+            targetAnno = annoElem;
+            break;
+        }
+    }
+    if (!targetAnno) {
+        return;
+    }
+    NSArray *allMoveAnno = [targetAnno allMoveAnimations];
+    for(MAAnnotationMoveAnimation *animation in allMoveAnno) {
+        [animation cancel];
+    }
+}
+
 #pragma mark 覆盖物类接口
+
+- (void)addHeatMap:(NSDictionary *)paramsDict_ {
+    NSString *overlayIdStr = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![overlayIdStr isKindOfClass:[NSString class]] || overlayIdStr.length==0) {
+        return;
+    }
+    if (!self.allOverlays) {
+        self.allOverlays = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    id target = [self.allOverlays objectForKey:overlayIdStr];
+    if (target) {
+        [self.mapView removeOverlay:target];
+    }
+    id dataSource = [paramsDict_ objectForKey:@"data"];
+    NSArray *locInfoArr = nil;
+    if ([dataSource isKindOfClass:[NSString class]]) {
+        NSString *file = [paramsDict_ stringValueForKey:@"data" defaultValue:@""];
+        if (file.length > 0) {
+            file = [self getPathWithUZSchemeURL:file];
+        } else {
+            return;
+        }
+        //NSString *locationString = [NSString stringWithContentsOfFile:file encoding:NSUTF8StringEncoding error:nil];
+        //NSData *data = [NSData dataWithContentsOfFile:locationString];
+        NSData *data = [NSData dataWithContentsOfFile:file];
+        NSError *err = nil;
+        locInfoArr = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+        if(!locInfoArr) {
+            NSLog(@"[Turbo_AMap] Read trace data error: %@", err);
+            return;
+        }
+    } else {
+        locInfoArr = [paramsDict_ arrayValueForKey:@"data" defaultValue:nil];
+    }
+    if(locInfoArr.count <= 0) {
+        NSLog(@"[Turbo_AMap] Read trace data error");
+        return;
+    }
+    NSMutableArray *items = [NSMutableArray array];
+    for (int i = 0; i < locInfoArr.count; ++i) {
+        @autoreleasepool {
+            MAHeatMapNode *item = [[MAHeatMapNode alloc] init];
+            NSDictionary *pointDict = locInfoArr[i];
+            item.coordinate =  CLLocationCoordinate2DMake([[pointDict objectForKey:@"latitude"] doubleValue], [[pointDict objectForKey:@"longitude"] doubleValue]);
+            item.intensity = [pointDict floatValueForKey:@"intensity" defaultValue:1];
+            [items addObject:item];
+        }
+    }
+    MAHeatMapTileOverlay *heatMapTileOverlay = [[MAHeatMapTileOverlay alloc] init];
+    heatMapTileOverlay.data = items;
+    //热力点图层样式配置
+    NSDictionary *heatMapStyles = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
+    NSInteger radius = [heatMapStyles integerValueForKey:@"radius" defaultValue:12];
+    [heatMapTileOverlay setRadius:radius];
+    float opacity = [heatMapStyles floatValueForKey:@"opacity" defaultValue:0.6];
+    [heatMapTileOverlay setOpacity: opacity];
+    BOOL allowRetinaAdapting = [heatMapStyles boolValueForKey:@"allowRetinaAdapting" defaultValue:NO];
+    [target setAllowRetinaAdapting:allowRetinaAdapting];
+    NSDictionary *gradient = [heatMapStyles dictValueForKey:@"gradient" defaultValue:@{}];
+    NSArray *colors = [gradient arrayValueForKey:@"colors" defaultValue:@[]];
+    NSMutableArray *allColors = [NSMutableArray array];
+    for (NSString *color in colors) {
+        [allColors addObject:[UZAppUtils colorFromNSString:color]];
+    }
+    if (allColors.count == 0) {
+        allColors = [NSMutableArray arrayWithObjects:[UIColor redColor], [UIColor blueColor],[UIColor greenColor], nil];
+    }
+    NSArray *points = [heatMapStyles arrayValueForKey:@"points" defaultValue:@[]];
+    if (points.count == 0) {
+        points = @[@(0.3),@(0.6),@(0.9)];
+    }
+    [heatMapTileOverlay setGradient:[[MAHeatMapGradient alloc] initWithColor:allColors andWithStartPoints:points]];
+    
+    [self.mapView addOverlay:heatMapTileOverlay];
+    [self.allOverlays setObject:heatMapTileOverlay forKey:overlayIdStr];
+}
+
+- (void)refreshHeatMap:(NSDictionary *)paramsDict_ {
+    NSString *overlayIdStr = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![overlayIdStr isKindOfClass:[NSString class]] || overlayIdStr.length==0) {
+        return;
+    }
+    MAHeatMapTileOverlay *target = [self.allOverlays objectForKey:overlayIdStr];
+    if (![target isKindOfClass:[MAHeatMapTileOverlay class]]) {
+        return;
+    }
+    NSDictionary *heatMapStyles = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
+    NSInteger radius = [heatMapStyles integerValueForKey:@"radius" defaultValue:12];
+    [target setRadius:radius];
+    float opacity = [heatMapStyles floatValueForKey:@"opacity" defaultValue:0.6];
+    [target setOpacity: opacity];
+    BOOL allowRetinaAdapting = [heatMapStyles boolValueForKey:@"allowRetinaAdapting" defaultValue:NO];
+    [target setAllowRetinaAdapting:allowRetinaAdapting];
+    NSDictionary *gradient = [heatMapStyles dictValueForKey:@"gradient" defaultValue:@{}];
+    NSArray *colors = [gradient arrayValueForKey:@"colors" defaultValue:@[]];
+    NSMutableArray *allColors = [NSMutableArray array];
+    for (NSString *color in colors) {
+        [allColors addObject:[UZAppUtils colorFromNSString:color]];
+    }
+    if (allColors.count == 0) {
+        allColors = [NSMutableArray arrayWithObjects:[UIColor redColor], [UIColor blueColor],[UIColor greenColor], nil];
+    }
+    NSArray *points = [heatMapStyles arrayValueForKey:@"points" defaultValue:@[]];
+    if (points.count == 0) {
+        points = @[@(0.3),@(0.6),@(0.9)];
+    }
+    [target setGradient:[[MAHeatMapGradient alloc] initWithColor:allColors andWithStartPoints:points]];
+    MATileOverlayRenderer *render = (MATileOverlayRenderer *)[self.mapView rendererForOverlay:target];
+    [render reloadData];
+}
+
+- (void)addMultiPoint:(NSDictionary *)paramsDict_ {
+    NSString *overlayIdStr = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![overlayIdStr isKindOfClass:[NSString class]] || overlayIdStr.length==0) {
+        return;
+    }
+    if (!self.allOverlays) {
+        self.allOverlays = [NSMutableDictionary dictionaryWithCapacity:1];
+    }
+    id target = [self.allOverlays objectForKey:overlayIdStr];
+    if (target) {
+        [self.mapView removeOverlay:target];
+    }
+    
+    NSString *file = [paramsDict_ stringValueForKey:@"path" defaultValue:@""];
+    if (file.length > 0) {
+        file = [self getPathWithUZSchemeURL:file];
+    } else {
+        return;
+    }
+    NSString *locationString = [NSString stringWithContentsOfFile:file encoding:NSUTF8StringEncoding error:nil];
+    NSData *data =  [NSData dataWithContentsOfFile:file];//[NSData dataWithContentsOfFile:locationString];
+    NSError *err = nil;
+    NSArray *locInfoArr = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+    if(!locInfoArr) {
+        NSLog(@"[Turbo_AMap] Read trace data error: %@", err);
+        return;
+    }
+    NSMutableArray *items = [NSMutableArray array];
+    for (int i = 0; i < locInfoArr.count; ++i) {
+        @autoreleasepool {
+            MAMultiPointItem *item = [[MAMultiPointItem alloc] init];
+            NSDictionary *pointDict = locInfoArr[i];
+            if ([pointDict objectForKey:@"latitude"]) {
+                item.coordinate =  CLLocationCoordinate2DMake([[pointDict objectForKey:@"latitude"] doubleValue], [[pointDict objectForKey:@"longitude"] doubleValue]);
+            } else {
+                item.coordinate =  CLLocationCoordinate2DMake([[pointDict objectForKey:@"lat"] doubleValue], [[pointDict objectForKey:@"lon"] doubleValue]);
+            }
+            item.title = [pointDict stringValueForKey:@"title" defaultValue:@""];
+            item.subtitle = [pointDict stringValueForKey:@"subtitle" defaultValue:@""];
+            item.customID = [pointDict stringValueForKey:@"customID" defaultValue:@""];
+            [items addObject:item];
+        }
+    }
+    //点聚合图层样式配置
+    multiPointStyles = [paramsDict_ dictValueForKey:@"styles" defaultValue:@{}];
+    multiPointCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    MAMultiPointOverlay *_overlay = [[MAMultiPointOverlay alloc] initWithMultiPointItems:items];
+    [self.mapView addOverlay:_overlay];
+    [self.mapView setVisibleMapRect:_overlay.boundingMapRect];
+    [self.allOverlays setObject:_overlay forKey:overlayIdStr];
+}
 
 - (void)addLine:(NSDictionary *)paramsDict_ {
     NSArray *pointAry = [paramsDict_ arrayValueForKey:@"points" defaultValue:nil];
@@ -1563,7 +1822,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         @autoreleasepool {
             NSDictionary *data = dataArray[i];
             _runningCoords[i].latitude = [data[@"latitude"] doubleValue];
-            _runningCoords[i].longitude = [data[@"longtitude"] doubleValue];
+            if ([data objectForKey:@"longitude"]) {
+                _runningCoords[i].longitude = [data[@"longitude"] doubleValue];
+            } else {
+                _runningCoords[i].longitude = [data[@"longtitude"] doubleValue];
+            }
             UIColor *speedColor = [UZAppUtils colorFromNSString:data[@"rgba"]];
             [_speedColors addObject:speedColor];
             [indexes addObject:@(i)];
@@ -1740,7 +2003,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         case AMapRoutePlanningTypeWalk: {//步行
             AMapWalkingRouteSearchRequest *navi = [[AMapWalkingRouteSearchRequest alloc] init];
             /* 提供备选方案*/
-            navi.multipath = 1;
+            //navi.multipath = 1;
             /* 出发点. */
             navi.origin = start;
             /* 目的地. */
@@ -1929,13 +2192,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSMutableDictionary *busLineInfo = [NSMutableDictionary dictionary];
     //添加路线上的公交站点标注
     NSMutableArray *busStopAnnotations = [NSMutableArray array];
-    /*
-    [busLine.busStops enumerateObjectsUsingBlock:^(AMapBusStop *busStop, NSUInteger idx, BOOL *stop) {
-        BusStopAnnotation *annotation = [[BusStopAnnotation alloc] initWithBusStop:busStop];
-
-        [busStopAnnotations addObject:annotation];
-    }];
-     */
     for (int i=0; i<busLine.busStops.count; i++) {
         AMapBusStop *busStop = [busLine.busStops objectAtIndex:i];
         BusStopAnnotation *annotation = [[BusStopAnnotation alloc] initWithBusStop:busStop];
@@ -2122,6 +2378,44 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSArray *allProvince = [MAOfflineMap sharedOfflineMap].provinces;
     NSMutableArray *provinceAry = [NSMutableArray array];
     for (MAOfflineProvince *province in allProvince) {
+        NSMutableDictionary *provinceInfo = [NSMutableDictionary dictionary];
+        NSString *name = province.name;
+        if ([name isKindOfClass:[NSString class]] && name.length>0) {
+            [provinceInfo setObject:name forKey:@"name"];
+        }
+        NSString *adcode = province.adcode;
+        if ([adcode isKindOfClass:[NSString class]] && adcode.length>0) {
+            [provinceInfo setObject:adcode forKey:@"adcode"];
+        }
+        NSString *jianpin = province.jianpin;
+        if ([jianpin isKindOfClass:[NSString class]] && jianpin.length>0) {
+            [provinceInfo setObject:jianpin forKey:@"jianpin"];
+        }
+        NSString *pinyin = province.pinyin;
+        if ([pinyin isKindOfClass:[NSString class]] && pinyin.length>0) {
+            [provinceInfo setObject:pinyin forKey:@"pinyin"];
+        }
+        [provinceInfo setObject:@(province.size) forKey:@"size"];
+        [provinceInfo setObject:@(province.downloadedSize) forKey:@"downloadedSize"];
+        [provinceInfo setObject:@(province.itemStatus) forKey:@"status"];
+        [provinceAry addObject:provinceInfo];
+    }
+    NSMutableDictionary *sendDict = [NSMutableDictionary dictionary];
+    [sendDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
+    if (provinceAry.count > 0) {
+        [sendDict setObject:provinceAry forKey:@"provinces"];
+    } else {
+        [sendDict setObject:[NSNumber numberWithBool:NO] forKey:@"status"];
+    }
+    [self sendResultEventWithCallbackId:provinceCbid dataDict:sendDict errDict:nil doDelete:YES];
+}
+
+- (void)getCitiesByProvince:(NSDictionary *)paramsDict_ {
+    NSInteger provinceCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    NSArray *allProvince = [MAOfflineMap sharedOfflineMap].provinces;
+    NSMutableArray *provinceAry = [NSMutableArray array];
+    for (MAOfflineProvince *province in allProvince) {
+        //省份包含的城市列表
         NSArray *cities = province.cities;
         NSMutableArray *citiesAry = [NSMutableArray array];
         for (MAOfflineItemCommonCity *city in cities) {
@@ -2154,9 +2448,31 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             [cityInfo setObject:[NSNumber numberWithInteger:status] forKey:@"status"];
             [citiesAry addObject:cityInfo];
         }
-        if (citiesAry.count > 0) {
-            [provinceAry addObject:citiesAry];
+        //省份信息
+        NSMutableDictionary *provinceInfo = [NSMutableDictionary dictionary];
+        NSString *name = province.name;
+        if ([name isKindOfClass:[NSString class]] && name.length>0) {
+            [provinceInfo setObject:name forKey:@"name"];
         }
+        NSString *adcode = province.adcode;
+        if ([adcode isKindOfClass:[NSString class]] && adcode.length>0) {
+            [provinceInfo setObject:adcode forKey:@"adcode"];
+        }
+        NSString *jianpin = province.jianpin;
+        if ([jianpin isKindOfClass:[NSString class]] && jianpin.length>0) {
+            [provinceInfo setObject:jianpin forKey:@"jianpin"];
+        }
+        NSString *pinyin = province.pinyin;
+        if ([pinyin isKindOfClass:[NSString class]] && pinyin.length>0) {
+            [provinceInfo setObject:pinyin forKey:@"pinyin"];
+        }
+        [provinceInfo setObject:@(province.size) forKey:@"size"];
+        [provinceInfo setObject:@(province.downloadedSize) forKey:@"downloadedSize"];
+        [provinceInfo setObject:@(province.itemStatus) forKey:@"status"];
+        
+        NSDictionary *provInfo = @{@"province":provinceInfo,@"cities":citiesAry};
+        
+        [provinceAry addObject:provInfo];
     }
     NSMutableDictionary *sendDict = [NSMutableDictionary dictionary];
     [sendDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
@@ -2167,7 +2483,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
     [self sendResultEventWithCallbackId:provinceCbid dataDict:sendDict errDict:nil doDelete:YES];
 }
-
 - (void)getMunicipalities:(NSDictionary *)paramsDict_ {
     NSInteger municipalitieCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     NSArray *allMunicipalities = [MAOfflineMap sharedOfflineMap].municipalities;
@@ -2420,6 +2735,142 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)reloadMap:(NSDictionary *)paramsDict_ {
     if (self.mapView) {
         [self.mapView reloadMap];
+    }
+}
+
+#pragma mark 经纬度转换、轨迹纠偏
+
+- (void)convertCoordinate:(NSDictionary *)paramsDict_ {
+    NSString *locType = [paramsDict_ stringValueForKey:@"type" defaultValue:@"GPS"];
+    AMapCoordinateType type = -1;
+    if([locType hasPrefix:@"baidu"]) {
+        type = AMapCoordinateTypeBaidu;
+    } else if([locType hasPrefix:@"GPS"]) {
+        type = AMapCoordinateTypeGPS;
+    } else if([locType hasPrefix:@"mapBar"]) {
+        type = AMapCoordinateTypeMapBar;
+    } else if([locType hasPrefix:@"mapABC"]) {
+        type = AMapCoordinateTypeMapABC;
+    } else if([locType hasPrefix:@"sosoMap"]) {
+        type = AMapCoordinateTypeSoSoMap;
+    } else if([locType hasPrefix:@"aliYun"]) {
+        type = AMapCoordinateTypeAliYun;
+    } else if([locType hasPrefix:@"google"]) {
+        type = AMapCoordinateTypeGoogle;
+    }
+    NSDictionary *dict = [paramsDict_ dictValueForKey:@"location" defaultValue:@{}];
+    CLLocationCoordinate2D loc = CLLocationCoordinate2DMake([[dict objectForKey:@"lat"] doubleValue], [[dict objectForKey:@"lon"] doubleValue]);
+    //目标经纬度转换为高德坐标
+    CLLocationCoordinate2D l = AMapCoordinateConvert(loc, type);
+    NSInteger convertCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    [self sendResultEventWithCallbackId:convertCbid dataDict:@{@"lat":@(l.latitude),@"lon":@(l.longitude)} errDict:nil doDelete:YES];
+}
+
+- (void)processedTrace:(NSDictionary *)paramsDict_ {
+    NSString *dataPath = [paramsDict_ stringValueForKey:@"path" defaultValue:@""];
+    if (dataPath.length == 0) {
+        return;
+    }
+    NSString *fileFullPath = [self getPathWithUZSchemeURL:dataPath];
+    if(![[NSFileManager defaultManager] fileExistsAtPath:fileFullPath]) {
+        return;
+    }
+    
+    NSData *data = [NSData dataWithContentsOfFile:fileFullPath];
+    NSError *err = nil;
+    NSArray *locInfoArr = [NSJSONSerialization JSONObjectWithData:data options:0 error:&err];
+    if(!locInfoArr) {
+        NSLog(@"[Turbo_AMap] Read trace data error: %@", err);
+        return;
+    }
+    NSString *locType = [paramsDict_ stringValueForKey:@"type" defaultValue:@"GPS"];
+    AMapCoordinateType type = -1;
+    if([locType hasPrefix:@"baidu"]) {
+        type = AMapCoordinateTypeBaidu;
+    } else if([locType hasPrefix:@"GPS"]) {
+        type = AMapCoordinateTypeGPS;
+    } else if([locType hasPrefix:@"mapBar"]) {
+        type = AMapCoordinateTypeMapBar;
+    } else if([locType hasPrefix:@"mapABC"]) {
+        type = AMapCoordinateTypeMapABC;
+    } else if([locType hasPrefix:@"sosoMap"]) {
+        type = AMapCoordinateTypeSoSoMap;
+    } else if([locType hasPrefix:@"aliYun"]) {
+        type = AMapCoordinateTypeAliYun;
+    } else if([locType hasPrefix:@"google"]) {
+        type = AMapCoordinateTypeGoogle;
+    }
+    
+    NSMutableArray *mArr = [NSMutableArray array];
+    for(NSDictionary *dict in locInfoArr) {
+        MATraceLocation *loc = [[MATraceLocation alloc] init];
+        if ([dict objectForKey:@"latitude"]) {
+            loc.loc = CLLocationCoordinate2DMake([[dict objectForKey:@"latitude"] doubleValue], [[dict objectForKey:@"longitude"] doubleValue]);
+        } else {
+            loc.loc = CLLocationCoordinate2DMake([[dict objectForKey:@"lat"] doubleValue], [[dict objectForKey:@"lon"] doubleValue]);
+        }
+        double speed = [[dict objectForKey:@"speed"] doubleValue];
+        loc.speed = speed * 3.6; //m/s  转 km/h
+        loc.time = [[dict objectForKey:@"loctime"] doubleValue];
+        loc.angle = [[dict objectForKey:@"bearing"] doubleValue];;
+        [mArr addObject:loc];
+    }
+    
+    NSString *savePath = [paramsDict_ stringValueForKey:@"savePath" defaultValue:@""];
+    if (savePath.length > 0) {
+        savePath = [self getPathWithUZSchemeURL:savePath];
+    } else {
+        savePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"aMapProcessedTraceData.txt"];
+    }
+    if ([[NSFileManager defaultManager] fileExistsAtPath:savePath]) {
+        [[NSFileManager defaultManager] removeItemAtPath:savePath error:nil];
+    }
+    NSInteger processCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    MATraceManager *manageer = [[MATraceManager alloc] init];
+    NSMutableArray *processedArr = [NSMutableArray array];
+    __weak typeof(self) weakSelf = self;
+    NSOperation *op = [manageer queryProcessedTraceWith:mArr type:type processingCallback:^(int index, NSArray<MATracePoint *> *points) {
+        if (points.count > 0) {
+            [processedArr addObjectsFromArray:points];
+        }
+    }  finishCallback:^(NSArray<MATracePoint *> *points, double distance) {
+        weakSelf.queryOperation = nil;
+        if (points.count > 0) {
+            [processedArr addObjectsFromArray:points];
+        }
+        NSMutableArray *allProcessedPoint = [NSMutableArray array];
+        for (MATracePoint *point in processedArr) {
+            NSDictionary *pointInfo = @{@"longitude":@(point.longitude),@"latitude":@(point.latitude)};
+            [allProcessedPoint addObject:pointInfo];
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSError *jsonError = nil;
+            NSData *procData = [NSJSONSerialization dataWithJSONObject:allProcessedPoint options:NSJSONWritingPrettyPrinted error:&jsonError];
+            if ([procData length] > 0 && jsonError == nil){
+                BOOL suc = [procData writeToFile:savePath atomically:YES];
+                if (suc) {
+                    [weakSelf sendResultEventWithCallbackId:processCbid dataDict:@{@"status":@(YES),@"path":savePath} errDict:nil doDelete:YES];
+                } else {
+                    [weakSelf sendResultEventWithCallbackId:processCbid dataDict:@{@"status":@(NO)} errDict:@{@"code":@(-2),@"msg":@"unknow error"} doDelete:YES];
+                }
+            } else {
+                [weakSelf sendResultEventWithCallbackId:processCbid dataDict:@{@"status":@(NO)} errDict:@{@"code":@(-1),@"msg":@"unknow error"} doDelete:YES];
+            }
+        });
+    } failedCallback:^(int errorCode, NSString *errorDesc) {
+        if(![errorDesc isKindOfClass:[NSString class]] || errorDesc.length==0) {
+            errorDesc = @"";
+        }
+        [weakSelf sendResultEventWithCallbackId:processCbid dataDict:@{@"status":@(NO)} errDict:@{@"code":@(errorCode),@"msg":errorDesc} doDelete:YES];
+        weakSelf.queryOperation = nil;
+    }];
+    self.queryOperation = op;
+}
+
+- (void)cancelProcessedTrace:(NSDictionary *)paramsDict_ {
+    if(self.queryOperation) {
+        [self.queryOperation cancel];
+        self.queryOperation = nil;
     }
 }
 
@@ -2810,7 +3261,58 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 #pragma mark - MAMapViewDelegate -
 
 #pragma mark 覆盖物类代理
+
+//海量点点击回调
+- (void)multiPointOverlayRenderer:(MAMultiPointOverlayRenderer *)renderer didItemTapped:(MAMultiPointItem *)item {
+    if (multiPointCbid < 0) {
+        return;
+    }
+    NSMutableDictionary *itemDict = [NSMutableDictionary dictionary];
+    CLLocationCoordinate2D coordinate = item.coordinate;
+    [itemDict setObject:@(coordinate.latitude) forKey:@"latitude"];
+    [itemDict setObject:@(coordinate.longitude) forKey:@"longitude"];
+    NSString *customID = item.customID;
+    if (![customID isKindOfClass:[NSString class]] || customID.length==0) {
+        customID = @"";
+    }
+    NSString *title = item.title;
+    if (![title isKindOfClass:[NSString class]] || title.length==0) {
+        title = @"";
+    }
+    NSString *subtitle = item.subtitle;
+    if (![subtitle isKindOfClass:[NSString class]] || subtitle.length==0) {
+        subtitle = @"";
+    }
+    [itemDict setObject:subtitle forKey:@"subtitle"];
+    [itemDict setObject:title forKey:@"title"];
+    [itemDict setObject:customID forKey:@"customID"];
+    [self sendResultEventWithCallbackId:multiPointCbid dataDict:itemDict errDict:nil doDelete:NO];
+}
+
 - (MAOverlayRenderer *)mapView:(MAMapView *)mapView rendererForOverlay:(id <MAOverlay>)overlay {
+    if ([overlay isKindOfClass:[MATileOverlay class]]) {
+        MATileOverlayRenderer *render = [[MATileOverlayRenderer alloc] initWithTileOverlay:overlay];
+        return render;
+    }
+    if ([overlay isKindOfClass:[MAMultiPointOverlay class]]) {
+        MAMultiPointOverlayRenderer *renderer = [[MAMultiPointOverlayRenderer alloc] initWithMultiPointOverlay:overlay];
+        NSString *iconPath = [multiPointStyles stringValueForKey:@"icon" defaultValue:@""];
+        renderer.icon = [UIImage imageWithContentsOfFile:[self getPathWithUZSchemeURL:iconPath]];
+        NSDictionary *pointSize = [multiPointStyles dictValueForKey:@"pointSize" defaultValue:nil];
+        if (pointSize) {
+            float w = [pointSize floatValueForKey:@"w" defaultValue:10];
+            float h = [pointSize floatValueForKey:@"h" defaultValue:10];
+            renderer.pointSize = CGSizeMake(w, h);
+        }
+        NSDictionary *anchor = [multiPointStyles dictValueForKey:@"anchor" defaultValue:nil];
+        if (anchor) {
+            float x = [pointSize floatValueForKey:@"x" defaultValue:0.5];
+            float y = [pointSize floatValueForKey:@"y" defaultValue:0.5];
+            renderer.anchor = CGPointMake(x, y);
+        }
+        renderer.delegate = self;
+        return renderer;
+    }
     UZMultiPolyline *target = (UZMultiPolyline *)overlay;
     if ([target isKindOfClass:[UZMultiPolyline class]]) {
         float borderWidth = target.locusWidth;
@@ -2831,7 +3333,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         NSString *fill = [overlayStyles stringValueForKey:@"fillColor" defaultValue:@"rgba(1,0.8,0,0.8)"];
         circleView.strokeColor = [UZAppUtils colorFromNSString:stroke];
         circleView.fillColor = [UZAppUtils colorFromNSString:fill];
-        circleView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
+        if ([overlayStyles boolValueForKey:@"lineDash" defaultValue:NO]) {
+            circleView.lineDashType = kMALineDashTypeDot;
+        } else {
+            circleView.lineDashType = kMALineDashTypeNone;
+        }
         return circleView;
     } else if ([overlay isKindOfClass:[MAPolygon class]]) {//多边形
         MAPolygonRenderer *polygonView = [[MAPolygonRenderer alloc] initWithPolygon:overlay];
@@ -2841,7 +3347,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         polygonView.strokeColor = [UZAppUtils colorFromNSString:stroke];
         polygonView.fillColor = [UZAppUtils colorFromNSString:fill];
         polygonView.lineJoinType = kMALineJoinRound;
-        polygonView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
+        if ([overlayStyles boolValueForKey:@"lineDash" defaultValue:NO]) {
+            polygonView.lineDashType = kMALineDashTypeDot;
+        } else {
+            polygonView.lineDashType = kMALineDashTypeNone;
+        }
         return polygonView;
     } else if ([overlay isKindOfClass:[ACDistrictLine class]]) {
         MAPolylineRenderer *polylineView = [[MAPolylineRenderer alloc] initWithPolyline:overlay];
@@ -2849,7 +3359,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
             polylineView.lineWidth = [self.districtLineDict floatValueForKey:@"borderWidth" defaultValue:2.0];
             NSString *realStrokeImgPath = [self getPathWithUZSchemeURL:strokeImage];
-            [polylineView loadStrokeTextureImage:[UIImage imageWithContentsOfFile:realStrokeImgPath]];
+            polylineView.strokeImage = [UIImage imageWithContentsOfFile:realStrokeImgPath];
         } else {//线
             polylineView.lineWidth = [self.districtLineDict floatValueForKey:@"borderWidth" defaultValue:2.0];
             NSString *color = [self.districtLineDict stringValueForKey:@"borderColor" defaultValue:@"#000"];
@@ -2863,25 +3373,20 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             } else {
                 polylineView.lineCapType  = kMALineCapArrow;
             }
-            polylineView.lineDash = [self.districtLineDict boolValueForKey:@"lineDash" defaultValue:NO];
+            if ([self.districtLineDict boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineView.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineView.lineDashType = kMALineDashTypeNone;
+            }
         }
         return polylineView;
     } else if ([overlay isKindOfClass:[MAPolyline class]]) {//线
         MAPolylineRenderer *polylineView = [[MAPolylineRenderer alloc] initWithPolyline:overlay];
-        //    NSString *keyStr = nil;
-        //    NSArray *allOverlayKeys = [self.allOverlays allKeys];
-        //    for (NSString *targetKey in allOverlayKeys) {
-        //        MAPolyline *target = [self.allOverlays objectForKey:targetKey];
-        //        if (target == overlay) {
-        //            keyStr = targetKey;
-        //            break;
-        //        }
-        //    }
         NSString *strokeImage = [overlayStyles stringValueForKey:@"strokeImg" defaultValue:@""];
         if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
             polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
             NSString *realStrokeImgPath = [self getPathWithUZSchemeURL:strokeImage];
-            [polylineView loadStrokeTextureImage:[UIImage imageWithContentsOfFile:realStrokeImgPath]];
+            polylineView.strokeImage = [UIImage imageWithContentsOfFile:realStrokeImgPath];
         } else {//线
             polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
             NSString *color = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
@@ -2895,7 +3400,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             } else {
                 polylineView.lineCapType  = kMALineCapArrow;
             }
-            polylineView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
+            if ([overlayStyles boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineView.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineView.lineDashType = kMALineDashTypeNone;
+            }
         }
         return polylineView;
     } else if ([overlay isKindOfClass:[MAGeodesicPolyline class]]) {//弧形
@@ -2903,7 +3412,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
         NSString *color = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
         polylineView.strokeColor = [UZAppUtils colorFromNSString:color];
-        polylineView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
+        if ([overlayStyles boolValueForKey:@"lineDash" defaultValue:NO]) {
+            polylineView.lineDashType = kMALineDashTypeDot;
+        } else {
+            polylineView.lineDashType = kMALineDashTypeNone;
+        }
         return polylineView;
     } else if ([overlay isKindOfClass:[MAGroundOverlay class]]) {//图片
         MAGroundOverlayRenderer *groundOverlayView = [[MAGroundOverlayRenderer alloc] initWithGroundOverlay:overlay];
@@ -2918,36 +3431,48 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             polylineRenderer.lineWidth = [walkStyle floatValueForKey:@"width" defaultValue:3];
             NSString *colorStr = [walkStyle stringValueForKey:@"color" defaultValue:@"#0000ee"];
             polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [walkStyle boolValueForKey:@"lineDash" defaultValue:NO];
+            if ([walkStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineRenderer.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineRenderer.lineDashType = kMALineDashTypeNone;
+            }
             NSString *strokeImg = [walkStyle stringValueForKey:@"strokeImg" defaultValue:nil];
             if (strokeImg.length > 0) {
                 strokeImg = [self getPathWithUZSchemeURL:strokeImg];
                 UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
+                polylineRenderer.strokeImage = strokeImage;
             }
         } else if (naviPolyline.type == MANaviAnnotationTypeBus) {//公交路线样式
             NSDictionary *busStyle = [routeStyles dictValueForKey:@"busLine" defaultValue:@{}];
             polylineRenderer.lineWidth = [busStyle floatValueForKey:@"width" defaultValue:4];
             NSString *colorStr = [busStyle stringValueForKey:@"color" defaultValue:@"#00BFFF"];
             polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [busStyle boolValueForKey:@"lineDash" defaultValue:NO];
+            if ([busStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineRenderer.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineRenderer.lineDashType = kMALineDashTypeNone;
+            }
             NSString *strokeImg = [busStyle stringValueForKey:@"strokeImg" defaultValue:nil];
             if (strokeImg.length > 0) {
                 strokeImg = [self getPathWithUZSchemeURL:strokeImg];
                 UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
+                polylineRenderer.strokeImage = strokeImage;
             }
         } else {//驾车路线样式
             NSDictionary *driveStyle = [routeStyles dictValueForKey:@"driveLine" defaultValue:@{}];
             polylineRenderer.lineWidth = [driveStyle floatValueForKey:@"width" defaultValue:5];
             NSString *colorStr = [driveStyle stringValueForKey:@"color" defaultValue:@"#00868B"];
             polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [driveStyle boolValueForKey:@"lineDash" defaultValue:NO];
+            if ([driveStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineRenderer.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineRenderer.lineDashType = kMALineDashTypeNone;
+            }
             NSString *strokeImg = [driveStyle stringValueForKey:@"strokeImg" defaultValue:nil];
             if (strokeImg.length > 0) {
                 strokeImg = [self getPathWithUZSchemeURL:strokeImg];
                 UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
+                polylineRenderer.strokeImage = strokeImage;
             }
         }
         return polylineRenderer;
@@ -2958,12 +3483,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         polylineRenderer.lineWidth = [driveStyle floatValueForKey:@"width" defaultValue:5];
         NSString *colorStr = [driveStyle stringValueForKey:@"color" defaultValue:@"#00868B"];
         polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-        polylineRenderer.lineDash = [driveStyle boolValueForKey:@"lineDash" defaultValue:NO];
+        if ([driveStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+            polylineRenderer.lineDashType = kMALineDashTypeDot;
+        } else {
+            polylineRenderer.lineDashType = kMALineDashTypeNone;
+        }
         NSString *strokeImg = [driveStyle stringValueForKey:@"strokeImg" defaultValue:nil];
         if (strokeImg.length > 0) {
             strokeImg = [self getPathWithUZSchemeURL:strokeImg];
             UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-            [polylineRenderer loadStrokeTextureImage:strokeImage];
+            polylineRenderer.strokeImage = strokeImage;
         }
         return polylineRenderer;
     }
@@ -2974,158 +3503,22 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         polylineRenderer.lineWidth = [lineStyle floatValueForKey:@"width" defaultValue:4];
         NSString *colorStr = [lineStyle stringValueForKey:@"color" defaultValue:@"#00BFFF"];
         polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-        polylineRenderer.lineDash = [lineStyle boolValueForKey:@"lineDash" defaultValue:NO];
+        if ([lineStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+            polylineRenderer.lineDashType = kMALineDashTypeDot;
+        } else {
+            polylineRenderer.lineDashType = kMALineDashTypeNone;
+        }
         NSString *strokeImg = [lineStyle stringValueForKey:@"strokeImg" defaultValue:nil];
         if (strokeImg.length > 0) {
             strokeImg = [self getPathWithUZSchemeURL:strokeImg];
             UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-            [polylineRenderer loadStrokeTextureImage:strokeImage];
+            polylineRenderer.strokeImage = strokeImage;
         }
         return polylineRenderer;
     }
     return nil;
 }
-/*
-- (MAOverlayView *)mapView:(MAMapView *)mapView viewForOverlay:(id <MAOverlay>)overlay {
-    if ([overlay isKindOfClass:[MACircle class]]) {//圆
-        MACircleView *circleView = [[MACircleView alloc] initWithCircle:overlay];
-        circleView.lineWidth  = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2];
-        NSString *stroke = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
-        NSString *fill = [overlayStyles stringValueForKey:@"fillColor" defaultValue:@"rgba(1,0.8,0,0.8)"];
-        circleView.strokeColor = [UZAppUtils colorFromNSString:stroke];
-        circleView.fillColor = [UZAppUtils colorFromNSString:fill];
-        circleView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
-        return circleView;
-    } else if ([overlay isKindOfClass:[MAPolygon class]]) {//多边形
-        MAPolygonView *polygonView = [[MAPolygonView alloc] initWithPolygon:overlay];
-        polygonView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2];
-        NSString *stroke = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
-        NSString *fill = [overlayStyles stringValueForKey:@"fillColor" defaultValue:@"rgba(1,0.8,0,0.8)"];
-        polygonView.strokeColor = [UZAppUtils colorFromNSString:stroke];
-        polygonView.fillColor = [UZAppUtils colorFromNSString:fill];
-        polygonView.lineJoinType = kMALineJoinRound;
-        polygonView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
-        return polygonView;
-    } else if ([overlay isKindOfClass:[MAPolyline class]]) {//线
-        MAPolylineView *polylineView = [[MAPolylineView alloc] initWithPolyline:overlay];
-        NSString *keyStr = nil;
-        NSArray *allOverlayKeys = [self.allOverlays allKeys];
-        for (NSString *targetKey in allOverlayKeys) {
-            MAPolyline *target = [self.allOverlays objectForKey:targetKey];
-            if (target == overlay) {
-                keyStr = targetKey;
-                break;
-            }
-        }
-        NSString *strokeImage = [overlayStyles stringValueForKey:@"strokeImg" defaultValue:@""];
-        if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
-            polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
-            NSString *realStrokeImgPath = [self getPathWithUZSchemeURL:strokeImage];
-            [polylineView loadStrokeTextureImage:[UIImage imageWithContentsOfFile:realStrokeImgPath]];
-        } else {//线
-            polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
-            NSString *color = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
-            polylineView.strokeColor = [UZAppUtils colorFromNSString:color];
-            polylineView.lineJoinType = kMALineJoinRound;
-            NSString *typeStr = [overlayStyles stringValueForKey:@"type" defaultValue:@"round"];
-            if ([typeStr isEqualToString:@"round"]) {
-                polylineView.lineCapType  = kMALineCapRound;
-            } else if ([typeStr isEqualToString:@"square"]) {
-                polylineView.lineCapType  = kMALineCapSquare;
-            } else {
-                polylineView.lineCapType  = kMALineCapArrow;
-            }
-            polylineView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
-        }
-        return polylineView;
-    } else if ([overlay isKindOfClass:[MAGeodesicPolyline class]]) {//弧形
-        MAPolylineView *polylineView = [[MAPolylineView alloc] initWithPolyline:overlay];
-        polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
-         NSString *color = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
-        polylineView.strokeColor = [UZAppUtils colorFromNSString:color];
-        polylineView.lineDash = [overlayStyles boolValueForKey:@"lineDash" defaultValue:NO];
-        return polylineView;
-    } else if ([overlay isKindOfClass:[MAGroundOverlay class]]) {//图片
-        MAGroundOverlayView *groundOverlayView = [[MAGroundOverlayView alloc] initWithGroundOverlay:overlay];
-        return groundOverlayView;
-    }
-    //路线规划
-    if ([overlay isKindOfClass:[MANaviPolyline class]]) {
-        MANaviPolyline *naviPolyline = (MANaviPolyline *)overlay;
-        MAPolylineView *polylineRenderer = [[MAPolylineView alloc] initWithPolyline:naviPolyline.polyline];
-        if (naviPolyline.type == MANaviAnnotationTypeWalking) {//步行路线样式
-            NSDictionary *walkStyle = [routeStyles dictValueForKey:@"walkLine" defaultValue:@{}];
-            polylineRenderer.lineWidth = [walkStyle floatValueForKey:@"width" defaultValue:3];
-            NSString *colorStr = [walkStyle stringValueForKey:@"color" defaultValue:@"#0000ee"];
-            polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [walkStyle boolValueForKey:@"lineDash" defaultValue:NO];
-            NSString *strokeImg = [walkStyle stringValueForKey:@"strokeImg" defaultValue:nil];
-            if (strokeImg.length > 0) {
-                strokeImg = [self getPathWithUZSchemeURL:strokeImg];
-                UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
-            }
-        } else if (naviPolyline.type == MANaviAnnotationTypeBus) {//公交路线样式
-            NSDictionary *busStyle = [routeStyles dictValueForKey:@"busLine" defaultValue:@{}];
-            polylineRenderer.lineWidth = [busStyle floatValueForKey:@"width" defaultValue:4];
-            NSString *colorStr = [busStyle stringValueForKey:@"color" defaultValue:@"#00BFFF"];
-            polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [busStyle boolValueForKey:@"lineDash" defaultValue:NO];
-            NSString *strokeImg = [busStyle stringValueForKey:@"strokeImg" defaultValue:nil];
-            if (strokeImg.length > 0) {
-                strokeImg = [self getPathWithUZSchemeURL:strokeImg];
-                UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
-            }
-        } else {//驾车路线样式
-            NSDictionary *driveStyle = [routeStyles dictValueForKey:@"driveLine" defaultValue:@{}];
-            polylineRenderer.lineWidth = [driveStyle floatValueForKey:@"width" defaultValue:5];
-            NSString *colorStr = [driveStyle stringValueForKey:@"color" defaultValue:@"#00868B"];
-            polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-            polylineRenderer.lineDash = [driveStyle boolValueForKey:@"lineDash" defaultValue:NO];
-            NSString *strokeImg = [driveStyle stringValueForKey:@"strokeImg" defaultValue:nil];
-            if (strokeImg.length > 0) {
-                strokeImg = [self getPathWithUZSchemeURL:strokeImg];
-                UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-                [polylineRenderer loadStrokeTextureImage:strokeImage];
-            }
-        }
-        return polylineRenderer;
-    }
-    if ([overlay isKindOfClass:[LineDashPolyline class]]) {//红绿灯时，左转弯路线断开部分
-        MAPolylineView *polylineRenderer = [[MAPolylineView alloc] initWithPolyline:((LineDashPolyline *)overlay).polyline];
-        NSDictionary *driveStyle = [routeStyles dictValueForKey:@"driveLine" defaultValue:@{}];
-        polylineRenderer.lineWidth = [driveStyle floatValueForKey:@"width" defaultValue:5];
-        NSString *colorStr = [driveStyle stringValueForKey:@"color" defaultValue:@"#00868B"];
-        polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-        polylineRenderer.lineDash = [driveStyle boolValueForKey:@"lineDash" defaultValue:NO];
-        NSString *strokeImg = [driveStyle stringValueForKey:@"strokeImg" defaultValue:nil];
-        if (strokeImg.length > 0) {
-            strokeImg = [self getPathWithUZSchemeURL:strokeImg];
-            UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-            [polylineRenderer loadStrokeTextureImage:strokeImage];
-        }
-        return polylineRenderer;
-    }
-    //公交路线规划
-    if ([overlay isKindOfClass:[MABusPolyline class]]) {
-        MAPolylineView *polylineRenderer = [[MAPolylineView alloc] initWithPolyline:((MABusPolyline *)overlay).polyline];
-        NSDictionary *lineStyle = [busLineStyles dictValueForKey:@"line" defaultValue:@{}];
-        polylineRenderer.lineWidth = [lineStyle floatValueForKey:@"width" defaultValue:4];
-        NSString *colorStr = [lineStyle stringValueForKey:@"color" defaultValue:@"#00BFFF"];
-        polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
-        polylineRenderer.lineDash = [lineStyle boolValueForKey:@"lineDash" defaultValue:NO];
-        NSString *strokeImg = [lineStyle stringValueForKey:@"strokeImg" defaultValue:nil];
-        if (strokeImg.length > 0) {
-            strokeImg = [self getPathWithUZSchemeURL:strokeImg];
-            UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
-            [polylineRenderer loadStrokeTextureImage:strokeImage];
-        }
-        return polylineRenderer;
-    }
-    return nil;
-}
-*/
+
 #pragma mark 标注、气泡类代理
 - (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation {
     if ([annotation isKindOfClass:[MAUserLocation class]]) {
@@ -3289,6 +3682,32 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         default:
             //设置标注为自定义图标（动态）
         case ANNOTATION_MARKE: {
+            //若当前为选中状态，且存在选中后的图标
+            if (annotationView.isSelected && annotation.selPinIcons.count>0) {
+                NSArray *pinIconPaths = annotation.selPinIcons;
+                if (pinIconPaths.count == 1) {
+                    NSString *path = [pinIconPaths firstObject];
+                    UIImage *pinImage = [UIImage imageWithContentsOfFile:path];
+                    pinImage = [self scaleImage:pinImage];//2倍图缩放图片
+                    annotationView.animationView.hidden = YES;//动画标注隐藏
+                    annotationView.image = pinImage;
+                } else {//动画标注
+                    self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
+                    NSString *animationFirstFramePath = [pinIconPaths firstObject];
+                    UIImage *firstImage = [UIImage imageWithContentsOfFile:animationFirstFramePath];
+                    CGSize firstImageSize = firstImage.size;
+                    float sclW = firstImageSize.width/2.0;
+                    float sclH = firstImageSize.height/2.0;
+                    //重设标注的image
+                    [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+                    [annotationView refreshAnimatedPin:annotation];
+                    annotationView.animationView.hidden = NO;
+                }
+                annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
+                annotationView.billboardView.hidden = YES;//避免与布告牌错乱
+                annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+                break;
+            }
             NSArray *pinIconPaths = annotation.pinIcons;
             NSString *pinIconPath = nil;
             if (pinIconPaths.count == 0) {//默认大头针图标
@@ -3380,8 +3799,37 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         return;
     }
     if ([view isSelected] && !target.haveBubble) {//若没有被设置气泡则取消标注选中状态
-        [mapView deselectAnnotation:target animated:NO];//取消标注选中状态
+        //[mapView deselectAnnotation:target animated:NO];//取消标注选中状态
+        //之前加的，不知道为了解决什么问题，现在注释掉会有什么问题
     }
+    AnimatedAnnotationView *annotationView = (AnimatedAnnotationView *)view;
+  
+    //若存在选中后的图标，且annotation 为AnimatedAnnotationView
+    if (target.selPinIcons.count>0 && [annotationView isKindOfClass:[AnimatedAnnotationView class]]) {
+        NSArray *pinIconPaths = target.selPinIcons;
+        if (pinIconPaths.count == 1) {
+            NSString *path = [pinIconPaths firstObject];
+            UIImage *pinImage = [UIImage imageWithContentsOfFile:path];
+            pinImage = [self scaleImage:pinImage];//2倍图缩放图片
+            annotationView.animationView.hidden = YES;//动画标注隐藏
+            annotationView.image = pinImage;
+        } else {//动画标注
+            self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
+            NSString *animationFirstFramePath = [pinIconPaths firstObject];
+            UIImage *firstImage = [UIImage imageWithContentsOfFile:animationFirstFramePath];
+            CGSize firstImageSize = firstImage.size;
+            float sclW = firstImageSize.width/2.0;
+            float sclH = firstImageSize.height/2.0;
+            //重设标注的image
+            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+            [annotationView refreshAnimatedPin:target];
+            annotationView.animationView.hidden = NO;
+        }
+        annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
+        annotationView.billboardView.hidden = YES;//避免与布告牌错乱
+        annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+    }
+    
     if (target.clickCbId < 0) {//标注点击事件回调
         return;
     }
@@ -3390,7 +3838,42 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [sendDict setObject:@"click" forKey:@"eventType"];
     [self sendResultEventWithCallbackId:target.clickCbId dataDict:sendDict errDict:nil doDelete:NO];
 }
-
+//取消点击状态
+- (void)mapView:(MAMapView *)mapView didDeselectAnnotationView:(MAAnnotationView *)view {
+    ACGDAnnotaion *annotation = (ACGDAnnotaion *)view.annotation;
+    if (![annotation isKindOfClass:[ACGDAnnotaion class]]) {
+        return;
+    }
+    AnimatedAnnotationView *annotationView = (AnimatedAnnotationView *)view;
+    NSArray *pinIconPaths = annotation.pinIcons;
+    NSString *pinIconPath = nil;
+    if (pinIconPaths.count == 0) {//默认大头针图标
+        pinIconPath = [[NSBundle mainBundle]pathForResource:@"res_aMap/redPin" ofType:@"png"];
+    } else if (pinIconPaths.count == 1) {//自定义标注图标
+        pinIconPath = [pinIconPaths firstObject];
+    }
+    UIImage *pinImage = [UIImage imageWithContentsOfFile:pinIconPath];
+    pinImage = [self scaleImage:pinImage];//2倍图缩放图片
+    //避免与可移动的标注的冲突
+    if (pinImage) {//普通标注
+        annotationView.animationView.hidden = YES;//动画标注隐藏
+        annotationView.image = pinImage;
+    } else {//动画标注
+        self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
+        NSString *animationFirstFramePath = [pinIconPaths firstObject];
+        UIImage *firstImage = [UIImage imageWithContentsOfFile:animationFirstFramePath];
+        CGSize firstImageSize = firstImage.size;
+        float sclW = firstImageSize.width/2.0;
+        float sclH = firstImageSize.height/2.0;
+        //重设标注的image
+        [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+        [annotationView refreshAnimatedPin:annotation];
+        annotationView.animationView.hidden = NO;
+    }
+    annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
+    annotationView.billboardView.hidden = YES;//避免与布告牌错乱
+    annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+}
 - (void)mapView:(MAMapView *)mapView annotationView:(MAAnnotationView *)view didChangeDragState:(MAAnnotationViewDragState)newState fromOldState:(MAAnnotationViewDragState)oldState {
     NSString *state = @"none";
     switch (newState) {
@@ -4268,6 +4751,12 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     UIView *mainBoard = [[UIView alloc]initWithFrame:CGRectMake(0, 0, billWidth, billHeight)];
     mainBoard.backgroundColor = [UIColor clearColor];
     NSString *billImgPath = annotation.billBgImg;
+    if (annotation.billboardSelected) {
+        NSString *seleBillBg = [annotation.selectedBillStyle stringValueForKey:@"bgImg" defaultValue:nil];
+        if (seleBillBg.length > 0) {
+            billImgPath = seleBillBg;
+        }
+    }
     if (billImgPath.length > 0) {
         NSString *billealImg = [self getPathWithUZSchemeURL:billImgPath];
         UIImage *bgImg = [UIImage imageWithContentsOfFile:billealImg];
@@ -4285,6 +4774,20 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSString *illusaligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
     NSString *titleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:@"#000"];
     NSString *subTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:@"#000"];
+    if (annotation.billboardSelected) {
+        NSString *selecillusPath = [annotation.selectedBillStyle stringValueForKey:@"illus" defaultValue:nil];
+        if (selecillusPath.length > 0) {
+            illusPath = selecillusPath;
+        }
+        NSString *selectitleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:nil];
+        if (selectitleColor.length > 0) {
+            titleColor = selectitleColor;
+        }
+        NSString *selecsubTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:nil];
+        if (selecsubTitleColor.length > 0) {
+            subTitleColor = selecsubTitleColor;
+        }
+    }
     float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
     float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
     float titleMarginT = [stylesInfo floatValueForKey:@"marginT" defaultValue:10];
@@ -4383,6 +4886,12 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //背景图片（160*75）
     UIView *mainBoard = annotationView.billboardView;
     NSString *billImgPath = annotation.billBgImg;
+    if (annotation.billboardSelected) {
+        NSString *seleBillBg = [annotation.selectedBillStyle stringValueForKey:@"bgImg" defaultValue:nil];
+        if (seleBillBg.length > 0) {
+            billImgPath = seleBillBg;
+        }
+    }
     if (billImgPath.length > 0) {
         NSString *billealImg = [self getPathWithUZSchemeURL:billImgPath];
         UIImage *bgImg = [UIImage imageWithContentsOfFile:billealImg];
@@ -4394,13 +4903,26 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //内容
     NSDictionary *contentInfo = [NSDictionary dictionaryWithDictionary:annotation.contentDict];
     NSString *illusPath = [contentInfo stringValueForKey:@"illus" defaultValue:nil];
-    
     float billWidth = mainBoard.bounds.size.width;
     float billHeight = mainBoard.bounds.size.height;
     NSDictionary *stylesInfo = annotation.stylesDict;
     NSString *illusaligment = [stylesInfo stringValueForKey:@"illusAlign" defaultValue:@"left"];
     NSString *titleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:@"#000"];
     NSString *subTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:@"#000"];
+    if (annotation.billboardSelected) {
+        NSString *selecillusPath = [annotation.selectedBillStyle stringValueForKey:@"illus" defaultValue:nil];
+        if (selecillusPath.length > 0) {
+            illusPath = selecillusPath;
+        }
+        NSString *selectitleColor = [stylesInfo stringValueForKey:@"titleColor" defaultValue:nil];
+        if (selectitleColor.length > 0) {
+            titleColor = selectitleColor;
+        }
+        NSString *selecsubTitleColor = [stylesInfo stringValueForKey:@"subTitleColor" defaultValue:nil];
+        if (selecsubTitleColor.length > 0) {
+            subTitleColor = selecsubTitleColor;
+        }
+    }
     float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
     float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
     float titleMarginT = [stylesInfo floatValueForKey:@"marginT" defaultValue:10];
@@ -4488,10 +5010,62 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 
 - (void)selectBillboard:(ACAMButton *)btn {
     ACAMButton *targetBtn = (ACAMButton *)btn;
+    ACGDAnnotaion *targetBillAnno = nil;
+    for (ACGDAnnotaion *temp in [self.mapView annotations]) {
+        if ([temp isKindOfClass:[ACGDAnnotaion class]] && temp.annotId==targetBtn.btnId) {
+            targetBillAnno = temp;
+            break;
+        }
+    }
+    targetBillAnno.billboardSelected = YES;
+    NSDictionary *selectedBillDict = targetBillAnno.selectedBillStyle;
+    if (targetBillAnno && selectedBillDict) {
+        UIView *mainBoard = [targetBtn superview];
+        //更改背景
+        NSString *selectedBg = [selectedBillDict stringValueForKey:@"bgImg" defaultValue:nil];
+        if (selectedBg.length > 0) {
+            UIImageView *bgView = [mainBoard viewWithTag:BILLBOARD_BGIMG];
+            NSString *billealImg = [self getPathWithUZSchemeURL:selectedBg];
+            UIImage *bgImg = [UIImage imageWithContentsOfFile:billealImg];
+            bgView.image = bgImg;
+        }
+        //更改插图
+        NSString *selectedIllus = [selectedBillDict stringValueForKey:@"illus" defaultValue:nil];
+        if (selectedIllus.length > 0) {
+            if ([selectedIllus hasPrefix:@"http"]) {//网络图片
+                UIImageView *asyImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
+                NSURL *urlpath = [NSURL URLWithString:selectedIllus];
+                [asyImg sd_setImageWithURL:urlpath];
+            } else {//本地图片
+                NSString *realIllusPath = [self getPathWithUZSchemeURL:selectedIllus];
+                UIImageView *illusImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
+                illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
+            }
+        }
+        //更改标题颜色
+        NSString *selectedTitleColor = [selectedBillDict stringValueForKey:@"titleColor" defaultValue:nil];
+        if (selectedTitleColor.length > 0) {
+            UILabel *titleLab = [mainBoard viewWithTag:BILLBOARD_TITLE];
+            titleLab.textColor = [UZAppUtils colorFromNSString:selectedTitleColor];
+        }
+        //更改子标题
+        NSString *selectedSubTitleColor = [selectedBillDict stringValueForKey:@"subTitleColor" defaultValue:nil];
+        UILabel *subTitleLab = [mainBoard viewWithTag:BILLBOARD_SUBTITLE];
+        subTitleLab.textColor = [UZAppUtils colorFromNSString:selectedSubTitleColor];
+    }
+    if (currentSelectedBillboard != targetBillAnno) {
+        if (currentSelectedBillboard) {
+            currentSelectedBillboard.billboardSelected = NO;
+            [self.mapView removeAnnotation:currentSelectedBillboard];
+            [self.mapView addAnnotation:currentSelectedBillboard];
+        }
+        currentSelectedBillboard = targetBillAnno;
+    }
+    
     NSInteger addBillboardCbid = targetBtn.billboardCbid;
     if (addBillboardCbid >= 0) {
         NSMutableDictionary *sendDict = [NSMutableDictionary dictionaryWithCapacity:1];
-        [sendDict setObject:[NSNumber numberWithInteger:targetBtn.btnId] forKey:@"id"];
+        [sendDict setObject:@(targetBtn.btnId) forKey:@"id"];
         [sendDict setObject:@"click" forKey:@"eventType"];
         [self sendResultEventWithCallbackId:addBillboardCbid dataDict:sendDict errDict:nil doDelete:NO];
     }
@@ -4519,6 +5093,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (UIImage *)scaleImage:(UIImage *)img {//缩放图片
+    if (!img) {
+        return nil;
+    }
     CGSize size = CGSizeMake(img.size.width/2.0, img.size.height/2.0);
     // 创建一个bitmap的context
     // 并把它设置成为当前正在使用的context

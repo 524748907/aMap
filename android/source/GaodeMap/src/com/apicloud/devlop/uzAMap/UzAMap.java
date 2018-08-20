@@ -9,20 +9,30 @@ package com.apicloud.devlop.uzAMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.OnIndoorBuildingActiveListener;
 import com.amap.api.maps.AMap.OnMapScreenShotListener;
+import com.amap.api.maps.CoordinateConverter;
+import com.amap.api.maps.CoordinateConverter.CoordType;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.IndoorBuildingInfo;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.trace.LBSTraceClient;
+import com.amap.api.trace.TraceListener;
+import com.amap.api.trace.TraceLocation;
 import com.apicloud.devlop.uzAMap.models.MoveAnnotation;
 import com.apicloud.devlop.uzAMap.models.MoveOverlay;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
+import com.uzmap.pkg.uzcore.UZCoreUtil;
 import com.uzmap.pkg.uzcore.UZWebView;
 import com.uzmap.pkg.uzcore.uzmodule.UZModule;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
@@ -30,6 +40,8 @@ import com.uzmap.pkg.uzkit.UZUtility;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class UzAMap extends UZModule {
@@ -50,7 +62,7 @@ public class UzAMap extends UZModule {
 		if (mMap == null) {
 			mMap = new MapOpen();
 		}
-		mMap.openMap(this, moduleContext, mContext);
+		mMap.openMap(this, moduleContext, context());
 	}
 
 	public void jsmethod_close(UZModuleContext moduleContext) {
@@ -89,7 +101,7 @@ public class UzAMap extends UZModule {
 		if (mLocation == null) {
 			mLocation = new MapLocation();
 		}
-		mLocation.getLocation(moduleContext, mContext);
+		mLocation.getLocation(moduleContext, context());
 	}
 
 	public void jsmethod_stopLocation(UZModuleContext moduleContext) {
@@ -99,11 +111,11 @@ public class UzAMap extends UZModule {
 	}
 
 	public void jsmethod_getCoordsFromName(UZModuleContext moduleContext) {
-		new MapCoordsAddress().getLocationFromName(moduleContext, mContext);
+		new MapCoordsAddress().getLocationFromName(moduleContext, context());
 	}
 
 	public void jsmethod_getNameFromCoords(UZModuleContext moduleContext) {
-		new MapCoordsAddress().getNameFromLocation(moduleContext, mContext);
+		new MapCoordsAddress().getNameFromLocation(moduleContext, context());
 	}
 
 	public void jsmethod_getDistance(UZModuleContext moduleContext) {
@@ -116,7 +128,7 @@ public class UzAMap extends UZModule {
 				mMap.setShowUser(new MapShowUser());
 			}
 			mMap.getShowUser().showUserLocation(mMap.getMapView().getMap(),
-					moduleContext, mContext);
+					moduleContext, context());
 		}
 	}
 
@@ -158,7 +170,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				String zoom = String.valueOf(mapView.getMap().getCameraPosition().zoom);
 				float zoomLevel = (float) moduleContext.optDouble("level", 10);
-				//Toast.makeText(mContext, "当前的缩放级别是" + zoom + "-----要缩放的级别是" + String.valueOf(zoomLevel), Toast.LENGTH_LONG).show();
+				//Toast.makeText(context(), "当前的缩放级别是" + zoom + "-----要缩放的级别是" + String.valueOf(zoomLevel), Toast.LENGTH_LONG).show();
 				new MapSimple().setZoomLevel(moduleContext, mapView.getMap());
 //				float zoomLevel = (float) moduleContext.optDouble("level", 10);
 //				boolean isAnimated = moduleContext.optBoolean("animation", true);
@@ -315,9 +327,41 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
 				}
 				mAnnotations.addAnnotations(moduleContext);
+			}
+		}
+	}
+	
+	/**
+	 * 给地图上的标注添加移动动画
+	 * @param moduleContext
+	 */
+	public void jsmethod_addMoveAnimation(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+				}
+				mAnnotations.addMoveAnimation(moduleContext);
+			}
+		}
+	}
+	
+	/**
+	 * 取消地图上的标注移动动画
+	 * @param moduleContext
+	 */
+	public void jsmethod_cancelMoveAnimation(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+				}
+				mAnnotations.cancelMoveAnimation(moduleContext);
 			}
 		}
 	}
@@ -332,7 +376,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
 				}
 				mAnnotations.addAnnotations(moduleContext);
 			}
@@ -345,7 +389,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.getAnnotationCoords(moduleContext);
 			}
@@ -358,7 +402,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.setAnnotationCoords(moduleContext);
 			}
@@ -371,7 +415,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.annotationExist(moduleContext);
 			}
@@ -384,7 +428,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.setWebBubbleUrl = false;
 				mAnnotations.setBubble(moduleContext);
@@ -401,7 +445,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.setWebBubbleUrl = true;
 				mAnnotations.setWebBubble(moduleContext);
@@ -436,7 +480,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.popupBubble(moduleContext);
 			}
@@ -449,7 +493,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.closeBubble(moduleContext);
 			}
@@ -461,7 +505,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), mContext);
+					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
 				}
 				mAnnotations.addBillboard(moduleContext);
 			}
@@ -474,7 +518,7 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.addMoveAnnotations(moduleContext);
 			}
@@ -508,11 +552,206 @@ public class UzAMap extends UZModule {
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							mContext);
+							context());
 				}
 				mAnnotations.removeAnnotations(moduleContext);
 			}
 		}
+	}
+	
+	
+	/**
+	 * 开始纠偏轨迹
+	 * @param moduleContext
+	 */
+	public void jsmethod_processedTrace(UZModuleContext moduleContext) {
+		String type = moduleContext.optString("type");
+		String path = moduleContext.optString("path");
+		String savePath = moduleContext.optString("savePath", "fs://" + System.currentTimeMillis() + ".txt");	
+		
+		new MyAsyncTask(moduleContext, type, makeRealPath(savePath)).execute(makeRealPath(path));
+	}
+	
+	private  LBSTraceClient client;
+	class MyAsyncTask extends AsyncTask<String, Void, Void>{
+		private String type;
+		private UZModuleContext moduleContext;
+		private String savePath;
+		public MyAsyncTask(UZModuleContext moduleContext, String type, String savePath) {
+			this.type = type;
+			this.moduleContext = moduleContext;
+			this.savePath = savePath;
+		}
+		@Override
+		protected Void doInBackground(String... arg0) {
+			String path = arg0[0];
+			List<TraceLocation> list = readTraceConfig(path);
+			if (client == null) {
+				client = LBSTraceClient.getInstance(context());
+			}
+			int zType;
+			if (TextUtils.equals(type, "aMap")) {
+				zType = LBSTraceClient.TYPE_AMAP;
+			}else if (TextUtils.equals(type, "baidu")) {
+				zType = LBSTraceClient.TYPE_BAIDU;
+			}else if (TextUtils.equals(type, "GPS")) {
+				zType = LBSTraceClient.TYPE_GPS;
+			}else {
+				zType = LBSTraceClient.TYPE_AMAP;
+			}
+			client.queryProcessedTrace(0, list, zType, new TraceListener() {
+				
+				@Override
+				public void onTraceProcessing(int arg0, int arg1, List<LatLng> arg2) {
+					
+				}
+				
+				@Override
+				public void onRequestFailed(int arg0, String arg1) {
+					try {
+						JSONObject result = new JSONObject();
+						JSONObject error = new JSONObject();
+						result.put("status", false);
+						result.put("path", null);
+						error.put("code", arg0);
+						error.put("msg", arg1);
+						moduleContext.error(result, error, false);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				@Override
+				public void onFinished(int lineID, List<LatLng> linepoints, int distance, int waitingtime) {
+					try {
+						JSONArray array = new JSONArray();
+						if (linepoints != null) {
+							for(int i = 0; i < linepoints.size(); i++) {
+								LatLng latLng = linepoints.get(i);
+								JSONObject json = new JSONObject();
+								json.put("longitude", latLng.longitude);
+								json.put("latitude", latLng.latitude);
+								array.put(json);
+							}
+						}
+						FileOutputStream fos = new FileOutputStream(savePath);
+						fos.write(array.toString().getBytes());
+						fos.close();
+						JSONObject result = new JSONObject();
+						JSONObject error = new JSONObject();
+						result.put("status", true);
+						result.put("path", savePath);
+						moduleContext.error(result, error, false);
+					} catch (Exception e) {
+					}
+					
+				}
+			});
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * 取消轨迹纠偏
+	 * @param moduleContext
+	 */
+	public void jsmethod_cancelProcessedTrace(UZModuleContext moduleContext) {
+		if (client != null) {
+			client.stopTrace();
+			client.destroy();
+			client = null;
+		}
+	}
+	
+	private List<TraceLocation> readTraceConfig(String path) {
+		List<TraceLocation> list = new ArrayList<>(); 
+		try {
+			InputStream inputStream = UZUtility.guessInputStream(path);
+			if (inputStream != null) {
+				String data = UZCoreUtil.readString(inputStream);
+				if (!TextUtils.isEmpty(data)) {
+					JSONArray arrayData = new JSONArray(data);
+					for(int i = 0; i < arrayData.length(); i++) {
+						JSONObject dataJson = arrayData.optJSONObject(i);
+						if (dataJson != null) {
+							long loctime = dataJson.optLong("dataJson");
+							double longitude = dataJson.optDouble("longitude");
+							double latitude = dataJson.optDouble("latitude");
+							double speed = dataJson.optDouble("speed");
+							double bearing = dataJson.optDouble("bearing");
+							TraceLocation location = new TraceLocation();
+							location.setTime(loctime);
+							location.setLongitude(longitude);
+							location.setLatitude(latitude);
+							location.setSpeed((float)speed);
+							location.setBearing((float)bearing);
+							list.add(location);
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	
+	/**
+	 * 其它坐标系经纬度转换为高德地图经纬度
+	 * @param moduleContext
+	 */
+	public void jsmethod_convertCoordinate(UZModuleContext moduleContext) {
+		try {
+			String type = moduleContext.optString("type");
+			CoordinateConverter converter = new CoordinateConverter(context());
+			switch (type) {
+			case "GPS":
+				converter.from(CoordType.GPS);
+				break;
+			case "baidu":
+				converter.from(CoordType.BAIDU);
+				break;
+			case "mapBar":
+				converter.from(CoordType.MAPBAR);
+				break;
+			case "mapABC":
+				converter.from(CoordType.MAPABC);
+				break;
+			case "sosoMap":
+				converter.from(CoordType.SOSOMAP);
+				break;
+			case "aliYun":
+				converter.from(CoordType.ALIYUN);
+				break;
+			case "google":
+				converter.from(CoordType.GOOGLE);
+				break;
+			default:
+				break;
+			}
+			JSONObject location = moduleContext.optJSONObject("location");
+			double lat = 0;
+			double lon = 0;
+			if (location != null) {
+				lat = location.optDouble("lat");
+				lon = location.optDouble("lon");
+				
+			}
+			LatLng latLng = new LatLng(lat, lon);
+			converter.coord(latLng);
+			LatLng resultLatLng = converter.convert();
+			if (resultLatLng != null) {
+				JSONObject result = new JSONObject();
+				result.put("lat", resultLatLng.latitude);
+				result.put("lon", resultLatLng.longitude);
+				moduleContext.success(result, false);
+			}
+		} catch (Exception e) {
+		}
+		
 	}
 
 	public void jsmethod_addLine(UZModuleContext moduleContext) {
@@ -586,10 +825,58 @@ public class UzAMap extends UZModule {
 			}
 		}
 	}
+	
+	/**
+	 * 在地图上添加热力点图层
+	 * @param moduleContext
+	 */
+	public void jsmethod_addHeatMap(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mOverlays == null) {
+					mOverlays = new MapOverlay(this, mapView.getMap());
+				}
+				mOverlays.addHeatMap(moduleContext);
+			}
+		}
+	}
+	
+	/**
+	 * 刷新在地图上添加热力点图层
+	 * @param moduleContext
+	 */
+	public void jsmethod_refreshHeatMap(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mOverlays == null) {
+					mOverlays = new MapOverlay(this, mapView.getMap());
+				}
+				mOverlays.refreshHeatMap(moduleContext);
+			}
+		}
+	}
+	
+	/**
+	 * 在地图上添加点聚合图层
+	 * @param moduleContext
+	 */
+	public void jsmethod_addMultiPoint(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mOverlays == null) {
+					mOverlays = new MapOverlay(this, mapView.getMap());
+				}
+				mOverlays.addMultiPoint(moduleContext);
+			}
+		}
+	}
 
 	public void jsmethod_searchRoute(UZModuleContext moduleContext) {
 		if (mSearch == null) {
-			mSearch = new MapSearch(mContext);
+			mSearch = new MapSearch(context());
 		}
 		mSearch.searchRoute(moduleContext);
 	}
@@ -599,7 +886,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mSearch == null) {
-					mSearch = new MapSearch(mContext);
+					mSearch = new MapSearch(context());
 				}
 				mSearch.drawRoute(moduleContext, mapView.getMap(), this);
 			}
@@ -611,7 +898,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mSearch == null) {
-					mSearch = new MapSearch(mContext);
+					mSearch = new MapSearch(context());
 				}
 				mSearch.removeRoute(moduleContext, mapView.getMap());
 			}
@@ -620,7 +907,7 @@ public class UzAMap extends UZModule {
 
 	public void jsmethod_searchBusRoute(UZModuleContext moduleContext) {
 		if (mBusLine == null) {
-			mBusLine = new MapBusLine(mContext);
+			mBusLine = new MapBusLine(context());
 		}
 		mBusLine.searchBusLine(moduleContext);
 	}
@@ -630,7 +917,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mBusLine == null) {
-					mBusLine = new MapBusLine(mContext);
+					mBusLine = new MapBusLine(context());
 				}
 				mBusLine.drawBusLine(moduleContext, mapView.getMap());
 			}
@@ -642,7 +929,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mBusLine == null) {
-					mBusLine = new MapBusLine(mContext);
+					mBusLine = new MapBusLine(context());
 				}
 				mBusLine.removeRoute(moduleContext, mapView.getMap());
 			}
@@ -650,55 +937,55 @@ public class UzAMap extends UZModule {
 	}
 
 	public void jsmethod_searchInCity(UZModuleContext moduleContext) {
-		new MapPoi(moduleContext, mContext).searchInCity(moduleContext);
+		new MapPoi(moduleContext, context()).searchInCity(moduleContext);
 	}
 
 	public void jsmethod_searchNearby(UZModuleContext moduleContext) {
-		new MapPoi(moduleContext, mContext).searchNearby(moduleContext);
+		new MapPoi(moduleContext, context()).searchNearby(moduleContext);
 	}
 
 	public void jsmethod_searchInPolygon(UZModuleContext moduleContext) {
-		new MapPoi(moduleContext, mContext).searchBounds(moduleContext);
+		new MapPoi(moduleContext, context()).searchBounds(moduleContext);
 	}
 
 	public void jsmethod_autocomplete(UZModuleContext moduleContext) {
-		new MapPoi(moduleContext, mContext).autoComplete(moduleContext);
+		new MapPoi(moduleContext, context()).autoComplete(moduleContext);
 	}
 
 	public void jsmethod_getProvinces(UZModuleContext moduleContext) {
-		new MapOffline().getProvinces(moduleContext, mContext);
+		new MapOffline().getProvinces(moduleContext, context());
 	}
 
 	public void jsmethod_getAllCities(UZModuleContext moduleContext) {
-		new MapOffline().getAllCities(moduleContext, mContext);
+		new MapOffline().getAllCities(moduleContext, context());
 	}
 
 	public void jsmethod_downloadRegion(UZModuleContext moduleContext) {
 		if (mMapOffline == null) {
 			mMapOffline = new MapOffline();
 		}
-		mMapOffline.downloadRegion(moduleContext, mContext);
+		mMapOffline.downloadRegion(moduleContext, context());
 	}
 
 	public void jsmethod_isDownloading(UZModuleContext moduleContext) {
 		if (mMapOffline == null) {
 			mMapOffline = new MapOffline();
 		}
-		mMapOffline.isDownloading(moduleContext, mContext);
+		mMapOffline.isDownloading(moduleContext, context());
 	}
 
 	public void jsmethod_pauseDownload(UZModuleContext moduleContext) {
 		if (mMapOffline == null) {
 			mMapOffline = new MapOffline();
 		}
-		mMapOffline.pauseDownload(moduleContext, mContext);
+		mMapOffline.pauseDownload(moduleContext, context());
 	}
 
 	public void jsmethod_cancelAllDownload(UZModuleContext moduleContext) {
 		if (mMapOffline == null) {
 			mMapOffline = new MapOffline();
 		}
-		mMapOffline.cancelAllDownload(moduleContext, mContext);
+		mMapOffline.cancelAllDownload(moduleContext, context());
 	}
 
 	public void jsmethod_clearDisk(UZModuleContext moduleContext) {

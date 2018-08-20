@@ -47,6 +47,17 @@
 			<div tapmode="active" onclick="fnClose()">
 				关闭高德地图
 			</div>
+			
+			<div tapmode="active" onclick="addMoveAnimation()">
+				给地图上的标注添加移动动画
+			</div>
+			
+			<div tapmode="active" onclick="addHeatMap()">
+				显示热力图
+			</div>
+			<div tapmode="active" onclick="refreshHeatMap()">
+				刷新热力图
+			</div>
 			<!--<div tapmode="active" onclick="fnShow()">
 				显示高德地图
 			</div>
@@ -62,6 +73,12 @@
 			<div tapmode="active" onclick="fnStopLocation()">
 				停止定位
 			</div>-->
+			<div tapmode="active" onclick="fnAddBillboard()">
+				在地图上添加布告牌
+			</div>
+			<div tapmode="active" onclick="fnGetLocation()">
+				获取当前位置信息
+			</div>
 			<div tapmode="active" onclick="fnGetCoordsFromName()">
 			根据地址查找经纬度
 			</div>                         
@@ -152,10 +169,13 @@
 			<div tapmode="active" onclick="fnSetBubble()">
 				弹出的自定义气泡信息
 			</div>
+			<div tapmode="active" onclick="fnSetBubble11()">
+				弹出的自定义气泡信息11
+			</div>
 			<div tapmode="active" onclick="fnPopupBubble()">
 				弹出指定标注的气泡
 			</div>
-			<div tapmode="active" onclick="fnSetWebBubbleUrl()">
+			<div tapmode="active" onclick="fnSetWebBubbleUrl1()">
 				弹出的网页气泡信息
 			</div>
 			<div tapmode="active" onclick="fnAddWebBubbleListener()">
@@ -167,9 +187,7 @@
 			<div tapmode="active" onclick="fnCloseBubble()">
 				关闭已弹出的气泡
 			</div>
-			<div tapmode="active" onclick="fnAddBillboard()">
-				在地图上添加布告牌
-			</div>
+			
 			<div tapmode="active" onclick="fnAddMobileAnnotations()">
 				在地图上添加可移动、旋转的标注图标
 			</div>
@@ -338,6 +356,86 @@
 			var aMap = api.require('aMap');
 			aMap.close();
 		};
+		
+		function addHeatMap(){
+			var aMap = api.require('aMap');
+			var params = {
+				id:1,
+				data:[
+				{
+				    longitude:116.3843839609304,      //数字类型；经度
+					latitude:39.98964439091298,       //数字类型；纬度
+					intensity:10     //数字类型；强度
+				},{
+				    longitude:116.3822458687,      //数字类型；经度
+					latitude:39.9766165332,       //数字类型；纬度
+					intensity:3     //数字类型；强度
+				},{
+				    longitude:116.3813875618,      //数字类型；经度
+					latitude:39.9778415378,       //数字类型；纬度
+					intensity:6     //数字类型；强度
+				},{
+				    longitude:116.3812588157,      //数字类型；经度
+					latitude:39.9760656851,       //数字类型；纬度
+					intensity:1     //数字类型；强度
+				}],
+				styles:{
+			        radius:30 ,   //热力图半径
+			        opacity:1,  //透明度
+			        allowRetinaAdapting:true,
+			        gradient: {
+			           colors:['#CD2626','#EEC900','#43CD80'],  //红黄蓝
+			           points:[0.2,0.5,0.9]
+			        }
+			    },
+			};
+			
+			
+			var params1 = {
+				id:1,
+				data:'widget://res/data.json'
+			};
+			
+			aMap.addHeatMap(params);
+		}
+		
+		function refreshHeatMap(){
+			var aMap = api.require('aMap');
+			var params = {
+				id:1,
+				styles:{
+					radius:40,
+					opacity:1,
+					gradient: {
+				       colors:['#4A708B','#EE30A7','#FFFF00'],  
+			           points:[0.2,0.5,0.9]
+				    }
+				}
+			};
+			aMap.refreshHeatMap(params);
+		}
+		
+		function addMoveAnimation(){
+			var aMap = api.require('aMap');
+			aMap.addMoveAnimation({
+			    id: 5,
+			    duration: 6,
+			    coordinates: [{
+			        lon: 116.3843839609304,
+			        lat: 39.98964439091298
+			    }]
+			}, function(ret) {
+			    alert(ret.id + '移动结束')
+			});
+		}
+		
+		function fnRemoveOverlay(){
+		var aMap = api.require('aMap');
+			aMap.removeOverlay({
+			    ids: [1]
+			});
+		}
+		
 		function fnShow() {
 			var aMap = api.require('aMap');
 			aMap.show();
@@ -362,6 +460,7 @@
 			aMap.getLocation({
 					autoStop: true   //获取位置后是否自动停止定位
  				},function(ret, err) {
+ 					aMap.stopLocation();
 					if (ret.status) {
 						alert(JSON.stringify(ret));
 					} else {
@@ -636,12 +735,14 @@
 					id : 1,
 					lon : 116.297,
 					lat : 40.109,
-					icons:['widget://image/biaozhu.png']
+					icons:['widget://image/biaozhu.png', 'widget://image/qipao.png'],
+					selectedIcons:['widget://image/paopao.png']
 				}, {
 					id : 2,
 					lon : 116.29,
 					lat : 40.109,
-					icons:['widget://image/biaozhu(1).png']
+					icons:['widget://image/biaozhu(1).png'],
+					selectedIcons:['widget://image/paopao.png']
 				}, {
 					id : 3,
 					lon : 116.298,
@@ -724,6 +825,31 @@
 			});
 		};
 		
+		function fnSetBubble11() {
+			var aMap = api.require('aMap');
+			aMap.setBubble({
+				id : 2,
+				bgImg : 'widget://image/qidian.png',
+				content : {
+					title : '大标题',
+					subTitle : '概述内容',
+					illus : //'widget://image/delete.png'
+					'http://ico.ooopic.com/ajax/iconpng/?id=145044.png'
+				},
+				styles : {
+					titleColor : '#000',
+					titleSize : 16,
+					subTitleColor : '#999',
+					subTitleSize : 12,
+					illusAlign : 'left'
+				}
+			}, function(ret) {
+				if (ret) {
+					alert(JSON.stringify(ret));
+				}
+			});
+		};
+		
 		function fnSetWebBubbleUrl(){
 			var map = api.require('aMap');
 			map.setWebBubble({
@@ -736,7 +862,25 @@
 				//url:'http://img6.ph.126.net',
 				url:'https://www.baidu.com/',
 				data:'漂亮MM < img src="hBiG96B8egigBULxUWcOpA==/109212290980771276.jpg">',
-				bg:'#999'
+				bg:'#000000'
+			}, function(ret){
+				alert(JSON.stringify(ret));
+			});
+		}
+		
+		function fnSetWebBubbleUrl1(){
+			var map = api.require('aMap');
+			map.setWebBubble({
+				id:2,
+				size : {
+					width:100,		//泡泡宽，默认值50
+					hight:100		//泡泡高，默认值50
+				},			
+				
+				url:'http://img6.ph.126.net',
+				//url:'https://www.baidu.com/',
+				data:'漂亮MM <img src="http://7ynwhl.com1.z0.glb.clouddn.com/apicloud/0f77f530f708fd26b4abffaf7b3e20b7.jpg">',
+				//bg:'rgba(144, 238, 144, 0)'
 			}, function(ret){
 				alert(JSON.stringify(ret));
 			});
@@ -782,7 +926,7 @@
 					title : '12345667',
 					subTitle : '概述内容',
 					//illus : 'http://ico.ooopic.com/ajax/iconpng/?id=145044.pn',
-					//illus:'widget://image/che.png'
+					illus:'widget://image/881649.jpg'
 				},
 				draggable:false,
 				styles : {
@@ -793,8 +937,8 @@
 			    illusRect: {                    //（可选项）JSON对象；插图大小配置
 			        x: 0,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
 			        y: 0,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
-			        w: 0,                        //（可选项）数字类型；插图的宽；默认：35
-			        h: 0                         //（可选项）数字类型；插图的高；默认：50
+			        w: 35,                        //（可选项）数字类型；插图的宽；默认：35
+			        h: 50                         //（可选项）数字类型；插图的高；默认：50
 			    },
 //			        marginT:5,
 //			        marginB:5,
@@ -804,6 +948,11 @@
 					subTitleColor: '#999',
 					subTitleSize: 12,
 					illusAlign: 'left'
+				},
+				selectedStyles:{
+					bgImg:'widget://image/xuanzhong.png',
+					titleColor:'#000',
+					subTitleColor:'000',
 				}
 			}, function(ret) {
 				if (ret) {
@@ -1297,12 +1446,7 @@
 				});
 		}
 		
-		function fnRemoveOverlay(){
-		var aMap = api.require('aMap');
-			aMap.removeOverlay({
-			    ids: [2]
-			});
-		}
+		
 		
 	//红包拿来项目代码	
 	function setLocation(){
