@@ -17,6 +17,8 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.util.Log;
 
+import com.amap.api.col.n3.ew;
+import com.amap.api.col.n3.n;
 import com.amap.api.maps.AMapException;
 import com.amap.api.maps.offlinemap.OfflineMapCity;
 import com.amap.api.maps.offlinemap.OfflineMapManager;
@@ -35,6 +37,17 @@ public class MapOffline implements OfflineMapDownloadListener {
 				.getOfflineMapProvinceList();
 		try {
 			getProvincesCallBack(moduleContext, provinces);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void getCitiesByProvince(UZModuleContext moduleContext, Context context) {
+		OfflineMapManager aMapManager = new OfflineMapManager(context, this);
+		ArrayList<OfflineMapProvince> provinces = aMapManager
+				.getOfflineMapProvinceList();
+		try {
+			getCitiesByProvincesCallBack(moduleContext, provinces);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -260,6 +273,49 @@ public class MapOffline implements OfflineMapDownloadListener {
 				provinceJson.put("pinyin", province.getPinyin());
 				provinceJson.put("size", province.getSize());
 				provinceJson.put("status", province.getState());
+			}
+		} else {
+			ret.put("status", false);
+		}
+		moduleContext.success(ret, false);
+	}
+	
+	private void getCitiesByProvincesCallBack(UZModuleContext moduleContext,
+			ArrayList<OfflineMapProvince> provinces) throws JSONException {
+		JSONObject ret = new JSONObject();
+		if (provinces != null) {
+			ret.put("status", true);
+			JSONArray provincesJson = new JSONArray();
+			ret.put("provinces", provincesJson);
+			for (OfflineMapProvince province : provinces) {
+				JSONObject provinceJson = new JSONObject();
+				JSONObject pJson = new JSONObject();
+				pJson.put("province", provinceJson);
+				provincesJson.put(pJson);
+				provinceJson.put("name", province.getProvinceName());
+				provinceJson.put("adcode", province.getProvinceCode());
+				provinceJson.put("jianpin", province.getJianpin());
+				provinceJson.put("pinyin", province.getPinyin());
+				provinceJson.put("size", province.getSize());
+				provinceJson.put("status", province.getState());
+				
+				JSONArray cityArray = new JSONArray();
+				JSONObject json = new JSONObject();
+				pJson.put("cities", cityArray);
+				//provincesJson.put(json);
+				ArrayList<OfflineMapCity> cityList = province.getCityList();
+				for(OfflineMapCity city : cityList) {
+					JSONObject cityJSON = new JSONObject();
+					cityJSON.put("name", city.getCity());
+					cityJSON.put("adcode", city.getAdcode());
+					cityJSON.put("cityCode", city.getCode());
+					cityJSON.put("jianpin", city.getJianpin());
+					cityJSON.put("pinyin", city.getPinyin());
+					cityJSON.put("size", city.getSize());
+					cityJSON.put("status", city.getState());
+					cityArray.put(cityJSON);
+				}
+				
 			}
 		} else {
 			ret.put("status", false);

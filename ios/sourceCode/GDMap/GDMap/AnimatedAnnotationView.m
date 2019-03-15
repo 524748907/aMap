@@ -69,7 +69,9 @@
         UIImage *firstPinImg = [self.animatedImages firstObject];
         kWidth = firstPinImg.size.width/2.0;
         kHeight = firstPinImg.size.height/2.0;
-        [self setBounds:CGRectMake(0.f, 0.f, kWidth, kHeight)];
+//        [self setBounds:CGRectMake(0.f, 0.f, kWidth, kHeight)];
+        [self setBounds:CGRectMake(0.f, 0.f, (animatedAnnotation.w == -1)?kWidth:animatedAnnotation.w, (animatedAnnotation.h == -1)?kHeight:animatedAnnotation.h)];
+
         [self setBackgroundColor:[UIColor clearColor]];
         if (!self.animationView) {
             self.animationView = [[UIImageView alloc] initWithFrame:self.bounds];

@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		032F48641D408664002D7EC4 /* UZMultiPolyline.m in Sources */ = {isa = PBXBuildFile; fileRef = 032F48631D408664002D7EC4 /* UZMultiPolyline.m */; };
-		03DA80521D3C8E3400C7E73F /* AMapFoundationKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03DA804F1D3C8E3400C7E73F /* AMapFoundationKit.framework */; };
-		03DA80531D3C8E3400C7E73F /* AMapSearchKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03DA80501D3C8E3400C7E73F /* AMapSearchKit.framework */; };
 		03DDE03B1C27DAEE002EF95C /* ACAMButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0321C27DAEE002EF95C /* ACAMButton.m */; };
 		03DDE03C1C27DAEE002EF95C /* ACBubbleView.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0341C27DAEE002EF95C /* ACBubbleView.m */; };
 		03DDE03D1C27DAEE002EF95C /* ACGDAnnotaion.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE0361C27DAEE002EF95C /* ACGDAnnotaion.m */; };
@@ -23,7 +21,6 @@
 		03DDE06C1C27DAF9002EF95C /* MANaviAnnotation.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05B1C27DAF9002EF95C /* MANaviAnnotation.m */; };
 		03DDE06D1C27DAF9002EF95C /* MANaviPolyline.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05D1C27DAF9002EF95C /* MANaviPolyline.m */; };
 		03DDE06E1C27DAF9002EF95C /* MANaviRoute.m in Sources */ = {isa = PBXBuildFile; fileRef = 03DDE05F1C27DAF9002EF95C /* MANaviRoute.m */; };
-		03FB1D771D3DE383002DB447 /* MAMapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03FB1D761D3DE383002DB447 /* MAMapKit.framework */; };
 		25ADABBD1F5FA5C7004AE0C8 /* ACDistrictLine.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ADABBA1F5FA5C7004AE0C8 /* ACDistrictLine.m */; };
 		25ADABBE1F5FA5C7004AE0C8 /* ACDistrictSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 25ADABBC1F5FA5C7004AE0C8 /* ACDistrictSearch.m */; };
 /* End PBXBuildFile section */
@@ -43,9 +40,6 @@
 /* Begin PBXFileReference section */
 		032F48621D408664002D7EC4 /* UZMultiPolyline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZMultiPolyline.h; sourceTree = "<group>"; };
 		032F48631D408664002D7EC4 /* UZMultiPolyline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UZMultiPolyline.m; sourceTree = "<group>"; };
-		03DA804E1D3C8E3400C7E73F /* AMap.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = AMap.bundle; sourceTree = "<group>"; };
-		03DA804F1D3C8E3400C7E73F /* AMapFoundationKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AMapFoundationKit.framework; sourceTree = "<group>"; };
-		03DA80501D3C8E3400C7E73F /* AMapSearchKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AMapSearchKit.framework; sourceTree = "<group>"; };
 		03DDE0251C27DA8A002EF95C /* libGDMap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGDMap.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		03DDE0311C27DAEE002EF95C /* ACAMButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACAMButton.h; sourceTree = "<group>"; };
 		03DDE0321C27DAEE002EF95C /* ACAMButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACAMButton.m; sourceTree = "<group>"; };
@@ -90,7 +84,6 @@
 		03DDE0741C27DB32002EF95C /* UZAppUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZAppUtils.h; sourceTree = "<group>"; };
 		03DDE0751C27DB7E002EF95C /* UZModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UZModule.h; sourceTree = "<group>"; };
 		03DDE0761C27DB8F002EF95C /* NSDictionaryUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDictionaryUtils.h; sourceTree = "<group>"; };
-		03FB1D761D3DE383002DB447 /* MAMapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MAMapKit.framework; sourceTree = "<group>"; };
 		253AE5C31FCEBB1B00E713C3 /* NSData+ImageContentType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+ImageContentType.h"; sourceTree = "<group>"; };
 		253AE5C41FCEBB1B00E713C3 /* SDImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDImageCache.h; sourceTree = "<group>"; };
 		253AE5C51FCEBB1B00E713C3 /* SDWebImageCompat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDWebImageCompat.h; sourceTree = "<group>"; };
@@ -117,9 +110,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03FB1D771D3DE383002DB447 /* MAMapKit.framework in Frameworks */,
-				03DA80531D3C8E3400C7E73F /* AMapSearchKit.framework in Frameworks */,
-				03DA80521D3C8E3400C7E73F /* AMapFoundationKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,8 +155,8 @@
 				253AE5C21FCEBB1B00E713C3 /* SDWebImage */,
 				03DDE0721C27DB07002EF95C /* res_aMap */,
 				03DDE0401C27DAF9002EF95C /* imgeCache */,
+				6706E70B21DC976000F4AC86 /* sourceSDK */,
 				03DDE0511C27DAF9002EF95C /* MARoute */,
-				03DDE0601C27DAF9002EF95C /* sourceSDK */,
 			);
 			path = GDMap;
 			sourceTree = "<group>";
@@ -222,17 +212,6 @@
 			path = MARoute;
 			sourceTree = "<group>";
 		};
-		03DDE0601C27DAF9002EF95C /* sourceSDK */ = {
-			isa = PBXGroup;
-			children = (
-				03FB1D761D3DE383002DB447 /* MAMapKit.framework */,
-				03DA804E1D3C8E3400C7E73F /* AMap.bundle */,
-				03DA804F1D3C8E3400C7E73F /* AMapFoundationKit.framework */,
-				03DA80501D3C8E3400C7E73F /* AMapSearchKit.framework */,
-			);
-			path = sourceSDK;
-			sourceTree = "<group>";
-		};
 		03DDE0731C27DB21002EF95C /* headFile */ = {
 			isa = PBXGroup;
 			children = (
@@ -263,6 +242,13 @@
 				253AE5D11FCEBB1B00E713C3 /* UIView+WebCacheOperation.h */,
 			);
 			path = SDWebImage;
+			sourceTree = "<group>";
+		};
+		6706E70B21DC976000F4AC86 /* sourceSDK */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = sourceSDK;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -433,7 +419,6 @@
 				);
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/GDMap/sourceSDK/2D",
 					"$(PROJECT_DIR)/GDMap/sourceSDK",
 				);
 				ONLY_ACTIVE_ARCH = NO;
@@ -452,7 +437,6 @@
 				);
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/GDMap/sourceSDK/2D",
 					"$(PROJECT_DIR)/GDMap/sourceSDK",
 				);
 				ONLY_ACTIVE_ARCH = NO;

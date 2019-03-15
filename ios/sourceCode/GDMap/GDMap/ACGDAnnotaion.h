@@ -46,6 +46,9 @@ typedef enum {
 @property (nonatomic, assign) NSTimeInterval timeOffset;
 @property (nonatomic, assign) id <CanMovingAnimationDelegate> delegate;
 
+@property (nonatomic, assign) float w;
+@property (nonatomic, assign) float h;
+
 - (void)moveStep;
 
 @end

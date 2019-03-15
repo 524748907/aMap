@@ -13,6 +13,8 @@ import org.json.JSONObject;
 
 import android.graphics.Point;
 
+import com.amap.api.col.n3.ew;
+import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.CancelableCallback;
 import com.amap.api.maps.AMap.OnCameraChangeListener;
@@ -24,6 +26,8 @@ import com.amap.api.maps.CameraUpdate;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.UiSettings;
 import com.amap.api.maps.model.CameraPosition;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.MyTrafficStyle;
@@ -31,6 +35,7 @@ import com.amap.api.maps.model.Polygon;
 import com.amap.api.maps.model.PolygonOptions;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
+import com.uzmap.pkg.a.e.n;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
 public class MapSimple {
@@ -335,12 +340,39 @@ public class MapSimple {
 				Polygon polygon = aMap.addPolygon(polygonOptions);
 				if (polygon.contains(latLng)) {
 					polygon.remove();
-					CallBackUtil.isPolygonContantPointCallBack(moduleContext,
-							true);
+					CallBackUtil.isPolygonContantPointCallBack(moduleContext, true);
 					return;
 				} else {
 					polygon.remove();
 				}
+			}
+			CallBackUtil.isPolygonContantPointCallBack(moduleContext, false);
+		}
+	}
+	
+	/**
+	 * 判断已知点是否在指定的圆形区域内
+	 * @param moduleContext
+	 * @param aMap
+	 */
+	public void isCircleContainsPoint(UZModuleContext moduleContext, AMap aMap) {
+		if (aMap != null) {
+			double lonP = moduleContext.optJSONObject("point").optDouble("lon");
+			double latP = moduleContext.optJSONObject("point").optDouble("lat");
+			JSONObject circleJson = moduleContext.optJSONObject("circle");
+			double lonC = circleJson.optJSONObject("center").optDouble("lon");
+			double latC = circleJson.optJSONObject("center").optDouble("lat");
+			double radius = circleJson.optDouble("radius", 100);
+			CircleOptions circleOptions = new CircleOptions();
+			circleOptions.center(new LatLng(latC, lonC));
+			circleOptions.radius(radius);
+			Circle circle = aMap.addCircle(circleOptions);
+			if (circle.contains(new LatLng(latP, lonP))) {
+				circle.remove();
+				CallBackUtil.isPolygonContantPointCallBack(moduleContext, true);
+				return;
+			}else {
+				circle.remove();
 			}
 			CallBackUtil.isPolygonContantPointCallBack(moduleContext, false);
 		}

@@ -172,6 +172,9 @@ public class MapPoi implements OnPoiSearchListener {
 						poi.put("lat", latLonPoint.getLatitude());
 						poi.put("lon", latLonPoint.getLongitude());
 					}
+					poi.put("province", poiItem.getProvinceName());
+					poi.put("city", poiItem.getCityName());
+					poi.put("district", poiItem.getAdName());
 				}
 			}
 

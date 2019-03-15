@@ -9,6 +9,8 @@ package com.apicloud.devlop.uzAMap.utils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.graphics.Point;
+import android.text.TextUtils;
+
 import com.amap.api.location.AMapLocation;
 import com.amap.api.maps.model.CameraPosition;
 import com.amap.api.maps.model.LatLng;
@@ -34,9 +36,15 @@ public class CallBackUtil {
 			if (status) {
 				ret.put("lon", aLocation.getLongitude());
 				ret.put("lat", aLocation.getLatitude());
-				long timestamp = System.currentTimeMillis();
-				ret.put("timestamp", timestamp);
+				ret.put("accuracy", aLocation.getAccuracy());
+				ret.put("timestamp", aLocation.getTime());
 				ret.put("heading", heading);
+				ret.put("altitude", aLocation.getAltitude());
+				ret.put("speed", aLocation.getSpeed());
+				if (!TextUtils.isEmpty(aLocation.getFloor())) {
+					ret.put("floor", aLocation.getFloor());
+				}
+				ret.put("course", aLocation.getBearing());
 			}
 			moduleContext.success(ret, false);
 		} catch (JSONException e) {

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -40,6 +41,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -47,6 +49,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.col.n3.bi;
+import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.InfoWindowAdapter;
 import com.amap.api.maps.AMap.OnInfoWindowClickListener;
@@ -80,6 +83,7 @@ import com.lidroid.xutils.bitmap.BitmapDisplayConfig;
 import com.lidroid.xutils.bitmap.callback.BitmapLoadCallBack;
 import com.lidroid.xutils.bitmap.callback.BitmapLoadFrom;
 import com.lidroid.xutils.util.OtherUtils;
+import com.uzmap.pkg.a.e.n;
 import com.uzmap.pkg.uzcore.UZCoreUtil;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
@@ -102,10 +106,12 @@ public class MapAnnotations
 	private Map<String, MoveAnnotation> mMoveMarkerMap = new HashMap<String, MoveAnnotation>();
 	private Map<Marker, Object> mMarkerBubbleMap = new HashMap<Marker, Object>();
 	private Map<Marker, MoveAnnotation> mMoveAnnoMap = new HashMap<Marker, MoveAnnotation>();
+	private UzMapView mapView;
 
-	public MapAnnotations(UzAMap uzAMap, AMap aMap, Context context) {
+	public MapAnnotations(UzAMap uzAMap, UzMapView mapView, Context context) {
 		this.mUzAMap = uzAMap;
-		this.mAMap = aMap;
+		this.mapView = mapView;
+		this.mAMap = mapView.getMap();
 		this.mContext = context;
 		this.mAMap.setOnMarkerDragListener(this);
 		this.mAMap.setOnMarkerClickListener(this);
@@ -121,7 +127,19 @@ public class MapAnnotations
 				mAnnotations.put(annotation.getId(), annotation);
 				Marker marker = mAMap.addMarker(createMarkerOptions(annotation.getLon(), annotation.getLat(),
 						annotation.getIcons(), annotation.getIconsPath(), annotation.isDraggable(),
-						(int) (annotation.getTimeInterval() * 50)));
+						(int) (annotation.getTimeInterval() * 50), annotation.getWidth(), annotation.getHeight()));
+				boolean locked = annotation.locked();
+				if (locked) {
+					int lockedX = annotation.getLockedX();
+					if (lockedX < 0) {
+						lockedX = mapView.getWidth()/2;
+					}
+					int lockedY = annotation.getLockedY();
+					if (lockedY < 0) {
+						lockedY = mapView.getHeight()/2;
+					}
+					marker.setPositionByPixels(lockedX, lockedY);
+				}
 
 				Marker oldMarker = mMarkers.get(annotation.getId());
 				if (oldMarker != null) {
@@ -172,8 +190,8 @@ public class MapAnnotations
 				}
 			}
 		} else {
-			mAMap.clear();
-			
+			mAMap.clear(true);
+			mMarkers.clear();
 		}
 	}
 	
@@ -380,9 +398,9 @@ public class MapAnnotations
 			// Log.e("TAG", "===========addBillboard======================");
 			String iconPath = bubble.getIconPath();
 			String illusAlign = bubble.getIllusAlign();
-			int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left");
+			int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left_new");
 			if (illusAlign == null || !illusAlign.equals("left")) {
-				layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_right");
+				layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_right_new");
 			}
 			View infoContent = View.inflate(mContext, layoutId, null);
 			int width = UZUtility.dipToPix(160);// 最外层的宽
@@ -440,15 +458,22 @@ public class MapAnnotations
 				// infoContent.setBackground(background);
 				// infoContent.setBackgroundResource(UZResourcesIDFinder.getResDrawableID("paopao"));
 			}
+			RelativeLayout rlContent = (RelativeLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
+			RelativeLayout.LayoutParams rlContentP = new RelativeLayout.LayoutParams(-1, -1);
+			rlContentP.leftMargin = UZUtility.dipToPix(10);
+			rlContentP.rightMargin = UZUtility.dipToPix(10);
+			rlContent.setLayoutParams(rlContentP);
+			
 			infoContent.setLayoutParams(new ViewGroup.LayoutParams(width, height));
 			TextView titleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("title"));
-			LinearLayout.LayoutParams textViewParaT = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-					ViewGroup.LayoutParams.WRAP_CONTENT);
+			RelativeLayout.LayoutParams textViewParaT = new RelativeLayout.LayoutParams(-1, -2);
 			textViewParaT.topMargin = titleMarginT;
-			textViewParaT.rightMargin = UZUtility.dipToPix(5);
+			//textViewParaT.rightMargin = UZUtility.dipToPix(5);
+			//textViewParaT.addRule(RelativeLayout.CENTER_HORIZONTAL);
 			titleView.setLayoutParams(textViewParaT);
-			if (bubble.getTitle() == null)
+			if (TextUtils.isEmpty(bubble.getTitle())) {
 				titleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
+			}
 			titleView.setText(bubble.getTitle());
 			titleView.setTextColor(bubble.getTitleColor());
 			titleView.setTextSize(bubble.getTitleSize());
@@ -460,13 +485,20 @@ public class MapAnnotations
 				titleView.setGravity(Gravity.LEFT);
 			}
 			TextView subTitleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
-			LinearLayout.LayoutParams textViewParaB = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-					ViewGroup.LayoutParams.MATCH_PARENT);
-			textViewParaB.bottomMargin = titleMarginB;
-			textViewParaB.rightMargin = UZUtility.dipToPix(5);
+			RelativeLayout.LayoutParams textViewParaB = new RelativeLayout.LayoutParams(-1, -2);
+			//textViewParaB.bottomMargin = titleMarginB;
+			//textViewParaB.rightMargin = UZUtility.dipToPix(5);
+			textViewParaB.addRule(RelativeLayout.BELOW, titleView.getId());
+			textViewParaB.addRule(RelativeLayout.CENTER_HORIZONTAL);
 			subTitleView.setLayoutParams(textViewParaB);
-			if (bubble.getSubTitle() == null)
+			if (TextUtils.isEmpty(bubble.getSubTitle())) {
 				subTitleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
+				//textViewParaT.addRule(RelativeLayout.CENTER_IN_PARENT);
+				//textViewParaT.topMargin = 0;
+				//textViewParaT.rightMargin = UZUtility.dipToPix(0);
+			}
+			textViewParaB.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			textViewParaB.bottomMargin = titleMarginB;
 			subTitleView.setText(bubble.getSubTitle());
 			subTitleView.setTextColor(bubble.getSubTitleColor());
 			subTitleView.setTextSize(bubble.getSubTitleSize());
@@ -487,9 +519,26 @@ public class MapAnnotations
 			boolean draggable = moduleContext.optBoolean("draggable", false);
 			Billboard billboard = new Billboard(bubble.getId(), lat, lon, draggable, null, moduleContext);
 			mBillboards.put(bubble.getId(), billboard);
-			if (iconPath == null) {
+			if (TextUtils.isEmpty(iconPath)) {
 				iconView.setVisibility(View.GONE);
+				//rlContent.setGravity(Gravity.CENTER);
+				
+				Marker marker = mAMap.addMarker(createBillboardOptions(lon, lat, infoContent, draggable, id));
+				billboard.setMarker(marker);
+				billboard.setView(infoContent);
+				billboard.setBubble(bubble);
+				if (!mMarkers.containsKey(bubble.getId())) {
+					mMarkers.put(bubble.getId(), marker);
+				}
+				mBillboardMap.put(marker, billboard);
 			} else {
+				if (illusAlign == null || !illusAlign.equals("left")) {//right
+					imgViewPara.addRule(RelativeLayout.RIGHT_OF, rlContent.getId());
+					imgViewPara.leftMargin = UZUtility.dipToPix(5);
+				}else {
+					rlContentP.addRule(RelativeLayout.RIGHT_OF, iconView.getId());
+					rlContentP.leftMargin = UZUtility.dipToPix(5);
+				}
 				if (iconPath.startsWith("http")) {
 					billboard.setView(infoContent);
 					getImgShowUtil().display(iconView, bubble.getIconPath(), getLoadCallBack(bubble));
@@ -554,7 +603,7 @@ public class MapAnnotations
 
 	@SuppressWarnings("deprecation")
 	private MarkerOptions createMarkerOptions(double lon, double lat, List<Bitmap> icons, List<String> iconsPath,
-			boolean draggable, int period) {
+			boolean draggable, int period, int aWidth, int aHeight) {
 		MarkerOptions markerOptions = new MarkerOptions();
 		if (icons != null && icons.size() > 0) {
 			ArrayList<BitmapDescriptor> giflist = new ArrayList<BitmapDescriptor>();
@@ -562,7 +611,21 @@ public class MapAnnotations
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 			for (String icon : iconsPath) {
 				if (icon != null) {
-					bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(jsParamsUtil.getBitmap(icon));
+					if (aWidth == -1 || aHeight == -1) {
+						bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(jsParamsUtil.getBitmap(icon));
+					}else {
+						Bitmap bgImg = UZUtility.getLocalImage(icon);
+						int width = bgImg.getWidth();
+						int height = bgImg.getHeight();
+						float scaleWidth = ((float) UZUtility.dipToPix(aWidth)) / width;  
+					    float scaleHeight = ((float) UZUtility.dipToPix(aHeight)) / height;  
+
+						Matrix matrix = new Matrix();  
+					    matrix.postScale(scaleWidth, scaleHeight);
+					    Bitmap newBitmap = Bitmap.createBitmap(bgImg, 0, 0, width, height, matrix, true); 
+						bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(newBitmap);
+					}
+					
 					giflist.add(bitmapDescriptor);
 				}
 			}
@@ -734,10 +797,10 @@ public class MapAnnotations
 		String billboard_selected_illus = billboard_bubble.getBillboard_selected_illus();
 		UZModuleContext moduleContext = billboard.getModuleContext();
 		
-		int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left");
+		int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left_new");
 		String illusAlign = billboard_bubble.getIllusAlign();
 		if (illusAlign == null || !illusAlign.equals("left")) {
-			layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_right");
+			layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_right_new");
 		}
 		View infoContent = View.inflate(mContext, layoutId, null);
 		Bitmap bitmap;
@@ -751,6 +814,12 @@ public class MapAnnotations
 			}
 		}
 		infoContent.setBackgroundDrawable(new BitmapDrawable(bitmap));
+		RelativeLayout rlContent = (RelativeLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
+		RelativeLayout.LayoutParams rlContentP = new RelativeLayout.LayoutParams(-1, -1);
+		rlContentP.leftMargin = UZUtility.dipToPix(10);
+		rlContentP.rightMargin = UZUtility.dipToPix(10);
+		rlContent.setLayoutParams(rlContentP);
+		
 		int width = UZUtility.dipToPix(160);// 最外层的宽
 		int height = UZUtility.dipToPix(75);// 最外层的高
 		int imgX = UZUtility.dipToPix(10);// 图片的定点坐标
@@ -785,15 +854,13 @@ public class MapAnnotations
 		infoContent.setLayoutParams(new ViewGroup.LayoutParams(width, height));
 		
 		TextView titleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("title"));
-		LinearLayout.LayoutParams textViewParaT = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT);
+		RelativeLayout.LayoutParams textViewParaT = new RelativeLayout.LayoutParams(-1, -2);
 		textViewParaT.topMargin = titleMarginT;
-		textViewParaT.rightMargin = UZUtility.dipToPix(5);
+		//textViewParaT.rightMargin = UZUtility.dipToPix(5);
 		titleView.setLayoutParams(textViewParaT);
-		if (billboard_bubble.getTitle() == null)
+		if (TextUtils.isEmpty(billboard_bubble.getTitle())) {
 			titleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
-		
-		
+		}
 		titleView.setText(billboard_bubble.getTitle());
 		if (isOld) {
 			titleView.setTextColor(billboard_bubble.getTitleColor());
@@ -814,13 +881,19 @@ public class MapAnnotations
 			titleView.setGravity(Gravity.LEFT);
 		}
 		TextView subTitleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
-		LinearLayout.LayoutParams textViewParaB = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.MATCH_PARENT);
-		textViewParaB.bottomMargin = titleMarginB;
-		textViewParaB.rightMargin = UZUtility.dipToPix(5);
+		RelativeLayout.LayoutParams textViewParaB = new RelativeLayout.LayoutParams(-1, -2);
+		//textViewParaB.bottomMargin = titleMarginB;
+		//textViewParaB.rightMargin = UZUtility.dipToPix(5);
+		textViewParaB.addRule(RelativeLayout.BELOW, titleView.getId());
 		subTitleView.setLayoutParams(textViewParaB);
-		if (billboard_bubble.getSubTitle() == null)
+		if (TextUtils.isEmpty(billboard_bubble.getSubTitle())) {
 			subTitleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
+//			textViewParaT.addRule(RelativeLayout.CENTER_IN_PARENT);
+//			textViewParaT.topMargin = 0;
+//			textViewParaT.rightMargin = UZUtility.dipToPix(0);
+		}
+		textViewParaB.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		textViewParaB.bottomMargin = titleMarginB;
 		subTitleView.setText(billboard_bubble.getSubTitle());
 		if (isOld) {
 			subTitleView.setTextColor(billboard_bubble.getSubTitleColor());
@@ -847,7 +920,15 @@ public class MapAnnotations
 		iconView.setLayoutParams(imgViewPara);
 		if (TextUtils.isEmpty(billboard_selected_illus) || TextUtils.isEmpty(billboard_bubble.getIconPath())) {
 			iconView.setVisibility(View.GONE);
+			//rlContent.setGravity(Gravity.CENTER);
 		}else {
+			if (illusAlign == null || !illusAlign.equals("left")) {
+				imgViewPara.addRule(RelativeLayout.RIGHT_OF, rlContent.getId());
+				imgViewPara.leftMargin = UZUtility.dipToPix(5);
+			}else {
+				rlContentP.addRule(RelativeLayout.RIGHT_OF, iconView.getId());
+				rlContentP.leftMargin = UZUtility.dipToPix(5);
+			}
 			String imagePath = null;
 			if (!TextUtils.equals(billboard_selected_illus, billboard_bubble.getIconPath())) {
 				imagePath = billboard_selected_illus;
@@ -888,141 +969,7 @@ public class MapAnnotations
 	@Override
 	public View getInfoContents(Marker marker) {
 		View infoContent = null;
-		// if(setWebBubbleUrl){
-		// final UZModuleContext moduleContext = (UZModuleContext)
-		// mMarkerBubbleMap.get(marker);
-		// int layoutId = UZResourcesIDFinder
-		// .getResLayoutID("mo_amap_bubble_webview");
-		// infoContent = View.inflate(mContext, layoutId, null);
-		// int width = 50;
-		// int hight = 50;
-		// String bg = moduleContext.optString("bg","#FFFFFF");
-		// if(UZUtility.isHtmlColor(bg)){
-		// infoContent.setBackgroundColor(UZUtility.parseCssColor(bg));
-		// }else{
-		// Bitmap bitmap =
-		// JsParamsUtil.getInstance().getBitmap(mUzAMap.makeRealPath(bg));
-		// infoContent.setBackgroundDrawable(new BitmapDrawable(bitmap));
-		// }
-		// JSONObject size = moduleContext.optJSONObject("size");
-		// if(size != null && !moduleContext.isNull("size")){
-		// width = size.optInt("width",50);
-		// hight = size.optInt("height",50);
-		// }
-		// infoContent.setLayoutParams(new LayoutParams(
-		// UZUtility.dipToPix(width), UZUtility.dipToPix(hight)));
-		// WebView webView = (WebView) infoContent
-		// .findViewById(UZResourcesIDFinder.getResIdID("mo_amap_bubble_webview"));
-		// webView.setBackgroundColor(0x00000000);
-		// String url = moduleContext.makeRealPath(moduleContext.optString("url"));
-		// //这里需要判断url是否/绝对路径开头，如果是，则加上file://
-		// if(url!=null && url.startsWith("/"))
-		// url = "file://"+url;
-		// if(moduleContext.isNull("data")){//如果data是空就加载网页
-		// webView.loadUrl(url);
-		// webView.setWebViewClient(new WebViewClient(){
-		// @Override
-		// public boolean shouldOverrideUrlLoading(WebView view, String url) {
-		// return false;}});
-		// }else{//否则就加载data数据的片段
-		// String data = moduleContext.optString("data","data parameter is nothing");
-		// webView.getSettings().setJavaScriptEnabled(true);
-		// webView.getSettings().setDefaultTextEncodingName("utf-8");
-		// webView.loadDataWithBaseURL(url, data, "text/html", "utf-8", null);//TODO
-		// }
-		//
-		// }else{
-		// final Bubble bubble = (Bubble)mMarkerBubbleMap.get(marker);
-		// if (bubble == null)
-		// return null;
-		// Log.e("TAG", "=============getInfoWindow======================");
-		// Log.e("TAG", bubble.getId());
-		// Log.e("TAG", "=============getInfoWindow======================");
-		// String illusAlign = bubble.getIllusAlign();
-		// int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left");
-		// //int layoutId = UZResourcesIDFinder.getResLayoutID("bubble_left");
-		// if (illusAlign == null || !illusAlign.equals("left")) {
-		// layoutId = UZResourcesIDFinder
-		// .getResLayoutID("mo_amap_bubble_right");
-		// }
-		// infoContent = View.inflate(mContext, layoutId, null);
-		// LinearLayout linearLayout =
-		// (LinearLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
-		// Bitmap bgImg = bubble.getBgImg();
-		// if (bgImg != null) {
-		// //infoContent.setLayoutParams(new
-		// LayoutParams(UZCoreUtil.dipToPix(bgImg.getWidth()),
-		// UZCoreUtil.dipToPix(bgImg.getHeight())));
-		// infoContent.setBackgroundDrawable(new BitmapDrawable(bgImg));
-		//
-		// int height = bgImg.getHeight();
-		//// int w = bgImg.getWidth();
-		// linearLayout.setLayoutParams(new
-		// RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, height));
-		// } else {
-		// infoContent.setBackgroundResource(UZResourcesIDFinder.getResDrawableID("mo_amap_custom_info_bubble"));
-		// //infoContent.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
-		// UZUtility.dipToPix(90)));
-		// }
-		// ImageView iconView = (ImageView) infoContent
-		// .findViewById(UZResourcesIDFinder.getResIdID("icon"));
-		// iconView.setOnClickListener(new OnClickListener() {
-		//
-		// @Override
-		// public void onClick(View v) {
-		// CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
-		// bubble.getId(), "clickIllus");
-		// }
-		// });
-		// if (bubble.getIconPath() != null
-		// && bubble.getIconPath().startsWith("http")) {
-		// getImgShowUtil().display(iconView, bubble.getIconPath(),
-		// getLoadCallBack(bubble.getId()));
-		// } else {
-		// JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
-		// iconView.setBackgroundDrawable(new BitmapDrawable(jsParamsUtil
-		// .getBitmap(mUzAMap.makeRealPath(bubble.getIconPath()))));
-		// }
-		// if (bubble.getIconPath() == null || bubble.getIconPath().isEmpty()) {
-		// iconView.setVisibility(View.GONE);
-		// }
-		//
-		// TextView titleView = (TextView) infoContent
-		// .findViewById(UZResourcesIDFinder.getResIdID("title"));
-		// titleView.setText(bubble.getTitle());
-		// titleView.setTextColor(bubble.getTitleColor());
-		// titleView.setTextSize(bubble.getTitleSize());
-		//
-		// titleView.setOnClickListener(new OnClickListener() {
-		//
-		// @Override
-		// public void onClick(View v) {
-		// CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
-		// bubble.getId(), "clickContent");
-		// }
-		// });
-		// TextView subTitleView = (TextView) infoContent
-		// .findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
-		// subTitleView.setText(bubble.getSubTitle());
-		// subTitleView.setTextColor(bubble.getSubTitleColor());
-		// subTitleView.setTextSize(bubble.getSubTitleSize());
-		// subTitleView.setOnClickListener(new OnClickListener() {
-		//
-		// @Override
-		// public void onClick(View v) {
-		// CallBackUtil.infoWindowClickCallBack(bubble.getModuleContext(),
-		// bubble.getId(), "clickContent");
-		// }
-		// });
-		// if (TextUtils.isEmpty(bubble.getSubTitle())) {
-		// subTitleView.setVisibility(View.GONE);
-		// }
-		// if (bgImg != null) {
-		// infoContent.setLayoutParams(new
-		// LayoutParams(UZCoreUtil.dipToPix(bgImg.getWidth()),
-		// UZCoreUtil.dipToPix(bgImg.getHeight())));
-		// }
-		// }
+		
 		return infoContent;
 	}
 
@@ -1037,9 +984,6 @@ public class MapAnnotations
 		View infoContent = null;
 		if (setWebBubbleUrl) {
 			final UZModuleContext moduleContext = (UZModuleContext) mMarkerBubbleMap.get(marker);
-			//old
-			//int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_webview");
-			
 			
 			int layoutId = UZResourcesIDFinder.getResLayoutID("webview");
 
@@ -1055,11 +999,9 @@ public class MapAnnotations
 
 			if (UZUtility.isHtmlColor(bg)) {
 				infoContent.setBackgroundColor(UZUtility.parseCssColor(bg));
-				//rl.setBackgroundColor(UZUtility.parseCssColor(bg));
 				webView.setBackgroundColor(UZUtility.parseCssColor(bg));
 			} else {
 				Bitmap bitmap = JsParamsUtil.getInstance().getBitmap(mUzAMap.makeRealPath(bg));
-				//infoContent.setBackgroundDrawable(new BitmapDrawable(bitmap));
 				webView.setBackgroundDrawable(new BitmapDrawable(bitmap));
 			}
 			JSONObject size = moduleContext.optJSONObject("size");
@@ -1067,14 +1009,8 @@ public class MapAnnotations
 				width = size.optInt("width", 50);
 				hight = size.optInt("height", 50);
 			}
-			//old
-//			infoContent.setLayoutParams(new LayoutParams(UZUtility.dipToPix(width),
-//			UZUtility.dipToPix(hight)));
-			
-			
+						
 			rl.setLayoutParams(new RelativeLayout.LayoutParams(UZUtility.dipToPix(width), UZUtility.dipToPix(hight)));
-
-			
 			
 			webView.setClickable(true);
 			webView.setOnClickListener(new OnClickListener() {
@@ -1105,14 +1041,6 @@ public class MapAnnotations
 					}else {
 						return false;
 					}
-//					switch (event.getAction()) {
-//					case MotionEvent.ACTION_DOWN:
-//						
-//						break;
-//
-//					default:
-//						break;
-//					}
 					
 				}
 			});
@@ -1165,15 +1093,21 @@ public class MapAnnotations
 				layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_right");
 			}
 			infoContent = View.inflate(mContext, layoutId, null);
-			// RelativeLayout rLayout = (RelativeLayout)
-			// infoContent.findViewById(UZResourcesIDFinder.getResIdID("rl"));
+			RelativeLayout rLayout = (RelativeLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("rl_root"));
 			LinearLayout linearLayout = (LinearLayout) infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
 			linearLayout.setPadding(5, 5, 5, 5);
 			Bitmap bgImg = bubble.getBgImg();
 			if (bgImg != null) {
-				infoContent.setBackgroundDrawable(new BitmapDrawable(bgImg));
-
+				int width = bgImg.getWidth();
 				int height = bgImg.getHeight();
+				float scaleWidth = ((float) UZUtility.dipToPix(bubble.getWidth())) / width;  
+			    float scaleHeight = ((float) UZUtility.dipToPix(bubble.getHeight())) / height;  
+
+				Matrix matrix = new Matrix();  
+			    matrix.postScale(scaleWidth, scaleHeight);
+			    Bitmap newBitmap = Bitmap.createBitmap(bgImg, 0, 0, width, height, matrix, true); 
+				infoContent.setBackgroundDrawable(new BitmapDrawable(newBitmap));
+
 				// int w = bgImg.getWidth();
 				// linearLayout.setLayoutParams(new RelativeLayout.LayoutParams(160, height));
 				// infoContent.setLayoutParams(new ViewGroup.LayoutParams(bgImg.getWidth(),
@@ -1185,6 +1119,10 @@ public class MapAnnotations
 			}
 
 			ImageView iconView = (ImageView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("icon"));
+			RelativeLayout.LayoutParams iconParams = new RelativeLayout.LayoutParams(-1,  -1);
+			iconParams.addRule(RelativeLayout.CENTER_VERTICAL);
+			//iconView.setLayoutParams(iconParams);
+			//iconView.setScaleType(ScaleType.FIT_XY);
 			iconView.setOnClickListener(new OnClickListener() {
 
 				@Override
@@ -1196,8 +1134,8 @@ public class MapAnnotations
 				getImgShowUtil().display(iconView, bubble.getIconPath(), getLoadCallBack(bubble));
 			} else {
 				JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
-				iconView.setBackgroundDrawable(
-						new BitmapDrawable(jsParamsUtil.getBitmap(mUzAMap.makeRealPath(bubble.getIconPath()))));
+				//iconView.setBackgroundDrawable(new BitmapDrawable(jsParamsUtil.getBitmap(mUzAMap.makeRealPath(bubble.getIconPath()))));
+				iconView.setImageBitmap(UZUtility.getLocalImage(mUzAMap.makeRealPath(bubble.getIconPath())));
 			}
 			if (bubble.getIconPath() == null || bubble.getIconPath().isEmpty()) {
 				iconView.setVisibility(View.GONE);

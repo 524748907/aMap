@@ -27,7 +27,8 @@
 typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     AMapRoutePlanningTypeDrive = 0, //驾车
     AMapRoutePlanningTypeWalk,      //步行
-    AMapRoutePlanningTypeBus        //公交
+    AMapRoutePlanningTypeBus,        //公交
+    AMapRoutePlanningTypeRide        //骑行
 };
 
 #define BUBBLEVIEW_PAOVIEW    1010
@@ -182,6 +183,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     BOOL fixed = [paramsDict_ boolValueForKey:@"fixed" defaultValue:YES];
     float zoomLevel = [paramsDict_ floatValueForKey:@"zoomLevel" defaultValue:10];
     BOOL isShow = [paramsDict_ boolValueForKey:@"showUserLocation" defaultValue:YES];
+    BOOL showAccuracyCircle = [paramsDict_ boolValueForKey:@"showsAccuracyRing" defaultValue:YES];
 
     //显示地图
     self.mapView = [[MAMapView alloc]initWithFrame:newRect];
@@ -189,7 +191,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     self.mapView.delegate = self;
     [self.mapView setZoomLevel:zoomLevel animated:NO];
     self.mapView.showsUserLocation = isShow;
+    self.mapView.customizeUserLocationAccuracyCircleRepresentation = !showAccuracyCircle;
     self.mapView.mapType = MAMapTypeStandard;
+//    self.mapView.mapType = MAMapTypeSatellite;
     [self addSubview:self.mapView fixedOn:fixedOnName fixed:fixed];
     firstShowLocation = YES;
     //[AMapServices sharedServices].enableHTTPS = YES;
@@ -202,16 +206,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
     //设置地图中心点
     NSDictionary *centerInfo = [paramsDict_ dictValueForKey:@"center" defaultValue:@{}];
-    if (centerInfo.count > 0) {
-        float centerLon = [centerInfo floatValueForKey:@"lon" defaultValue:116.213];
-        float centerLat = [centerInfo floatValueForKey:@"lat" defaultValue:39.213];
-        if ([self isValidLon:centerLon lat:centerLat]) {
-            firstShowLocation = NO;
-            CLLocationCoordinate2D coord2d;
-            coord2d.latitude = centerLat;
-            coord2d.longitude = centerLon;
-            [self.mapView setCenterCoordinate:coord2d animated:NO];
-        }
+    float centerLon = [centerInfo floatValueForKey:@"lon" defaultValue:116.397647];
+    float centerLat = [centerInfo floatValueForKey:@"lat" defaultValue:39.908259];
+    if ([self isValidLon:centerLon lat:centerLat]) {
+        firstShowLocation = NO;
+        CLLocationCoordinate2D coord2d;
+        coord2d.latitude = centerLat;
+        coord2d.longitude = centerLon;
+        [self.mapView setCenterCoordinate:coord2d animated:NO];
     }
     //回调
     NSInteger openCbid = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
@@ -358,6 +360,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         double acur = currentUserLocation.location.horizontalAccuracy;
         [sendDict setObject:@(acur) forKey:@"accuracy"];
         [sendDict setObject:[NSNumber numberWithLongLong:timestamp] forKey:@"timestamp"];
+        
+        //lgg
+        [sendDict setObject:@(currentUserLocation.location.verticalAccuracy) forKey:@"verticalAccuracy"];
+        [sendDict setObject:@(currentUserLocation.location.horizontalAccuracy) forKey:@"horizontalAccuracy"];
+        [sendDict setObject:@(currentUserLocation.location.course) forKey:@"course"];
+        [sendDict setObject:@(currentUserLocation.location.speed) forKey:@"speed"];
+        if (currentUserLocation.location.floor) {
+            [sendDict setObject:@(currentUserLocation.location.floor.level) forKey:@"floor"];
+        }
+        
         [self sendResultEventWithCallbackId:getLocationCbid dataDict:sendDict errDict:nil doDelete:getLocationAutostop];
         if (getLocationAutostop) {
             getLocationCbid = -1;
@@ -740,12 +752,12 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSInteger cbcontantId = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
     NSArray *arrSome = [paramsDict_ arrayValueForKey:@"points" defaultValue:nil];
     if (arrSome.count == 0) {
-        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"status"] errDict:nil doDelete:YES];
+        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil doDelete:YES];
         return;
     }
     NSDictionary *targetInfo = [paramsDict_ dictValueForKey:@"point" defaultValue:@{}];
     if (!targetInfo || targetInfo.count==0) {
-        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"status"] errDict:nil doDelete:YES];
+        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil doDelete:YES];
         return;
     }
     float targetX = [targetInfo floatValueForKey:@"lat" defaultValue:360];
@@ -766,6 +778,32 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     
     CLLocationCoordinate2D targetPoint = CLLocationCoordinate2DMake(targetX, targetY);
     BOOL is = MAPolygonContainsCoordinate(targetPoint, allPoint, pointCount);
+    [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:is] forKey:@"status"] errDict:nil doDelete:YES];
+}
+
+- (void)isCircleContainsPoint:(NSDictionary *)paramsDict_ {
+    NSInteger cbcontantId = [paramsDict_ integerValueForKey:@"cbId" defaultValue:-1];
+    NSDictionary *circleDict = [paramsDict_ dictValueForKey:@"circle" defaultValue:nil];
+    if (!circleDict) {
+        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil doDelete:YES];
+        return;
+    }
+    NSDictionary *centerDict = [circleDict dictValueForKey:@"center" defaultValue:@{}];
+    float centerX = [centerDict floatValueForKey:@"lat" defaultValue:360];
+    float centerY = [centerDict floatValueForKey:@"lon" defaultValue:360];
+    CLLocationCoordinate2D centerPoint = CLLocationCoordinate2DMake(centerX, centerY);
+    double radius = [circleDict floatValueForKey:@"radius" defaultValue:100];
+    
+    NSDictionary *targetInfo = [paramsDict_ dictValueForKey:@"point" defaultValue:@{}];
+    if (!targetInfo || targetInfo.count==0) {
+        [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil doDelete:YES];
+        return;
+    }
+    float targetX = [targetInfo floatValueForKey:@"lat" defaultValue:360];
+    float targetY = [targetInfo floatValueForKey:@"lon" defaultValue:360];
+    CLLocationCoordinate2D targetPoint = CLLocationCoordinate2DMake(targetX, targetY);
+    
+    BOOL is = MACircleContainsCoordinate(targetPoint, centerPoint, radius);
     [self sendResultEventWithCallbackId:cbcontantId dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:is] forKey:@"status"] errDict:nil doDelete:YES];
 }
 
@@ -925,6 +963,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         }
         float lon = [annoInfo floatValueForKey:@"lon" defaultValue:360];
         float lat = [annoInfo floatValueForKey:@"lat" defaultValue:360];
+        
+        float w = [annoInfo floatValueForKey:@"w" defaultValue:-1];
+        float h = [annoInfo floatValueForKey:@"h" defaultValue:-1];
         if (![self isValidLon:lon lat:lat]) {
             continue;
         }
@@ -950,11 +991,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             }
             selPinIcons = newSelPinIcons;
         }
+        
+        BOOL locked = [annoInfo boolValueForKey:@"locked" defaultValue:NO];
+        
         ACGDAnnotaion *annotation = [[ACGDAnnotaion alloc] init];
         CLLocationCoordinate2D coor;
         coor.longitude = lon;
         coor.latitude = lat;
         annotation.coordinate = coor;
+        annotation.w = w;
+        annotation.h = h;
         annotation.annotId = annoId;
         annotation.clickCbId = addAnnCbid;//点击标注的回调id
         annotation.interval = timeInterval;
@@ -973,10 +1019,40 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         } else {
             annotation.draggable = draggable;
         }
+        
+        annotation.lockedToScreen = locked;
+        if (locked) {
+            float lockedX = [annoInfo floatValueForKey:@"lockedX" defaultValue:CGRectGetWidth(self.mapView.frame) * 0.5];
+            float lockedY = [annoInfo floatValueForKey:@"lockedY" defaultValue:CGRectGetHeight(self.mapView.frame) * 0.5];
+            annotation.lockedScreenPoint = CGPointMake(lockedX, lockedY);
+        }
+        
         [annotationsAry addObject:annotation];
     }
     if (annotationsAry.count > 0) {
         [self.mapView addAnnotations:annotationsAry];
+    }
+}
+
+#pragma mark - 取消选中标注
+- (void)cancelAnnotationSelected:(NSDictionary *)paramsDict_
+{
+    NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
+    if (![setID isKindOfClass:[NSString class]] || setID.length==0) {
+        return;
+    }
+    
+    NSArray *annos = [self.mapView annotations];
+    for (ACGDAnnotaion *annoElem in annos) {
+        if (![annoElem isKindOfClass:[ACGDAnnotaion class]]) {
+            continue;
+        }
+        if (annoElem.annotId == [setID integerValue]) {
+
+            [self.mapView deselectAnnotation:annoElem animated:NO];
+
+            break;
+        }
     }
 }
 
@@ -1564,6 +1640,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 }
 
 - (void)addLine:(NSDictionary *)paramsDict_ {
+    
     NSArray *pointAry = [paramsDict_ arrayValueForKey:@"points" defaultValue:nil];
     if (pointAry.count == 0) {
         return;
@@ -1911,8 +1988,10 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         self.routePlanningType = AMapRoutePlanningTypeBus;//公交
     } else if ([routeType isEqualToString:@"walk"]){
         self.routePlanningType = AMapRoutePlanningTypeWalk;//步行
-    } else {
+    } else if ([routeType isEqualToString:@"drive"]){
         self.routePlanningType = AMapRoutePlanningTypeDrive;//驾车
+    } else {
+        self.routePlanningType = AMapRoutePlanningTypeRide;//骑行
     }
     //路线策略
     AMapDrivingStrategy drivePolicy = AMapDrivingStrategyFastest;
@@ -2011,6 +2090,18 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             [self.mapSearch AMapWalkingRouteSearch:navi];
         }
         break;
+            
+        case AMapRoutePlanningTypeRide: {//骑行
+            AMapRidingRouteSearchRequest *navi = [[AMapRidingRouteSearchRequest alloc] init];
+            /* 提供备选方案*/
+            //navi.multipath = 1;
+            /* 出发点. */
+            navi.origin = start;
+            /* 目的地. */
+            navi.destination = end;
+            [self.mapSearch AMapRidingRouteSearch:navi];
+        }
+            break;
     }
 }
 
@@ -2058,7 +2149,17 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         AMapTransit *transits = self.routePlans.transits[planIndex];
         self.naviRoute = [MANaviRoute naviRouteForTransit:transits];
     } else {//步行、自驾
-        MANaviAnnotationType type = self.routePlanningType == AMapRoutePlanningTypeDrive ? MANaviAnnotationTypeDrive : MANaviAnnotationTypeWalking;
+//        MANaviAnnotationType type = self.routePlanningType == AMapRoutePlanningTypeDrive ? MANaviAnnotationTypeDrive : MANaviAnnotationTypeWalking;
+        
+        MANaviAnnotationType type;
+        if (self.routePlanningType == AMapRoutePlanningTypeDrive) {
+            type = MANaviAnnotationTypeDrive;
+        }else if (self.routePlanningType == AMapRoutePlanningTypeWalk) {
+            type = MANaviAnnotationTypeWalking;
+        }else {
+            type = MANaviAnnotationTypeRide;
+        }
+        
         if (planIndex > self.routePlans.paths.count) {
             planIndex = self.routePlans.paths.count - 1;
         }
@@ -2894,7 +2995,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (void)onReGeocodeSearchDone:(AMapReGeocodeSearchRequest *)request response:(AMapReGeocodeSearchResponse *)response {//根据经纬度搜地址
     AMapReGeocode *target = response.regeocode;
     if (!target) {
-        [self sendResultEventWithCallbackId:getAddrByLocationCbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil  doDelete:YES];
+       [self sendResultEventWithCallbackId:getAddrByLocationCbid dataDict:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO] forKey:@"status"] errDict:nil  doDelete:YES];
+       
         return;
     }
     AMapAddressComponent *placemark = target.addressComponent;
@@ -2968,6 +3070,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [cbDict setObject:towncode forKey:@"towncode"];
     [cbDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
     [self sendResultEventWithCallbackId:getAddrByLocationCbid dataDict:cbDict errDict:nil  doDelete:YES];
+   
 }
 
 - (void)onInputTipsSearchDone:(AMapInputTipsSearchRequest *)request response:(AMapInputTipsSearchResponse *)response {//输入提示回调
@@ -3071,6 +3174,22 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 if ([address isKindOfClass:[NSString class]] && address.length>0) {
                     [poiInfo setObject:address forKey:@"address"];
                 }
+                // 省
+                NSString * province = mapPoi.province;
+                if ([province isKindOfClass:[NSString class]] && province.length>0) {
+                    [poiInfo setObject:province forKey:@"province"];
+                }
+                // 市
+                NSString * city = mapPoi.city;
+                if ([city isKindOfClass:[NSString class]] && city.length>0) {
+                    [poiInfo setObject:city forKey:@"city"];
+                }
+                // 区域
+                NSString * district = mapPoi.district;
+                if ([district isKindOfClass:[NSString class]] && district.length>0) {
+                    [poiInfo setObject:district forKey:@"district"];
+                }
+                
                 NSString *tel = mapPoi.tel;
                 if ([tel isKindOfClass:[NSString class]] && tel.length>0) {
                     [poiInfo setObject:tel forKey:@"tel"];
@@ -3231,7 +3350,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [sendDict setObject:endNode forKey:@"end"];
     //出租车费用
     [sendDict setObject:[NSNumber numberWithFloat:mapRoute.taxiCost] forKey:@"taxiCost"];
-    //步行、驾车路线方案
+    //步行、骑行、驾车路线方案
     if (mapRoute.paths.count > 0) {
         NSMutableArray *pathAry = [self getPathInfo:mapRoute.paths];
         if (pathAry.count > 0) {
@@ -3385,12 +3504,15 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         NSString *strokeImage = [overlayStyles stringValueForKey:@"strokeImg" defaultValue:@""];
         if ([strokeImage isKindOfClass:[NSString class]] && strokeImage.length>0) {//文理图片线条
             polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
+
             NSString *realStrokeImgPath = [self getPathWithUZSchemeURL:strokeImage];
             polylineView.strokeImage = [UIImage imageWithContentsOfFile:realStrokeImgPath];
-        } else {//线
+            
+        }else {//线
             polylineView.lineWidth = [overlayStyles floatValueForKey:@"borderWidth" defaultValue:2.0];
             NSString *color = [overlayStyles stringValueForKey:@"borderColor" defaultValue:@"#000"];
             polylineView.strokeColor = [UZAppUtils colorFromNSString:color];
+            
             polylineView.lineJoinType = kMALineJoinRound;
             NSString *typeStr = [overlayStyles stringValueForKey:@"type" defaultValue:@"round"];
             if ([typeStr isEqualToString:@"round"]) {
@@ -3405,6 +3527,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             } else {
                 polylineView.lineDashType = kMALineDashTypeNone;
             }
+
         }
         return polylineView;
     } else if ([overlay isKindOfClass:[MAGeodesicPolyline class]]) {//弧形
@@ -3458,7 +3581,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
                 polylineRenderer.strokeImage = strokeImage;
             }
-        } else {//驾车路线样式
+        } else if (naviPolyline.type == MANaviAnnotationTypeDrive){//驾车路线样式
             NSDictionary *driveStyle = [routeStyles dictValueForKey:@"driveLine" defaultValue:@{}];
             polylineRenderer.lineWidth = [driveStyle floatValueForKey:@"width" defaultValue:5];
             NSString *colorStr = [driveStyle stringValueForKey:@"color" defaultValue:@"#00868B"];
@@ -3469,6 +3592,22 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 polylineRenderer.lineDashType = kMALineDashTypeNone;
             }
             NSString *strokeImg = [driveStyle stringValueForKey:@"strokeImg" defaultValue:nil];
+            if (strokeImg.length > 0) {
+                strokeImg = [self getPathWithUZSchemeURL:strokeImg];
+                UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
+                polylineRenderer.strokeImage = strokeImage;
+            }
+        } else {//骑行路线样式
+            NSDictionary * rideStyle = [routeStyles dictValueForKey:@"rideLine" defaultValue:@{}];
+            polylineRenderer.lineWidth = [rideStyle floatValueForKey:@"width" defaultValue:3];
+            NSString *colorStr = [rideStyle stringValueForKey:@"color" defaultValue:@"#698B22"];
+            polylineRenderer.strokeColor = [UZAppUtils colorFromNSString:colorStr];
+            if ([rideStyle boolValueForKey:@"lineDash" defaultValue:NO]) {
+                polylineRenderer.lineDashType = kMALineDashTypeDot;
+            } else {
+                polylineRenderer.lineDashType = kMALineDashTypeNone;
+            }
+            NSString *strokeImg = [rideStyle stringValueForKey:@"strokeImg" defaultValue:nil];
             if (strokeImg.length > 0) {
                 strokeImg = [self getPathWithUZSchemeURL:strokeImg];
                 UIImage *strokeImage = [UIImage imageWithContentsOfFile:strokeImg];
@@ -3591,6 +3730,19 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                     img = [self scaleImage:img];
                     poiAnnotationView.image = img;
                 }
+                break;
+                    
+                case MANaviAnnotationTypeRide:{
+                    NSString *path = [iconsInfo stringValueForKey:@"ride" defaultValue:nil];
+                    if (path.length > 0) {
+                        path = [self getPathWithUZSchemeURL:path];
+                    } else {
+                        path = [[NSBundle mainBundle]pathForResource:@"res_aMap/man" ofType:@"png"];
+                    }
+                    UIImage *img = [UIImage imageWithContentsOfFile:path];
+                    img = [self scaleImage:img];
+                    poiAnnotationView.image = img;
+                }
                     break;
                     
                 case MANaviAnnotationTypeStart:{
@@ -3690,7 +3842,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                     UIImage *pinImage = [UIImage imageWithContentsOfFile:path];
                     pinImage = [self scaleImage:pinImage];//2倍图缩放图片
                     annotationView.animationView.hidden = YES;//动画标注隐藏
-                    annotationView.image = pinImage;
+                    annotationView.image = [self imageResize:pinImage andResizeTo:CGSizeMake((annotation.w == -1)?pinImage.size.width:annotation.w, (annotation.h == -1)?pinImage.size.height:annotation.h)];
+//                    annotationView.image = pinImage;
+                
                 } else {//动画标注
                     self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
                     NSString *animationFirstFramePath = [pinIconPaths firstObject];
@@ -3699,7 +3853,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                     float sclW = firstImageSize.width/2.0;
                     float sclH = firstImageSize.height/2.0;
                     //重设标注的image
-                    [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+//                    [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+                    [self resetAnnotationViewImage:annotationView withSize:CGSizeMake((annotation.w == -1)?sclW:annotation.w, (annotation.h == -1)?sclH:annotation.h)];
                     [annotationView refreshAnimatedPin:annotation];
                     annotationView.animationView.hidden = NO;
                 }
@@ -3719,8 +3874,11 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             pinImage = [self scaleImage:pinImage];//2倍图缩放图片
             //避免与可移动的标注的冲突
             if (pinImage) {//普通标注
+                
                 annotationView.animationView.hidden = YES;//动画标注隐藏
-                annotationView.image = pinImage;
+            
+                annotationView.image = [self imageResize:pinImage andResizeTo:CGSizeMake((annotation.w == -1)?pinImage.size.width:annotation.w, (annotation.h == -1)?pinImage.size.height:annotation.h)];
+//                annotationView.image = pinImage;
             } else {//动画标注
                 self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
                 NSString *animationFirstFramePath = [pinIconPaths firstObject];
@@ -3729,7 +3887,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 float sclW = firstImageSize.width/2.0;
                 float sclH = firstImageSize.height/2.0;
                 //重设标注的image
-                [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+//                [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+                [self resetAnnotationViewImage:annotationView withSize:CGSizeMake((annotation.w == -1)?sclW:annotation.w, (annotation.h == -1)?sclH:annotation.h)];
                 [annotationView refreshAnimatedPin:annotation];
                 annotationView.animationView.hidden = NO;
             }
@@ -3786,12 +3945,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
-- (void)resetAnnotationViewImage:(AnimatedAnnotationView *)annotationView withSize:(CGSize)size {
-    float scale = [UIScreen mainScreen].scale;
-    UIImage *scaleImage = [self OriginImage:self.placeholdImage scaleToSize:CGSizeMake(size.width*scale, size.height*scale)];
-    UIImage *finalImage = [UIImage imageWithData:UIImagePNGRepresentation(scaleImage) scale:scale];
-    annotationView.image = finalImage;
-}
 //点击标注
 - (void)mapView:(MAMapView *)mapView didSelectAnnotationView:(MAAnnotationView *)view {
     ACGDAnnotaion *target = (ACGDAnnotaion *)view.annotation;
@@ -3812,7 +3965,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             UIImage *pinImage = [UIImage imageWithContentsOfFile:path];
             pinImage = [self scaleImage:pinImage];//2倍图缩放图片
             annotationView.animationView.hidden = YES;//动画标注隐藏
-            annotationView.image = pinImage;
+            annotationView.image = [self imageResize:pinImage andResizeTo:CGSizeMake((target.w == -1)?pinImage.size.width:target.w, (target.h == -1)?pinImage.size.height:target.h)];
+//            annotationView.image = pinImage;
         } else {//动画标注
             self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
             NSString *animationFirstFramePath = [pinIconPaths firstObject];
@@ -3821,7 +3975,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             float sclW = firstImageSize.width/2.0;
             float sclH = firstImageSize.height/2.0;
             //重设标注的image
-            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+//            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake((target.w == -1)?sclW:target.w, (target.h == -1)?sclH:target.h)];
             [annotationView refreshAnimatedPin:target];
             annotationView.animationView.hidden = NO;
         }
@@ -3829,6 +3984,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         annotationView.billboardView.hidden = YES;//避免与布告牌错乱
         annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
     }
+    
+    
     
     if (target.clickCbId < 0) {//标注点击事件回调
         return;
@@ -3857,7 +4014,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     //避免与可移动的标注的冲突
     if (pinImage) {//普通标注
         annotationView.animationView.hidden = YES;//动画标注隐藏
-        annotationView.image = pinImage;
+//        annotationView.image = pinImage;
+        annotationView.image = [self imageResize:pinImage andResizeTo:CGSizeMake((annotation.w == -1)?pinImage.size.width:annotation.w, (annotation.h == -1)?pinImage.size.height:annotation.h)];
     } else {//动画标注
         self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
         NSString *animationFirstFramePath = [pinIconPaths firstObject];
@@ -3866,13 +4024,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         float sclW = firstImageSize.width/2.0;
         float sclH = firstImageSize.height/2.0;
         //重设标注的image
-        [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+//        [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+        [self resetAnnotationViewImage:annotationView withSize:CGSizeMake((annotation.w == -1)?sclW:annotation.w, (annotation.h == -1)?sclH:annotation.h)];
         [annotationView refreshAnimatedPin:annotation];
         annotationView.animationView.hidden = NO;
     }
     annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
     annotationView.billboardView.hidden = YES;//避免与布告牌错乱
     annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+    
+    
 }
 - (void)mapView:(MAMapView *)mapView annotationView:(MAAnnotationView *)view didChangeDragState:(MAAnnotationViewDragState)newState fromOldState:(MAAnnotationViewDragState)oldState {
     NSString *state = @"none";
@@ -4104,6 +4265,16 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     long long timestamp = (long long)([currentUserLocation.location.timestamp timeIntervalSince1970] * 1000);
     [sendDict setObject:[NSNumber numberWithLongLong:timestamp] forKey:@"timestamp"];
     [sendDict setObject:[NSNumber numberWithBool:YES] forKey:@"status"];
+    
+    //lgg
+    [sendDict setObject:@(currentUserLocation.location.verticalAccuracy) forKey:@"verticalAccuracy"];
+    [sendDict setObject:@(currentUserLocation.location.horizontalAccuracy) forKey:@"horizontalAccuracy"];
+    [sendDict setObject:@(currentUserLocation.location.course) forKey:@"course"];
+    [sendDict setObject:@(currentUserLocation.location.speed) forKey:@"speed"];
+    if (currentUserLocation.location.floor) {
+        [sendDict setObject:@(currentUserLocation.location.floor.level) forKey:@"floor"];
+    }
+    
     [self sendResultEventWithCallbackId:getLocationCbid dataDict:sendDict errDict:nil doDelete:NO];
 }
 
@@ -4571,6 +4742,10 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     NSString *illusPath = [contentInfo stringValueForKey:@"illus" defaultValue:nil];
     NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:@""];
+    
+    float bubbleWidth = [stylesInfo floatValueForKey:@"w" defaultValue:-1];
+    float bubbleHeight = [stylesInfo floatValueForKey:@"h" defaultValue:90];
+    
     float bubbleLong = 160;
     NSString *bgImgPathStr = annotaion.bubbleBgImg;
     if (bgImgPathStr.length == 0) {//若使用默认气泡背景，则根据内容文字大小自适应，最小160
@@ -4583,10 +4758,15 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             bubbleLong = 160;
         }
     }
+    if (bubbleWidth >= 0) {
+        bubbleLong = bubbleWidth;
+    }
     //背景图片
     NormalBubbleBgImgView *norBubbleBgView = popBubbleView.normalBgImgView;
-    popBubbleView.frame = CGRectMake(0, 0, bubbleLong, 90);
-    norBubbleBgView.frame = CGRectMake(0, 0, bubbleLong, 90);
+//    popBubbleView.frame = CGRectMake(0, 0, bubbleLong, 90);
+//    norBubbleBgView.frame = CGRectMake(0, 0, bubbleLong, 90);
+    popBubbleView.frame = CGRectMake(0, 0, bubbleLong, bubbleHeight);
+    norBubbleBgView.frame = CGRectMake(0, 0, bubbleLong, bubbleHeight);
     
     UIImage *imageBg = nil;
     if (bgImgPathStr.length > 0) {//自定义气泡背景
@@ -4605,7 +4785,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         UIEdgeInsets inset1 = UIEdgeInsetsMake(10, 10, 16, 16);
         leftImage = [leftImage resizableImageWithCapInsets:inset1 resizingMode:UIImageResizingModeStretch];
         UIImageView *leftImg = norBubbleBgView.leftBgImgView;
-        leftImg.frame = CGRectMake(0, 0, bubbleLong/2.0, 90);
+        leftImg.frame = CGRectMake(0, 0, bubbleLong/2.0, bubbleHeight);
         leftImg.image = leftImage;
         //右边气泡
         NSString *rightBubble = [[NSBundle mainBundle]pathForResource:@"res_aMap/bubble_right" ofType:@"png"];
@@ -4613,7 +4793,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         UIEdgeInsets inset2 = UIEdgeInsetsMake(10, 16, 16, 10);
         rightImage = [rightImage resizableImageWithCapInsets:inset2 resizingMode:UIImageResizingModeStretch];
         UIImageView *rightImg = norBubbleBgView.rightBgImgView;
-        rightImg.frame = CGRectMake(bubbleLong/2.0, 0, bubbleLong/2.0, 90);
+        rightImg.frame = CGRectMake(bubbleLong/2.0, 0, bubbleLong/2.0, bubbleHeight);
         rightImg.image = rightImage;
     }
     //位置参数
@@ -4679,7 +4859,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         tap.bubbleCbid = annotaion.bubbleClickCbid;
     }
     if (subTitle.length == 0) {
-        labelY = 28;
+//        labelY = 28;
+        labelY = (bubbleHeight - labelH) / 2 ;
     } else {
         labelY = 18;
     }
@@ -5084,18 +5265,12 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
-- (UIImage*)OriginImage:(UIImage*)image scaleToSize:(CGSize)size {
-    UIGraphicsBeginImageContext(size);//size为CGSize类型，即你所需要的图片尺寸
-    [image drawInRect:CGRectMake(0,0, size.width, size.height)];
-    UIImage *scaledImage =UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return scaledImage;
-}
-
 - (UIImage *)scaleImage:(UIImage *)img {//缩放图片
     if (!img) {
         return nil;
     }
+    CGSize bImgSize = img.size;
+    //NSLog(@"scaleImage转换之前图片大小：%f,%f",bImgSize.width,bImgSize.height);
     CGSize size = CGSizeMake(img.size.width/2.0, img.size.height/2.0);
     // 创建一个bitmap的context
     // 并把它设置成为当前正在使用的context
@@ -5107,9 +5282,32 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [img drawInRect:CGRectMake(0,0, size.width, size.height)];
     // 从当前context中创建一个改变大小后的图片
     UIImage *scaledImage =UIGraphicsGetImageFromCurrentImageContext();
+    bImgSize = scaledImage.size;
+    //NSLog(@"scaleImage转换之后图片大小：%f,%f",bImgSize.width,bImgSize.height);
     // 使当前的context出堆栈
     UIGraphicsEndImageContext();
     //返回新的改变大小后的图片
+    return scaledImage;
+}
+
+- (void)resetAnnotationViewImage:(AnimatedAnnotationView *)annotationView withSize:(CGSize)size {
+    float scale = [UIScreen mainScreen].scale;
+    CGSize bImgSize = self.placeholdImage.size;
+    //NSLog(@"1转换之前图片大小：%f,%f",bImgSize.width,bImgSize.height);
+    UIImage *scaleImage = [self OriginImage:self.placeholdImage scaleToSize:CGSizeMake(size.width*scale, size.height*scale)];
+    bImgSize = scaleImage.size;
+    //NSLog(@"1转换之后图片大小：%f,%f",bImgSize.width,bImgSize.height);
+    UIImage *finalImage = [UIImage imageWithData:UIImagePNGRepresentation(scaleImage) scale:scale];
+    bImgSize = finalImage.size;
+    //NSLog(@"2转换之后图片大小：%f,%f",bImgSize.width,bImgSize.height);
+    annotationView.image = finalImage;
+}
+
+- (UIImage*)OriginImage:(UIImage*)image scaleToSize:(CGSize)size {
+    UIGraphicsBeginImageContext(size);//size为CGSize类型，即你所需要的图片尺寸
+    [image drawInRect:CGRectMake(0,0, size.width, size.height)];
+    UIImage *scaledImage =UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
     return scaledImage;
 }
 
@@ -5305,6 +5503,17 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         [pathAry addObject:pathInfo];
     }
     return pathAry;
+}
+
+-(UIImage *)imageResize:(UIImage*)img andResizeTo:(CGSize)newSize
+{
+    CGFloat scale = [[UIScreen mainScreen]scale];
+    UIGraphicsBeginImageContext(newSize);
+    UIGraphicsBeginImageContextWithOptions(newSize, NO, scale);
+    [img drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
 }
 #pragma mark -搜索区域
 

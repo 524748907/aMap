@@ -8,8 +8,10 @@ package com.apicloud.devlop.uzAMap.models;
 
 import java.util.List;
 
+import com.alibaba.idst.nls.internal.VoiceActDetector;
 import com.amap.api.maps.model.Marker;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 import android.graphics.Bitmap;
 
@@ -126,6 +128,51 @@ public class Annotation {
 
 	public void setSelectIconsPath(List<String> selectIconsPath) {
 		this.selectIconsPath = selectIconsPath;
+	}
+	
+	private int width;
+	public void setWidth(int width) {
+		this.width = width;
+	}
+	
+	public int getWidth() {
+		return width;
+	}
+	
+	private int height;
+	public void setHeight(int height) {
+		this.height = height;
+	}
+	
+	public int getHeight() {
+		return height;
+	}
+	
+	private boolean locked;
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+	
+	public boolean locked() {
+		return locked;
+	}
+	
+	private int lockedX;
+	public void setLockedX(int lockedX) {
+		this.lockedX = lockedX;
+	}
+	
+	public int getLockedX() {
+		return UZUtility.dipToPix(lockedX);
+	}
+	
+	private int lockedY;
+	public void setLockedY(int lockedY) {
+		this.lockedY = lockedY;
+	}
+	
+	public int getLockedY() {
+		return UZUtility.dipToPix(lockedY);
 	}
 	
 	

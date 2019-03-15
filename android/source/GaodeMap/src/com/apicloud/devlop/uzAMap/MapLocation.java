@@ -29,14 +29,14 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 	private int mAccuracy;
 //	private float mMinDistance;
 	private boolean mAutoStop;
-	private SensorManager mSensorManager;
-	private Sensor mSensor;
+//	private SensorManager mSensorManager;
+//	private Sensor mSensor;
 	private AMapLocationClient mLocationClient;
 	private AMapLocationClientOption mLocationOption;
 
 	public void getLocation(UZModuleContext moduleContext, Context context) {
 		mContext = context;
-		initSensor();
+		//initSensor();
 		MapView mMapView = new UzMapView(mContext);
 		mMapView.onCreate(null);
 		mModuleContext = moduleContext;
@@ -54,18 +54,23 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 	}
 
 	@SuppressWarnings("deprecation")
-	private void initSensor() {
-		mSensorManager = (SensorManager) mContext
-				.getSystemService(Context.SENSOR_SERVICE);
-		mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-		mSensorManager.registerListener(this, mSensor,
-				SensorManager.SENSOR_DELAY_FASTEST);
-	}
+//	private void initSensor() {
+//		mSensorManager = (SensorManager) mContext
+//				.getSystemService(Context.SENSOR_SERVICE);
+//		mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+//		mSensorManager.registerListener(this, mSensor,
+//				SensorManager.SENSOR_DELAY_FASTEST);
+//	}
 
 	private void init() {
 		mLocationClient = new AMapLocationClient(mContext);
 		mLocationOption = new AMapLocationClientOption();
 		mLocationOption.setLocationMode(AMapLocationMode.Hight_Accuracy);
+		mLocationOption.setLocationCacheEnable(false);
+		mLocationOption.setMockEnable(false);
+		mLocationOption.setSensorEnable(true);
+		mLocationOption.setOnceLocation(mAutoStop);
+		mLocationClient.setLocationOption(mLocationOption);
 		mLocationClient.setLocationListener(this);
 		mLocationClient.startLocation();
 	}
@@ -126,8 +131,8 @@ public class MapLocation implements AMapLocationListener, SensorEventListener {
 		}
 		CallBackUtil
 				.locationCallBack(mModuleContext, aLocation, mAngle, status);
-		if (mAutoStop) {
-			stopLocation();
-		}
+//		if (mAutoStop) {
+//			stopLocation();
+//		}
 	}
 }

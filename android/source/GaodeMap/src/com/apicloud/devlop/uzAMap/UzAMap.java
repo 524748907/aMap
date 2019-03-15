@@ -18,14 +18,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.amap.api.col.n3.ew;
+import com.amap.api.col.n3.ne;
+import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.OnIndoorBuildingActiveListener;
 import com.amap.api.maps.AMap.OnMapScreenShotListener;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.CoordinateConverter;
 import com.amap.api.maps.CoordinateConverter.CoordType;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.IndoorBuildingInfo;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.trace.LBSTraceClient;
 import com.amap.api.trace.TraceListener;
 import com.amap.api.trace.TraceLocation;
@@ -57,6 +62,7 @@ public class UzAMap extends UZModule {
 	public UzAMap(UZWebView webView) {
 		super(webView);
 	}
+	
 
 	public void jsmethod_open(UZModuleContext moduleContext) {
 		if (mMap == null) {
@@ -291,6 +297,19 @@ public class UzAMap extends UZModule {
 			}
 		}
 	}
+	
+	/**
+	 * 判断已知点是否在指定的圆形区域内
+	 * @param moduleContext
+	 */
+	public void jsmethod_isCircleContainsPoint(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				new MapSimple().isCircleContainsPoint(moduleContext, mapView.getMap());
+			}
+		}
+	}
 
 	public void jsmethod_interconvertCoords(UZModuleContext moduleContext) {
 		if (mMap != null) {
@@ -325,9 +344,11 @@ public class UzAMap extends UZModule {
 	public void jsmethod_addAnnotations(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
+			int width = mapView.getWidth();
+			int height = mapView.getHeight();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addAnnotations(moduleContext);
 			}
@@ -343,7 +364,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addMoveAnimation(moduleContext);
 			}
@@ -359,7 +380,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.cancelMoveAnimation(moduleContext);
 			}
@@ -376,7 +397,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addAnnotations(moduleContext);
 			}
@@ -388,8 +409,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.getAnnotationCoords(moduleContext);
 			}
@@ -401,8 +421,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.setAnnotationCoords(moduleContext);
 			}
@@ -414,8 +433,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.annotationExist(moduleContext);
 			}
@@ -427,8 +445,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.setWebBubbleUrl = false;
 				mAnnotations.setBubble(moduleContext);
@@ -444,8 +461,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.setWebBubbleUrl = true;
 				mAnnotations.setWebBubble(moduleContext);
@@ -473,14 +489,68 @@ public class UzAMap extends UZModule {
 			webBubbleModuleContext = null;
 		}
 	}
+	
+	/**
+	 * 缩放地图，包含所有的Mark标注
+	 * @param moduleContext
+	 */
+	public void jsmethod_zoomToSpan(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			JSONArray points = moduleContext.optJSONArray("points");
+			JSONObject center = moduleContext.optJSONObject("center");
+			if (center != null) {
+				zoomToSpanWithCenter(center, points);
+			}else {
+				zoomToSpan(points);
+			}
+		}
+		
+	}
+	
+	private void zoomToSpan(JSONArray points) {
+		LatLngBounds bounds = getLatLngBounds(points);
+		mMap.getMapView().getMap().moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+	}
+	
+	private void zoomToSpanWithCenter(JSONObject center, JSONArray points) {
+		LatLngBounds bounds = getLatLngBounds(center, points);
+		mMap.getMapView().getMap().moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+	}
+	
+	//根据中心点和自定义内容获取缩放bounds
+    private LatLngBounds getLatLngBounds(JSONObject centerpoint, JSONArray pointList) {
+        LatLngBounds.Builder b = LatLngBounds.builder();
+        if (centerpoint != null){
+            for (int i = 0; i < pointList.length(); i++) {
+            		JSONObject pJson = pointList.optJSONObject(i);
+                LatLng p = new LatLng(pJson.optDouble("lat"), pJson.optDouble("lon"));
+                LatLng p1 = new LatLng((centerpoint.optDouble("lat") * 2) - p.latitude, (centerpoint.optDouble("lon") * 2) - p.longitude);
+                b.include(p);
+                b.include(p1);
+            }
+        }
+        return b.build();
+    }
+	
+	/**
+     * 根据自定义内容获取缩放bounds
+     */
+    private LatLngBounds getLatLngBounds(JSONArray points) {
+        LatLngBounds.Builder b = LatLngBounds.builder();
+        for (int i = 0; i < points.length(); i++) {
+             JSONObject pJson = points.optJSONObject(i);
+             LatLng p = new LatLng(pJson.optDouble("lat"), pJson.optDouble("lon"));
+             b.include(p);
+         }
+        return b.build();
+    }
 
 	public void jsmethod_popupBubble(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.popupBubble(moduleContext);
 			}
@@ -492,8 +562,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.closeBubble(moduleContext);
 			}
@@ -505,7 +574,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(), context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addBillboard(moduleContext);
 			}
@@ -517,8 +586,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addMoveAnnotations(moduleContext);
 			}
@@ -551,8 +619,7 @@ public class UzAMap extends UZModule {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
 				if (mAnnotations == null) {
-					mAnnotations = new MapAnnotations(this, mapView.getMap(),
-							context());
+					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.removeAnnotations(moduleContext);
 			}
@@ -954,6 +1021,10 @@ public class UzAMap extends UZModule {
 
 	public void jsmethod_getProvinces(UZModuleContext moduleContext) {
 		new MapOffline().getProvinces(moduleContext, context());
+	}
+	
+	public void jsmethod_getCitiesByProvince(UZModuleContext moduleContext) {
+		new MapOffline().getCitiesByProvince(moduleContext, context());
 	}
 
 	public void jsmethod_getAllCities(UZModuleContext moduleContext) {

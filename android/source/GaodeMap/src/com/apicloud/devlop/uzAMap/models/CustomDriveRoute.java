@@ -24,12 +24,17 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	private int busColor;
 	private int driveColor;
 	private int walkColor;
+	private int rideColor;
 	private float lineWidth;
 	private String startPointImgPath;
 	private String endPointImgPath;
 	private String busPointImgPath;
 	private String walkPointImgPath;
 	private String drivePointImgPath;
+	private String ridePointImgPath;
+	
+	private boolean lineDash;
+	private String strokeImg;
 
 	public CustomDriveRoute(Context context, AMap aMap, DrivePath drivePath,
 			LatLonPoint start, LatLonPoint end, List<LatLonPoint> throughPointList) {
@@ -47,6 +52,10 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	public void setWalkColor(int walkColor) {
 		this.walkColor = walkColor;
 	}
+	
+	public void setRideColor(int rideColor) {
+		this.rideColor = rideColor;
+	}
 
 	public void setBusPointImgPath(String busPointImgPath) {
 		this.busPointImgPath = busPointImgPath;
@@ -59,9 +68,36 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	public void setDrivePointImgPath(String drivePointImgPath) {
 		this.drivePointImgPath = drivePointImgPath;
 	}
+	
+	public void setRidePointImgPath(String ridePointImgPath) {
+		this.ridePointImgPath = ridePointImgPath;
+	}
 
 	public void setLineWidth(float lineWidth) {
 		this.lineWidth = lineWidth;
+	}
+	
+	public void setLineDash(boolean lineDash) {
+		this.lineDash = lineDash;
+	}
+	
+	public void setStrokeImg(String path) {
+		this.strokeImg = path;
+	}
+	
+	@Override
+	protected String getStrokeImg() {
+		return strokeImg;
+	}
+	
+	@Override
+	protected boolean getDriveLineDash() {
+		return lineDash;
+	}
+	
+	@Override
+	protected String getBusStrokeImg() {
+		return strokeImg;
 	}
 
 	@Override
@@ -82,6 +118,11 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 	@Override
 	protected int getWalkColor() {
 		return walkColor;
+	}
+	
+	@Override
+	protected int getRideColor() {
+		return rideColor;
 	}
 
 	public void setStartPointImgPath(String startPointImgPath) {
@@ -163,6 +204,22 @@ public class CustomDriveRoute extends DrivingRouteOverlay {
 			bitmapDescriptor = BitmapDescriptorFactory
 					.fromBitmap(BitmapFactory.decodeStream(UZUtility
 							.guessInputStream(walkPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (bitmapDescriptor != null) {
+			return bitmapDescriptor;
+		}
+		return super.getWalkBitmapDescriptor();
+	}
+	
+	@Override
+	protected BitmapDescriptor getRideBitmapDescriptor() {
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(ridePointImgPath)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

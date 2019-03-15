@@ -18,6 +18,7 @@ import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 public class RouteOverlay {
 	protected List<Marker> stationMarkers = new ArrayList<Marker>();
@@ -114,6 +115,14 @@ public class RouteOverlay {
 	protected BitmapDescriptor getDriveBitmapDescriptor() {
 		return BitmapDescriptorFactory.fromResource(getDrawID("amap_car"));
 	}
+	
+	protected BitmapDescriptor getRideBitmapDescriptor() {
+		return BitmapDescriptorFactory.fromResource(getDrawID("amap_ride"));
+	}
+	
+	protected String getRidePointImg() {
+		return "";
+	}
 
 	protected void addStartAndEndMarker() {
 		startMarker = mAMap.addMarker((new MarkerOptions())
@@ -194,7 +203,7 @@ public class RouteOverlay {
 	}
 
 	protected int getWalkColor() {
-		return Color.parseColor("#6db74d");
+		return Color.parseColor("#6db74d");//6db74d
 	}
 
 	/**
@@ -203,11 +212,55 @@ public class RouteOverlay {
 	 * @since V2.2.1
 	 */
 	protected int getBusColor() {
-		return Color.parseColor("#537edc");
+		return Color.parseColor("#537edc");////537edc
 	}
 
 	protected int getDriveColor() {
-		return Color.parseColor("#537edc");
+		return Color.parseColor("#537edc");//537edc
+	}
+	
+	protected int getRideColor() {
+		return UZUtility.parseCssColor("#698B22");
+	}
+	
+	protected boolean getLineDash() {
+		return false;
+	}
+	
+	protected String getStrokeImg() {
+		return "";
+	}
+	
+	protected boolean getWalkLineDash() {
+		return false;
+	}
+	
+	protected boolean getDriveLineDash() {
+		return false;
+	}
+	
+	protected boolean getBusLineDash() {
+		return false;
+	}
+	
+	protected boolean getRideLineDash() {
+		return false;
+	}
+	
+	protected String getWalkStrokeImg() {
+		return "";
+	}
+	
+	protected String getDriveStrokeImg() {
+		return "";
+	}
+	
+	protected String getBusStrokeImg() {
+		return "";
+	}
+	
+	protected String getRideStrokeImg() {
+		return "";
 	}
 
 	// protected int getShowRouteZoom() {

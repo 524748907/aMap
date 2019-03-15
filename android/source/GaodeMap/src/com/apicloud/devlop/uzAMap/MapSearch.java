@@ -15,6 +15,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
+
+import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.route.BusPath;
@@ -24,19 +26,23 @@ import com.amap.api.services.route.Doorway;
 import com.amap.api.services.route.DrivePath;
 import com.amap.api.services.route.DriveRouteResult;
 import com.amap.api.services.route.DriveStep;
+import com.amap.api.services.route.RidePath;
 import com.amap.api.services.route.RideRouteResult;
+import com.amap.api.services.route.RideStep;
 import com.amap.api.services.route.RouteBusLineItem;
 import com.amap.api.services.route.RouteBusWalkItem;
 import com.amap.api.services.route.RouteSearch;
 import com.amap.api.services.route.RouteSearch.BusRouteQuery;
 import com.amap.api.services.route.RouteSearch.DriveRouteQuery;
 import com.amap.api.services.route.RouteSearch.OnRouteSearchListener;
+import com.amap.api.services.route.RouteSearch.RideRouteQuery;
 import com.amap.api.services.route.RouteSearch.WalkRouteQuery;
 import com.amap.api.services.route.WalkPath;
 import com.amap.api.services.route.WalkRouteResult;
 import com.amap.api.services.route.WalkStep;
 import com.apicloud.devlop.uzAMap.models.CustomBusRoute;
 import com.apicloud.devlop.uzAMap.models.CustomDriveRoute;
+import com.apicloud.devlop.uzAMap.models.CustomRideRoute;
 import com.apicloud.devlop.uzAMap.models.CustomWalkRoute;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
 import com.uzmap.pkg.uzcore.uzmodule.UZModule;
@@ -49,6 +55,7 @@ public class MapSearch implements OnRouteSearchListener {
 	private static final String ROUTE_TYPE_DRIVE = "drive";
 	private static final String ROUTE_TYPE_TRANSIT = "transit";
 	private static final String ROUTE_TYPE_WALK = "walk";
+	private static final String ROUTE_TYPE_RIDE = "ride";
 
 	private static final String DRIVE_TIME_FIRST = "drive_time_first";// 速度优先（时间）
 	private static final String DRIVE_FEE_FIRST = "drive_fee_first";// 费用优先（不走收费路段的最快道路）
@@ -70,6 +77,7 @@ public class MapSearch implements OnRouteSearchListener {
 	private BusRouteResult mBusRouteResult;
 	private DriveRouteResult mDriveRouteResult;
 	private WalkRouteResult mWalkRouteResult;
+	private RideRouteResult mRideRouteResult;
 
 	private String mSearchType;
 
@@ -79,6 +87,8 @@ public class MapSearch implements OnRouteSearchListener {
 	private Map<String, CustomDriveRoute> mDriveRouteOverlayMap = new HashMap<String, CustomDriveRoute>();
 	@SuppressLint("UseSparseArrays")
 	private Map<String, CustomWalkRoute> mWalkRouteOverlayMap = new HashMap<String, CustomWalkRoute>();
+	@SuppressLint("UseSparseArrays")
+	private Map<String, CustomRideRoute> mRideRouteOverlayMap = new HashMap<String, CustomRideRoute>();
 
 	public MapSearch(Context context) {
 		this.mContext = context;
@@ -126,11 +136,19 @@ public class MapSearch implements OnRouteSearchListener {
 		failCallBack(mModuleContext);
 	}
 	
-	//骑行路径规划结果的回调方法
+	// 骑行路径规划结果的回调方法
 	// 新接口
 	@Override
-	public void onRideRouteSearched(RideRouteResult arrideRouteResultg0, int errorCode) {
-		
+	public void onRideRouteSearched(RideRouteResult result, int errorCode) {
+		if (errorCode == 1000) {
+			if (result != null && result.getPaths() != null && result.getPaths().size() > 0) {
+				mRideRouteResult = result;
+				JSONObject resultJson = rideRouteSearchedJson(result);
+				routeCallBack(mModuleContext, resultJson);
+				return;
+			}
+			failCallBack(mModuleContext);
+		}
 	}
 
 	private void routeCallBack(UZModuleContext moduleContext, JSONObject ret) {
@@ -181,6 +199,10 @@ public class MapSearch implements OnRouteSearchListener {
 				if (mWalkRouteResult != null) {
 					drawWalkRoute(moduleContext, aMap, module);
 				}
+			} else if (mSearchType.equals(ROUTE_TYPE_RIDE)) {
+				if (mRideRouteResult != null) {
+					drawRideRoute(moduleContext, aMap, module);
+				}
 			}
 		}
 	}
@@ -206,6 +228,12 @@ public class MapSearch implements OnRouteSearchListener {
 					CustomWalkRoute walkRoute = mWalkRouteOverlayMap.get(id);
 					if (walkRoute != null) {
 						walkRoute.removeFromMap();
+					}
+				}
+				if (mRideRouteOverlayMap.containsKey(id)) {
+					CustomRideRoute rideRoute = mRideRouteOverlayMap.get(id);
+					if (rideRoute != null) {
+						rideRoute.removeFromMap();
 					}
 				}
 			}
@@ -284,6 +312,29 @@ public class MapSearch implements OnRouteSearchListener {
 			}
 		}
 	}
+	
+	private void drawRideRoute(UZModuleContext moduleContext, AMap aMap, UZModule module) {
+		if (mContext == null) {
+			return;
+		}
+		String id = moduleContext.optString("id");
+		int index = moduleContext.optInt("index");
+		List<RidePath> paths = mRideRouteResult.getPaths();
+		if (paths != null) {
+			if (index < paths.size()) {
+				RidePath ridePath = paths.get(index);
+				if (ridePath != null) {
+					CustomRideRoute customRideRoute = getCustomRideRoute(moduleContext, aMap, ridePath, module);
+					mRideRouteOverlayMap.put(id, customRideRoute);
+					customRideRoute.removeFromMap();
+					customRideRoute.addToMap();
+					if (moduleContext.optBoolean("autoresizing", true)) {
+						customRideRoute.zoomToSpan();
+					}
+				}
+			}
+		}
+	}
 
 	private CustomBusRoute getCustomBusRoute(UZModuleContext moduleContext, AMap aMap, BusPath busPath, UZModule module) {
 		CustomBusRoute customBusRoute = new CustomBusRoute(mContext, aMap,
@@ -294,6 +345,7 @@ public class MapSearch implements OnRouteSearchListener {
 		customBusRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
 		customBusRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customBusRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
+		customBusRoute.setRideColor(jsParamsUtil.rideColor(moduleContext));
 		customBusRoute.setLineWidth(jsParamsUtil.busWidth(moduleContext));
 		customBusRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "bus")));
@@ -301,10 +353,19 @@ public class MapSearch implements OnRouteSearchListener {
 				.iconPath(moduleContext, "man")));
 		customBusRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "car")));
+		customBusRoute.setRidePointImgPath(module.makeRealPath(jsParamsUtil.iconPath(moduleContext, "ride")));
 		customBusRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "start")));
 		customBusRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "end")));
+		customBusRoute.setWalkLineDash(jsParamsUtil.getLineDash(moduleContext, "walkLine"));
+		customBusRoute.setBusLineDash(jsParamsUtil.getLineDash(moduleContext, "busLine"));
+		customBusRoute.setDriveLineDash(jsParamsUtil.getLineDash(moduleContext, "driveLine"));
+		customBusRoute.setRideLineDash(jsParamsUtil.getLineDash(moduleContext, "rideLine"));
+		customBusRoute.setWalkStrokeImg(moduleContext.makeRealPath(jsParamsUtil.getStrokeImg(moduleContext, "walkLine")));
+		customBusRoute.setBusStrokeImg(moduleContext.makeRealPath(jsParamsUtil.getStrokeImg(moduleContext, "busLine")));
+		customBusRoute.setDriveStrokeImg(moduleContext.makeRealPath(jsParamsUtil.getStrokeImg(moduleContext, "driveLine")));
+		customBusRoute.setRideStrokeImg(moduleContext.makeRealPath(jsParamsUtil.getStrokeImg(moduleContext, "rideLine")));
 		return customBusRoute;
 	}
 
@@ -318,6 +379,7 @@ public class MapSearch implements OnRouteSearchListener {
 		customDriveRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
 		customDriveRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customDriveRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
+		customDriveRoute.setRideColor(jsParamsUtil.rideColor(moduleContext));
 		customDriveRoute.setLineWidth(jsParamsUtil.driveWidth(moduleContext));
 		customDriveRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "bus")));
@@ -325,10 +387,13 @@ public class MapSearch implements OnRouteSearchListener {
 				.iconPath(moduleContext, "man")));
 		customDriveRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "car")));
+		customDriveRoute.setRidePointImgPath(module.makeRealPath(jsParamsUtil.iconPath(moduleContext, "ride")));
 		customDriveRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "start")));
 		customDriveRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "end")));
+		customDriveRoute.setLineDash(jsParamsUtil.getLineDash(moduleContext, "driveLine"));
+		customDriveRoute.setStrokeImg(moduleContext.makeRealPath(jsParamsUtil.getStrokeImg(moduleContext, "driveLine")));
 		return customDriveRoute;
 	}
 
@@ -342,6 +407,7 @@ public class MapSearch implements OnRouteSearchListener {
 		customWalkRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
 		customWalkRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
 		customWalkRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
+		customWalkRoute.setRideColor(jsParamsUtil.rideColor(moduleContext));
 		customWalkRoute.setLineWidth(jsParamsUtil.walkWidth(moduleContext));
 		customWalkRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "bus")));
@@ -349,11 +415,39 @@ public class MapSearch implements OnRouteSearchListener {
 				.iconPath(moduleContext, "man")));
 		customWalkRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "car")));
+		customWalkRoute.setRidePointImgPath(module.makeRealPath(jsParamsUtil.iconPath(moduleContext, "ride")));
 		customWalkRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "start")));
 		customWalkRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
 				.iconPath(moduleContext, "end")));
+		customWalkRoute.setLineDash(jsParamsUtil.getLineDash(moduleContext, "walkLine"));
+		customWalkRoute.setStrokeImg(jsParamsUtil.getStrokeImg(moduleContext, "walkLine"));
 		return customWalkRoute;
+	}
+	
+	private CustomRideRoute getCustomRideRoute(UZModuleContext moduleContext, AMap aMap, RidePath ridePath, UZModule module) {
+		CustomRideRoute customRideRoute = new CustomRideRoute(mContext, aMap, ridePath, mRideRouteResult.getStartPos(), mRideRouteResult.getTargetPos());
+		customRideRoute.setNodeIconVisibility(true);
+		JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
+		customRideRoute.setBusColor(jsParamsUtil.busColor(moduleContext));
+		customRideRoute.setWalkColor(jsParamsUtil.walkColor(moduleContext));
+		customRideRoute.setDriveColor(jsParamsUtil.driveColor(moduleContext));
+		customRideRoute.setRideColor(jsParamsUtil.rideColor(moduleContext));
+		customRideRoute.setLineWidth(jsParamsUtil.rideWidth(moduleContext));
+		customRideRoute.setBusPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "bus")));
+		customRideRoute.setWalkPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "man")));
+		customRideRoute.setDrivePointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "car")));
+		customRideRoute.setRidePointImgPath(module.makeRealPath(jsParamsUtil.iconPath(moduleContext, "ride")));
+		customRideRoute.setStartPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "start")));
+		customRideRoute.setEndPointImgPath(module.makeRealPath(jsParamsUtil
+				.iconPath(moduleContext, "end")));
+		customRideRoute.setLineDash(jsParamsUtil.getLineDash(moduleContext, "rideLine"));
+		customRideRoute.setStrokeImg(jsParamsUtil.getStrokeImg(moduleContext, "rideLine"));
+		return customRideRoute;
 	}
 
 	private String getPolicyStr(UZModuleContext moduleContext, String type) {
@@ -402,8 +496,11 @@ public class MapSearch implements OnRouteSearchListener {
 					wayPoints, null, "");
 			routeSearch.calculateDriveRouteAsyn(query);
 		} else if (type.equalsIgnoreCase(ROUTE_TYPE_WALK)) {
-			WalkRouteQuery query = new WalkRouteQuery(fromAndTo, policy);
+			WalkRouteQuery query = new WalkRouteQuery(fromAndTo);
 			routeSearch.calculateWalkRouteAsyn(query);
+		} else if(type.equalsIgnoreCase(ROUTE_TYPE_RIDE)){
+			RideRouteQuery query = new RideRouteQuery(fromAndTo);
+			routeSearch.calculateRideRouteAsyn(query);
 		}
 	}
 
@@ -473,6 +570,14 @@ public class MapSearch implements OnRouteSearchListener {
 		startJson.put("lat", start.getLatitude());
 		return startJson;
 	}
+	
+	private JSONObject startPoint(RideRouteResult result) throws JSONException{
+		JSONObject startJson = new JSONObject();
+		LatLonPoint start = result.getStartPos();
+		startJson.put("lon", start.getLongitude());
+		startJson.put("lat", start.getLatitude());
+		return startJson;
+	}
 
 	private JSONObject endPoint(BusRouteResult result) throws JSONException {
 		JSONObject endJson = new JSONObject();
@@ -483,6 +588,14 @@ public class MapSearch implements OnRouteSearchListener {
 	}
 
 	private JSONObject endPoint(WalkRouteResult result) throws JSONException {
+		JSONObject endJson = new JSONObject();
+		LatLonPoint end = result.getTargetPos();
+		endJson.put("lon", end.getLongitude());
+		endJson.put("lat", end.getLatitude());
+		return endJson;
+	}
+	
+	private JSONObject endPoint(RideRouteResult result)  throws JSONException{
 		JSONObject endJson = new JSONObject();
 		LatLonPoint end = result.getTargetPos();
 		endJson.put("lon", end.getLongitude());
@@ -605,6 +718,19 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 		return resultJson;
 	}
+	
+	private JSONObject rideRouteSearchedJson(RideRouteResult result) {
+		JSONObject resultJson = new JSONObject();
+		try {
+			resultJson.put("status", true);
+			resultJson.put("start", startPoint(result));
+			resultJson.put("end", endPoint(result));
+			resultJson.put("paths", ridePlans(result));
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return resultJson;
+	}
 
 	private JSONArray drivePlans(DriveRouteResult result) throws JSONException {
 		List<DrivePath> drivePaths = result.getPaths();
@@ -638,6 +764,21 @@ public class MapSearch implements OnRouteSearchListener {
 		}
 		return plans;
 	}
+	
+	private JSONArray ridePlans(RideRouteResult result) throws JSONException{
+		List<RidePath> ridePaths = result.getPaths();
+		JSONArray plans = new JSONArray();
+		RidePath ridePath = null;
+		for (int i = 0; i < ridePaths.size(); i++) {
+			JSONObject plan = new JSONObject();
+			plans.put(plan);
+			ridePath = ridePaths.get(i);
+			plan.put("duration", ridePath.getDuration());
+			plan.put("distance", ridePath.getDistance());
+			plan.put("steps", rideSteps(ridePath));
+		}
+		return plans;
+	}
 
 	private JSONArray driveSteps(DrivePath drivePath) throws JSONException {
 		JSONArray driveStepsJson = new JSONArray();
@@ -659,6 +800,17 @@ public class MapSearch implements OnRouteSearchListener {
 			}
 		}
 		return walkStepsJson;
+	}
+	
+	private JSONArray rideSteps(RidePath ridePath) throws JSONException {
+		JSONArray rideStepsJson = new JSONArray();
+		List<RideStep> rideSteps = ridePath.getSteps();
+		if (rideSteps != null) {
+			for (int i = 0; i < rideSteps.size(); i++) {
+				rideStepsJson.put(rideStep(rideSteps.get(i)));
+			}
+		}
+		return rideStepsJson;
 	}
 
 	private JSONObject driveStep(DriveStep driveStep) throws JSONException {
@@ -686,6 +838,18 @@ public class MapSearch implements OnRouteSearchListener {
 		busStepJson.put("action", walkStep.getAction());
 		busStepJson.put("assistantAction", walkStep.getAssistantAction());
 		return busStepJson;
+	}
+	
+	private JSONObject rideStep(RideStep rideStep) throws JSONException{
+		JSONObject rideStepJson = new JSONObject();
+		rideStepJson.put("instruction", rideStep.getInstruction());
+		rideStepJson.put("orientation", rideStep.getOrientation());
+		rideStepJson.put("road", rideStep.getRoad());
+		rideStepJson.put("distance", rideStep.getDistance());
+		rideStepJson.put("duration", rideStep.getDuration());
+		rideStepJson.put("action", rideStep.getAction());
+		rideStepJson.put("assistantAction", rideStep.getAssistantAction());
+		return rideStepJson;
 	}
 
 	private JSONObject startPoint(DriveRouteResult result) throws JSONException {

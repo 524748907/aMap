@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 
+import com.alibaba.idst.nls.internal.connector.FrameDataPosterFactory.PosterType;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.OnMultiPointClickListener;
 import com.amap.api.maps.CameraUpdateFactory;
@@ -73,16 +74,27 @@ public class MapOverlay {
 		int borderColor = UZUtility.parseCssColor("#000");
 		double borderWidth = 2;
 		if (styles != null) {
+			String type = styles.optString("type", "round");
 			lineDash = styles.optBoolean("lineDash", false);
 			borderColor = UZUtility.parseCssColor(styles.optString(
 					"borderColor", "#000"));
 			borderWidth = styles.optDouble("borderWidth", 2);
-			String strokeImgPath = moduleContext.optString("strokeImg");
+			String strokeImgPath = styles.optString("strokeImg");
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 			Bitmap strokeImg = jsParamsUtil.getBitmap(mUzAMap
 					.makeRealPath(strokeImgPath));
 			polylineOptions.setCustomTexture(BitmapDescriptorFactory
 					.fromBitmap(strokeImg));
+			if (!TextUtils.isEmpty(strokeImgPath)) {
+				if (TextUtils.equals(type, "round")) {
+					polylineOptions.lineCapType(PolylineOptions.LineCapType.LineCapRound);
+				}else if (TextUtils.equals(type, "square")) {
+					polylineOptions.lineCapType(PolylineOptions.LineCapType.LineCapSquare);
+				}else if (TextUtils.equals(type, "arrow")) {
+					polylineOptions.lineCapType(PolylineOptions.LineCapType.LineCapArrow);
+				}
+			}
+			
 		}
 		polylineOptions.width((float) borderWidth).color(borderColor);
 		polylineOptions.setDottedLine(lineDash);

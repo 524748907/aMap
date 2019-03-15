@@ -336,16 +336,23 @@
 						},
 				showUserLocation : true,  //是否显示用户位置
 				zoomLevel : 11,  //缩放等级
-				center: {
-					    lon: 116.4021310000,
-		        		lat: 39.9994480000
-					    },
+				//center: {
+					    //lon: 116.4021310000,
+		        		//lat: 39.9994480000
+					    //},
 				fixedOn : api.frameName,
 				fixed : true
 			}, function(ret, err) {
 				if (ret.status) {
 					alert(JSON.stringify(ret));
 					//setLocation();
+					aMap.addEventListener({
+	                    name: 'viewChange'
+	                }, function(ret) {
+	                    if (ret.status) {
+	                        //alert(JSON.stringify(ret));
+	                    }
+	                });
 				} else {
 					alert(JSON.stringify(err));
 						}

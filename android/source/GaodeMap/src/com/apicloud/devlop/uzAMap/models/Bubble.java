@@ -8,6 +8,7 @@ package com.apicloud.devlop.uzAMap.models;
 
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 
+import android.R.integer;
 import android.graphics.Bitmap;
 
 public class Bubble {
@@ -28,6 +29,8 @@ public class Bubble {
 	private int billboard_selected_subTitleColor;
 	private String billboard_selected_illus;
 	private String billboard_bgImg;
+	private int width;
+	private int height;
 	
 
 	public Bubble() {
@@ -35,7 +38,7 @@ public class Bubble {
 
 	public Bubble(String id, Bitmap bgImg, String title, String subTitle,
 			String iconPath, int titleSize, int subTitleSize,
-			String illusAlign, int titleColor, int subTitleColor,
+			String illusAlign, int titleColor, int subTitleColor, int w, int h,
 			UZModuleContext moduleContext) {
 		this.id = id;
 		this.bgImg = bgImg;
@@ -47,6 +50,8 @@ public class Bubble {
 		this.illusAlign = illusAlign;
 		this.titleColor = titleColor;
 		this.subTitleColor = subTitleColor;
+		this.width = w;
+		this.height = h;
 		this.moduleContext = moduleContext;
 	}
 
@@ -176,6 +181,14 @@ public class Bubble {
 
 	public void setBillboard_bgImg(String billboard_bgImg) {
 		this.billboard_bgImg = billboard_bgImg;
+	}
+	
+	public int getWidth() {
+		return width;
+	}
+	
+	public int getHeight() {
+		return height;
 	}
 	
 	

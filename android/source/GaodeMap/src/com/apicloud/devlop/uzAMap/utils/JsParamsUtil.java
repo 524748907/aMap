@@ -21,6 +21,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.DisplayMetrics;
 
+import com.amap.api.col.n3.nu;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.services.core.LatLonPoint;
@@ -267,6 +268,8 @@ public class JsParamsUtil {
 			JSONArray icons = null;
 			JSONArray selectIcons = null;
 			JSONArray allIcons = null;
+			int width = -1;
+			int height = -1;
 			allIcons = moduleContext.optJSONArray("icons");
 			List<Bitmap> allIconList = new ArrayList<Bitmap>();
 			List<String> allIconPathList = new ArrayList<String>();
@@ -299,6 +302,11 @@ public class JsParamsUtil {
 				boolean draggable = jsonObject.optBoolean("draggable", false);
 				icons = jsonObject.optJSONArray("icons");
 				selectIcons = jsonObject.optJSONArray("selectedIcons");
+				width = jsonObject.optInt("w", -1);
+				height = jsonObject.optInt("h", -1);
+				boolean locked = jsonObject.optBoolean("locked", false);
+				int lockedX = jsonObject.optInt("lockedX", -1);
+				int lockedY = jsonObject.optInt("lockedY", -1);
 				if (icons != null) {
 					List<Bitmap> iconList = new ArrayList<Bitmap>();
 					List<String> iconPathList = new ArrayList<String>();
@@ -333,6 +341,11 @@ public class JsParamsUtil {
 				annotation.setLat(lat);
 				annotation.setLon(lon);
 				annotation.setDraggable(draggable);
+				annotation.setWidth(width);
+				annotation.setHeight(height);
+				annotation.setLocked(locked);
+				annotation.setLockedX(lockedX);
+				annotation.setLockedY(lockedY);
 				if (jsonObject.isNull("draggable")) {
 					annotation.setDraggable(allDraggable);
 				}
@@ -374,7 +387,8 @@ public class JsParamsUtil {
 	public Bubble bubble(UZModuleContext moduleContext, UzAMap aMap) {
 		String id = moduleContext.optString("id");
 		String bgImgStr = moduleContext.optString("bgImg");
-		Bitmap bgImg = getBitmap(aMap.makeRealPath(bgImgStr));
+		//Bitmap bgImg = getBitmap(aMap.makeRealPath(bgImgStr));
+		Bitmap bgImg = UZUtility.getLocalImage(aMap.makeRealPath(bgImgStr));
 		JSONObject content = moduleContext.optJSONObject("content");
 		String title = null;
 		String subTitle = null;
@@ -390,19 +404,23 @@ public class JsParamsUtil {
 		String subTitleColorStr = null;
 		int subTitleSize = 14;
 		String illusAlign = null;
-		if (content != null) {
-			titleColorStr = styles.optString("titleColor");
-			subTitleColorStr = styles.optString("subTitleColor");
+		int w = 160;
+		int h = 90;
+		
+		if (styles != null) {
+			titleColorStr = styles.optString("titleColor", "#000");
+			subTitleColorStr = styles.optString("subTitleColor", "#000");
 			titleSize = styles.optInt("titleSize", 16);
 			subTitleSize = styles.optInt("subTitleSize", 14);
 			illusAlign = styles.optString("illusAlign", "left");
+			w = styles.optInt("w", 160);
+			h = styles.optInt("h", 90);
 		}
 		int titleColor = UZUtility.parseCssColor(titleColorStr);
 		int subTitleColor = UZUtility.parseCssColor(subTitleColorStr);
 		
 		return new Bubble(id, bgImg, title, subTitle, iconPath, titleSize,
-				subTitleSize, illusAlign, titleColor, subTitleColor,
-				moduleContext);
+				subTitleSize, illusAlign, titleColor, subTitleColor, w, h, moduleContext);
 	}
 
 	public int bubbleId(UZModuleContext moduleContext) {
@@ -620,6 +638,19 @@ public class JsParamsUtil {
 		}
 		return UZUtility.parseCssColor(defaultValue);
 	}
+	
+	public int rideColor(UZModuleContext moduleContext) {
+		String defaultValue = "#698B22";
+		JSONObject styles = moduleContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject parent = styles.optJSONObject("rideLine");
+			if (parent != null) {
+				return UZUtility.parseCssColor(parent.optString("color",
+						defaultValue));
+			}
+		}
+		return UZUtility.parseCssColor(defaultValue);
+	}
 
 	public int busWidth(UZModuleContext moduleContext) {
 		int defaultValue = 4;
@@ -650,6 +681,18 @@ public class JsParamsUtil {
 		JSONObject styles = moduleContext.optJSONObject("styles");
 		if (styles != null) {
 			JSONObject parent = styles.optJSONObject("walkLine");
+			if (parent != null) {
+				return UZUtility.dipToPix(parent.optInt("width", defaultValue));
+			}
+		}
+		return UZUtility.dipToPix(defaultValue);
+	}
+	
+	public int rideWidth(UZModuleContext moduleContext) {
+		int defaultValue = 3;
+		JSONObject styles = moduleContext.optJSONObject("styles");
+		if (styles != null) {
+			JSONObject parent = styles.optJSONObject("rideLine");
 			if (parent != null) {
 				return UZUtility.dipToPix(parent.optInt("width", defaultValue));
 			}
@@ -695,6 +738,30 @@ public class JsParamsUtil {
 
 	public boolean autoresizing(UZModuleContext moduleContext) {
 		return moduleContext.optBoolean("autoresizing", true);
+	}
+	
+	public boolean getLineDash(UZModuleContext moduleContext, String node) {
+		JSONObject styles = moduleContext.optJSONObject("styles");
+		if (styles == null) {
+			styles = new JSONObject();
+		}
+		JSONObject nodeJson = styles.optJSONObject(node);
+		if (nodeJson == null) {
+			nodeJson = new JSONObject();
+		}
+		return nodeJson.optBoolean("lineDash", false);
+	}
+	
+	public String getStrokeImg(UZModuleContext moduleContext, String node) {
+		JSONObject styles = moduleContext.optJSONObject("styles");
+		if (styles == null) {
+			styles = new JSONObject();
+		}
+		JSONObject nodeJson = styles.optJSONObject(node);
+		if (nodeJson == null) {
+			nodeJson = new JSONObject();
+		}
+		return moduleContext.makeRealPath(nodeJson.optString("strokeImg"));
 	}
 
 	public List<String> removeRouteIds(UZModuleContext moduleContext) {

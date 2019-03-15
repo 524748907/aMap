@@ -21,12 +21,14 @@ public class CustomBusRoute extends BusRouteOverlay {
 	private int busColor;
 	private int driveColor;
 	private int walkColor;
+	private int rideColor;
 	private float lineWidth;
 	private String startPointImgPath;
 	private String endPointImgPath;
 	private String busPointImgPath;
 	private String walkPointImgPath;
 	private String drivePointImgPath;
+	private String ridePointImgPath;
 
 	public CustomBusRoute(Context context, AMap aMap, BusPath busPath,
 			LatLonPoint start, LatLonPoint end) {
@@ -44,6 +46,10 @@ public class CustomBusRoute extends BusRouteOverlay {
 	public void setWalkColor(int walkColor) {
 		this.walkColor = walkColor;
 	}
+	
+	public void setRideColor(int rideColor) {
+		this.rideColor = rideColor;
+	}
 
 	public void setBusPointImgPath(String busPointImgPath) {
 		this.busPointImgPath = busPointImgPath;
@@ -56,9 +62,89 @@ public class CustomBusRoute extends BusRouteOverlay {
 	public void setDrivePointImgPath(String drivePointImgPath) {
 		this.drivePointImgPath = drivePointImgPath;
 	}
+	
+	public void setRidePointImgPath(String ridePointImgPath) {
+		this.ridePointImgPath = ridePointImgPath;
+	}
 
 	public void setLineWidth(float lineWidth) {
 		this.lineWidth = lineWidth;
+	}
+	
+	private boolean walkLineDash;
+	public void setWalkLineDash(boolean lineDash) {
+		this.walkLineDash = lineDash;
+	}
+	
+	private boolean driveLineDash;
+	public void setDriveLineDash(boolean lineDash) {
+		this.driveLineDash = lineDash;
+	}
+	
+	private boolean busLineDash;
+	public void setBusLineDash(boolean lineDash) {
+		this.busLineDash = lineDash;
+	}
+	
+	private boolean rideLineDash;
+	public void setRideLineDash(boolean line) {
+		this.rideLineDash = line;
+	}
+	
+	@Override
+	protected boolean getBusLineDash() {
+		return busLineDash;
+	}
+	
+	@Override
+	protected boolean getDriveLineDash() {
+		return driveLineDash;
+	}
+	
+	@Override
+	protected boolean getWalkLineDash() {
+		return walkLineDash;
+	}
+	
+	@Override
+	protected boolean getRideLineDash() {
+		return rideLineDash;
+	}
+	
+	private String busStrokeImg;
+	public void setBusStrokeImg(String img) {
+		this.busStrokeImg = img;
+	}
+	@Override
+	protected String getBusStrokeImg() {
+		return busStrokeImg;
+	}
+	
+	private String driveStrokeImg;
+	public void setDriveStrokeImg(String img) {
+		this.driveStrokeImg = img;
+	}
+	@Override
+	protected String getDriveStrokeImg() {
+		return driveStrokeImg;
+	}
+	
+	private String walkStrokeImg;
+	public void setWalkStrokeImg(String img) {
+		this.walkStrokeImg = img;
+	}
+	@Override
+	protected String getWalkStrokeImg() {
+		return walkStrokeImg;
+	}
+	
+	private String rideStrokeImg;
+	public void setRideStrokeImg(String img) {
+		this.rideStrokeImg = img;
+	}
+	@Override
+	protected String getRideStrokeImg() {
+		return rideStrokeImg;
 	}
 
 	@Override
@@ -79,6 +165,11 @@ public class CustomBusRoute extends BusRouteOverlay {
 	@Override
 	protected int getWalkColor() {
 		return walkColor;
+	}
+	
+	@Override
+	protected int getRideColor() {
+		return rideColor;
 	}
 
 	public void setStartPointImgPath(String startPointImgPath) {
@@ -160,6 +251,22 @@ public class CustomBusRoute extends BusRouteOverlay {
 			bitmapDescriptor = BitmapDescriptorFactory
 					.fromBitmap(BitmapFactory.decodeStream(UZUtility
 							.guessInputStream(walkPointImgPath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (bitmapDescriptor != null) {
+			return bitmapDescriptor;
+		}
+		return super.getWalkBitmapDescriptor();
+	}
+	
+	@Override
+	protected BitmapDescriptor getRideBitmapDescriptor() {
+		BitmapDescriptor bitmapDescriptor = null;
+		try {
+			bitmapDescriptor = BitmapDescriptorFactory
+					.fromBitmap(BitmapFactory.decodeStream(UZUtility
+							.guessInputStream(ridePointImgPath)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

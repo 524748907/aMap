@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.AbsoluteLayout;
@@ -40,8 +41,11 @@ public class MapOpen {
 			final Context context) {
 		if (mMapView == null) {
 			mMapView = new UzMapView(context);
+			//mMapView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+			
 			mMapView.onCreate(null);
 			mMapView.onResume();
+			
 			final MapOpen map = this;
 			mMapView.addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
 				@Override
@@ -61,16 +65,16 @@ public class MapOpen {
 					}
 					
 					mapSimple.setCenterOpen(moduleContext, mMapView.getMap());
-					boolean isShowUserLoc = moduleContext.optBoolean(
-							"showUserLocation", true);
+					boolean isShowUserLoc = moduleContext.optBoolean("showUserLocation", true);
 					if (isShowUserLoc) {
 						if (mShowUser == null) {
 							mShowUser = new MapShowUser();
 						}
-						mShowUser.showUserLocationOpen(map, context);
+						mShowUser.showUserLocationOpen(map, context, moduleContext);
 					}
 				}
 			});
+			
 			insertView(uzAMap, moduleContext, context, mMapView);
 		} else {
 			showMap();

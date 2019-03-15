@@ -9,6 +9,7 @@ package com.apicloud.devlop.uzAMap;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewParent;
 import com.amap.api.maps.MapView;
 
@@ -17,8 +18,10 @@ public class UzMapView extends MapView {
 
 	public UzMapView(Context context) {
 		super(context);
+		//setLayerType(View.LAYER_TYPE_HARDWARE, null);
 	}
 
+	
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
 		try {

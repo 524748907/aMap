@@ -16,7 +16,8 @@ typedef NS_ENUM(NSInteger, MANaviAnnotationType)
     MANaviAnnotationTypeWalking = 1,
     MANaviAnnotationTypeBus = 2,
     MANaviAnnotationTypeStart = 3,
-    MANaviAnnotationTypeEnd = 4
+    MANaviAnnotationTypeEnd = 4,
+    MANaviAnnotationTypeRide = 5
 };
 
 @interface MANaviAnnotation : MAPointAnnotation

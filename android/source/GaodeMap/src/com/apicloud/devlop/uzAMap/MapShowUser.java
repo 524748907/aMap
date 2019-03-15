@@ -67,13 +67,18 @@ public class MapShowUser implements AMapLocationListener {
 		}
 	}
 
-	public void showUserLocationOpen(MapOpen mMap, Context context) {
+	public void showUserLocationOpen(MapOpen mMap, Context context, UZModuleContext moduleContext) {
 		mContext = context;
 		if (mMap != null) {
 			AMap aMap = mMap.getMapView().getMap();
 			init();
-			addLocMarker(aMap);
-			//aMap.setMyLocationStyle(createLocationStyle(context));
+			//addLocMarker(aMap);
+			MyLocationStyle locationStyle = createLocationStyle(context, true, moduleContext);
+			if (locationStyle != null) {
+				aMap.setMyLocationStyle(locationStyle);
+				aMap.setMyLocationEnabled(true);
+			}
+			
 		}
 	}
 	
@@ -135,29 +140,38 @@ public class MapShowUser implements AMapLocationListener {
 		}
 		
 		MyLocationStyle myLocationStyle = new MyLocationStyle();
-		boolean showsAccuracyRing = moduleContext.optBoolean("showsAccuracyRing", true);
 		
-		String fillColor = moduleContext.optString("fillColor");
-		String strokeColor = moduleContext.optString("strokeColor");
-		if (!TextUtils.isEmpty(strokeColor)) {
-			myLocationStyle.strokeColor(Color.parseColor(strokeColor));
-		}
-		if (!TextUtils.isEmpty(fillColor)) {
-			myLocationStyle.radiusFillColor(Color.parseColor(fillColor));
-		}
-		int lineWidth = moduleContext.optInt("lineWidth", 0);
-		myLocationStyle.strokeWidth(lineWidth);
-		
-		
-		boolean showsHeadingIndicator = moduleContext.optBoolean("showsHeadingIndicator", true);
-		if (showsHeadingIndicator) {
-			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE);
+		if (moduleContext.optBoolean("showsAccuracyRing", true)) {
+			String fillColor = moduleContext.optString("fillColor");
+			String strokeColor = moduleContext.optString("strokeColor");
+			if (!TextUtils.isEmpty(strokeColor)) {
+				myLocationStyle.strokeColor(Color.parseColor(strokeColor));
+			}
+			if (!TextUtils.isEmpty(fillColor)) {
+				myLocationStyle.radiusFillColor(Color.parseColor(fillColor));
+			}
+			int lineWidth = moduleContext.optInt("lineWidth", 0);
+			myLocationStyle.strokeWidth(lineWidth);
 		}else {
-			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
+			myLocationStyle.strokeColor(Color.TRANSPARENT);
+			myLocationStyle.radiusFillColor(Color.TRANSPARENT);
 		}
-		
+		if (!moduleContext.isNull("showsHeadingIndicator")) {
+			if (moduleContext.optBoolean("showsHeadingIndicator", true)) {
+				myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE);
+			}else {
+				myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
+			}
+		}else {
+			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_SHOW);
+		}
 		myLocationStyle = myLocationStyle.myLocationIcon(bitmapDescriptor).showMyLocation(isShow);
+		
 		return myLocationStyle;
+	}
+	
+	public void createLocationStyle() {
+		
 	}
 
 	@Override
