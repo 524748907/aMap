@@ -82,7 +82,7 @@ public class MapOverlay {
 			String strokeImgPath = styles.optString("strokeImg");
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 			Bitmap strokeImg = jsParamsUtil.getBitmap(mUzAMap
-					.makeRealPath(strokeImgPath));
+					.makeRealPath(strokeImgPath), -1, -1);
 			polylineOptions.setCustomTexture(BitmapDescriptorFactory
 					.fromBitmap(strokeImg));
 			if (!TextUtils.isEmpty(strokeImgPath)) {
@@ -244,7 +244,7 @@ public class MapOverlay {
 			String imgPath = moduleContext.optString("imgPath");
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 			Bitmap bitmap = jsParamsUtil.getBitmap(mUzAMap
-					.makeRealPath(imgPath));
+					.makeRealPath(imgPath), -1, -1);
 			if (bitmap != null) {
 				double lbLon = moduleContext.optDouble("lbLon");
 				double lbLat = moduleContext.optDouble("lbLat");

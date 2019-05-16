@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.util.DisplayMetrics;
 
 import com.amap.api.col.n3.nu;
@@ -259,8 +260,7 @@ public class JsParamsUtil {
 		return moduleContext.optString("name");
 	}
 
-	public List<Annotation> annotations(UZModuleContext moduleContext,
-			UzAMap aMap) {
+	public List<Annotation> annotations(UZModuleContext moduleContext, UzAMap aMap) {
 		JSONArray annotations = moduleContext.optJSONArray("annotations");
 		if (annotations != null) {
 			List<Annotation> annotationList = new ArrayList<Annotation>();
@@ -277,7 +277,7 @@ public class JsParamsUtil {
 				String iconPath = null;
 				for (int j = 0; j < allIcons.length(); j++) {
 					iconPath = allIcons.optString(j);
-					allIconList.add(getBitmap(aMap.makeRealPath(iconPath)));
+					allIconList.add(getBitmap(aMap.makeRealPath(iconPath), -1, -1));
 					allIconPathList.add(aMap.makeRealPath(iconPath));
 				}
 			}
@@ -288,7 +288,7 @@ public class JsParamsUtil {
 				String iconPath = null;
 				for(int j = 0; j < allSelectedIcons.length(); j++) {
 					iconPath = allSelectedIcons.optString(j);
-					allSelectedBitmap.add(getBitmap(aMap.makeRealPath(iconPath)));
+					allSelectedBitmap.add(getBitmap(aMap.makeRealPath(iconPath), -1, -1));
 					allSelectedIconList.add(aMap.makeRealPath(iconPath));
 				}
 			}
@@ -313,7 +313,7 @@ public class JsParamsUtil {
 					String iconPath = null;
 					for (int j = 0; j < icons.length(); j++) {
 						iconPath = icons.optString(j);
-						iconList.add(getBitmap(aMap.makeRealPath(iconPath)));
+						iconList.add(getBitmap(aMap.makeRealPath(iconPath), width, height));
 						iconPathList.add(aMap.makeRealPath(iconPath));
 					}
 					annotation.setIcons(iconList);
@@ -328,7 +328,7 @@ public class JsParamsUtil {
 					String iconPath = null;
 					for(int k = 0; k < selectIcons.length(); k++) {
 						iconPath = selectIcons.optString(k);
-						selecticonList.add(getBitmap(aMap.makeRealPath(iconPath)));
+						selecticonList.add(getBitmap(aMap.makeRealPath(iconPath), width, height));
 						selecticonPathList.add(aMap.makeRealPath(iconPath));
 					}
 					annotation.setSelectIcons(selecticonList);
@@ -373,7 +373,7 @@ public class JsParamsUtil {
 				double lat = object.optDouble("lat");
 				double lon = object.optDouble("lon");
 				String iconPath = object.optString("icon");
-				Bitmap icon = getBitmap(aMap.makeRealPath(iconPath));
+				Bitmap icon = getBitmap(aMap.makeRealPath(iconPath), -1, -1);
 				boolean draggable = object.optBoolean("draggable", false);
 				annotation = new MoveAnnotation(id, null, lat, lon, icon,
 						draggable, moduleContext);
@@ -405,7 +405,7 @@ public class JsParamsUtil {
 		int subTitleSize = 14;
 		String illusAlign = null;
 		int w = 160;
-		int h = 90;
+		int h = 75;
 		
 		if (styles != null) {
 			titleColorStr = styles.optString("titleColor", "#000");
@@ -414,7 +414,7 @@ public class JsParamsUtil {
 			subTitleSize = styles.optInt("subTitleSize", 14);
 			illusAlign = styles.optString("illusAlign", "left");
 			w = styles.optInt("w", 160);
-			h = styles.optInt("h", 90);
+			h = styles.optInt("h", 75);
 		}
 		int titleColor = UZUtility.parseCssColor(titleColorStr);
 		int subTitleColor = UZUtility.parseCssColor(subTitleColorStr);
@@ -554,14 +554,14 @@ public class JsParamsUtil {
 
 	public Bitmap overlayImg(UZModuleContext moduleContext, UZModule module) {
 		String imgPath = moduleContext.optString("imgPath");
-		return getBitmap(module.makeRealPath(imgPath));
+		return getBitmap(module.makeRealPath(imgPath), -1, -1);
 	}
 
 	public Bitmap dashImg(UZModuleContext moduleContext, UZModule module) {
 		JSONObject styles = moduleContext.optJSONObject("styles");
 		if (styles != null) {
 			String imgPath = styles.optString("dashImg");
-			return getBitmap(module.makeRealPath(imgPath));
+			return getBitmap(module.makeRealPath(imgPath), -1, -1);
 		}
 		return null;
 	}
@@ -594,7 +594,7 @@ public class JsParamsUtil {
 		if (!moduleContext.isNull("styles")) {
 			JSONObject start = styles.optJSONObject(name);
 			if (start != null) {
-				return getBitmap(module.makeRealPath(start.optString("icon")));
+				return getBitmap(module.makeRealPath(start.optString("icon")), -1, -1);
 			}
 		}
 		return null;
@@ -815,23 +815,36 @@ public class JsParamsUtil {
 		return null;
 	}
 
-	public Bitmap getBitmap(String path) {
-		Bitmap bitmap = null;
-		InputStream input = null;
-		try {
-			input = UZUtility.guessInputStream(path);
-			bitmap = BitmapFactory.decodeStream(input);
-		} catch (IOException e) {
-			e.printStackTrace();
+	public Bitmap getBitmap(String path, int aWidth, int aHeight) {
+//		Bitmap bitmap = null;
+//		InputStream input = null;
+//		try {
+//			input = UZUtility.guessInputStream(path);
+//			bitmap = BitmapFactory.decodeStream(input);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		if (input != null) {
+//			try {
+//				input.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+	    
+		
+		Bitmap bitmap2 = UZUtility.getLocalImage(path);
+		if (aWidth == -1 || aHeight == -1) {
+			return bitmap2;
 		}
-		if (input != null) {
-			try {
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return bitmap;
+		int width = bitmap2.getWidth();
+		int height = bitmap2.getHeight();
+		float scaleWidth = ((float) UZUtility.dipToPix(aWidth)) / width;  
+	    float scaleHeight = ((float) UZUtility.dipToPix(aHeight)) / height;
+	    Matrix matrix = new Matrix();  
+	    matrix.postScale(scaleWidth, scaleHeight);
+	    Bitmap newBitmap = Bitmap.createBitmap(bitmap2, 0, 0, width, height, matrix, true); 
+		return newBitmap;
 	}
 
 	public int getScreenWidth(Activity act) {

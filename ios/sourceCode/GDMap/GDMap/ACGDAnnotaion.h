@@ -10,9 +10,10 @@
 #import <MAMapKit/MAMapKit.h>
 
 typedef enum {
-    ANNOTATION_MARKE = 0,  //标注
-    ANNOTATION_BILLBOARD,  //布告牌
-    ANNOTATION_MOBILEGD      //可移动的标注
+    ANNOTATION_MARKE = 0,     //标注
+    ANNOTATION_BILLBOARD,     //布告牌
+    ANNOTATION_WEBBOARD,      //网页布告牌
+    ANNOTATION_MOBILEGD       //可移动的标注
 } AnnotationType;
 
 @protocol CanMovingAnimationDelegate;
@@ -48,6 +49,9 @@ typedef enum {
 
 @property (nonatomic, assign) float w;
 @property (nonatomic, assign) float h;
+//web board 参数
+@property (nonatomic, copy) NSString *bgStr, *urlStr, *dataStr;
+@property (nonatomic, copy) NSDictionary *sizeDict;
 
 - (void)moveStep;
 

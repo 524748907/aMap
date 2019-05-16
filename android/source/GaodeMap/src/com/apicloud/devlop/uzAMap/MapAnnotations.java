@@ -12,43 +12,34 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
+import android.text.Html;
 import android.text.TextUtils;
-import android.text.style.BulletSpan;
 import android.util.Log;
 import android.util.Pair;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
-import android.webkit.WebSettings;
-import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.amap.api.col.n3.bi;
 import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.InfoWindowAdapter;
@@ -58,24 +49,18 @@ import com.amap.api.maps.AMap.OnMarkerDragListener;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
-import com.amap.api.maps.model.Gradient;
-import com.amap.api.maps.model.HeatmapTileProvider;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
-import com.amap.api.maps.model.TileOverlay;
-import com.amap.api.maps.model.TileOverlayOptions;
-import com.amap.api.maps.model.WeightedLatLng;
 import com.amap.api.maps.utils.SpatialRelationUtil;
 import com.amap.api.maps.utils.overlay.SmoothMoveMarker;
 import com.amap.api.maps.utils.overlay.SmoothMoveMarker.MoveListener;
-import com.apicloud.amap.R;
 import com.apicloud.devlop.uzAMap.models.Annotation;
 import com.apicloud.devlop.uzAMap.models.Billboard;
 import com.apicloud.devlop.uzAMap.models.Bubble;
 import com.apicloud.devlop.uzAMap.models.MoveAnnotation;
-import com.apicloud.devlop.uzAMap.models.TileOverlayData;
+import com.apicloud.devlop.uzAMap.models.WebBillBubb;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
 import com.lidroid.xutils.BitmapUtils;
@@ -83,8 +68,6 @@ import com.lidroid.xutils.bitmap.BitmapDisplayConfig;
 import com.lidroid.xutils.bitmap.callback.BitmapLoadCallBack;
 import com.lidroid.xutils.bitmap.callback.BitmapLoadFrom;
 import com.lidroid.xutils.util.OtherUtils;
-import com.uzmap.pkg.a.e.n;
-import com.uzmap.pkg.uzcore.UZCoreUtil;
 import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
@@ -107,6 +90,8 @@ public class MapAnnotations
 	private Map<Marker, Object> mMarkerBubbleMap = new HashMap<Marker, Object>();
 	private Map<Marker, MoveAnnotation> mMoveAnnoMap = new HashMap<Marker, MoveAnnotation>();
 	private UzMapView mapView;
+	private GestureDetector mDetector;
+	private MyGestureListener mGestureListener;
 
 	public MapAnnotations(UzAMap uzAMap, UzMapView mapView, Context context) {
 		this.mUzAMap = uzAMap;
@@ -117,6 +102,8 @@ public class MapAnnotations
 		this.mAMap.setOnMarkerClickListener(this);
 		this.mAMap.setInfoWindowAdapter(this);
 		this.mAMap.setOnInfoWindowClickListener(this);
+		mGestureListener = new MyGestureListener();
+		mDetector = new GestureDetector(context, mGestureListener);
 	}
 
 	public void addAnnotations(UZModuleContext moduleContext) {
@@ -124,7 +111,7 @@ public class MapAnnotations
 		List<Annotation> annotations = jsParamsUtil.annotations(moduleContext, mUzAMap);
 		if (annotations != null && annotations.size() > 0) {
 			for (Annotation annotation : annotations) {
-				mAnnotations.put(annotation.getId(), annotation);
+				mAnnotations.put(annotation.getId(), annotation);				
 				Marker marker = mAMap.addMarker(createMarkerOptions(annotation.getLon(), annotation.getLat(),
 						annotation.getIcons(), annotation.getIconsPath(), annotation.isDraggable(),
 						(int) (annotation.getTimeInterval() * 50), annotation.getWidth(), annotation.getHeight()));
@@ -168,6 +155,48 @@ public class MapAnnotations
 				}
 				mMarkers.put(annotation.getId(), marker);
 				mMoveAnnoMap.put(marker, annotation);
+			}
+		}
+	}
+	
+	public void showAnnotations(UZModuleContext moduleContext) {
+		if (mMarkers.size() > 0) {
+			JSONArray ids = moduleContext.optJSONArray("ids");
+			JSONObject insets = moduleContext.optJSONObject("insets");
+			if (insets == null) {
+				insets = new JSONObject();
+			}
+			int top = insets.optInt("top", 50);
+			int left = insets.optInt("left", 50);
+			int bottom = insets.optInt("bottom", 50);
+			int right = insets.optInt("right", 50);
+			boolean animation = moduleContext.optBoolean("animation", true);
+			LatLngBounds.Builder b = LatLngBounds.builder();
+			if (ids != null && ids.length() > 0) {
+				for(int i = 0; i < ids.length(); i++) {
+					Marker marker = mMarkers.get(ids.optString(i));
+					if (marker != null) {
+						LatLng p = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
+			            b.include(p);
+					}
+				}
+				
+			}else {
+				for (Map.Entry<String, Marker> entry : mMarkers.entrySet()) {
+				    Marker marker = entry.getValue();
+				    if (marker != null) {
+						LatLng p = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
+			            b.include(p);
+					}
+				}
+			}
+			LatLngBounds bounds = b.build();
+			if (bounds != null) {
+				if (animation) {
+					this.mapView.getMap().animateCamera(CameraUpdateFactory.newLatLngBoundsRect(bounds, left, right, top, bottom));
+				}else {
+					this.mapView.getMap().moveCamera(CameraUpdateFactory.newLatLngBoundsRect(bounds, left, right, top, bottom));
+				}
 			}
 		}
 	}
@@ -367,7 +396,7 @@ public class MapAnnotations
 			CallBackUtil.infoWindowClickCallBack(moduleContext, id, "click");
 			LatLng centerLatLng = marker.getPosition();
 			if (centerLatLng != null) {
-				mAMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerLatLng, mAMap.getCameraPosition().zoom));
+				//mAMap.moveCamera(CameraUpdateFactory.newLatLngZoom(centerLatLng, mAMap.getCameraPosition().zoom));
 			}
 		}
 	}
@@ -390,12 +419,6 @@ public class MapAnnotations
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 			Bubble bubble = jsParamsUtil.bubble(moduleContext, mUzAMap);
 			bubble.setBillboard_bgImg(bgImgStr);
-			// Log.e("TAG", "===========addBillboard======================");
-			// Log.e("TAG", "addBillboard --- id:" + bubble.getId() + "- title:" +
-			// bubble.getTitle());
-			// Toast.makeText(moduleContext.getContext(), "addBillboard --- id:" +
-			// bubble.getId() + "- title:" + bubble.getTitle(), Toast.LENGTH_LONG).show();;
-			// Log.e("TAG", "===========addBillboard======================");
 			String iconPath = bubble.getIconPath();
 			String illusAlign = bubble.getIllusAlign();
 			int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left_new");
@@ -411,40 +434,84 @@ public class MapAnnotations
 			int imgH = UZUtility.dipToPix(50);// 图片高
 			int titleMarginT = UZUtility.dipToPix(10);// 标题上边距
 			int titleMarginB = UZUtility.dipToPix(10);// 标题下边距
+			int titleMaxLines = 1;
+			int subTitleMaxLines = 1;
+			int titleMarginLeft = UZUtility.dipToPix(10);
+			int titleMarginRight = UZUtility.dipToPix(10);
+			int subMarginLeft = UZUtility.dipToPix(10);
+			int subMarginRight = UZUtility.dipToPix(10);
 			String textalignment = "left";// 标题的对齐方式 左中右
 			if (!moduleContext.isNull("styles")) {
 				JSONObject styles = moduleContext.optJSONObject("styles");
-				if (styles != null && styles.has("size")) {
-					JSONObject size = styles.optJSONObject("size");
-					width = UZUtility.dipToPix(size.optInt("width", 160));
-					height = UZUtility.dipToPix(size.optInt("height", 75));
-				}
-				if (styles != null && styles.has("illusRect")) {
-					JSONObject illusRect = styles.optJSONObject("illusRect");
-					imgX = UZUtility.dipToPix(illusRect.optInt("x", 10));
-					imgY = UZUtility.dipToPix(illusRect.optInt("y", 5));
-					imgW = UZUtility.dipToPix(illusRect.optInt("w", 35));
-					imgH = UZUtility.dipToPix(illusRect.optInt("h", 50));
-				}
-				if (styles != null && styles.has("marginT")) {
-					titleMarginT = UZUtility.dipToPix(styles.optInt("marginT", 10));
+				if (styles != null) {
+					if (styles.has("size")) {
+						JSONObject size = styles.optJSONObject("size");
+						width = UZUtility.dipToPix(size.optInt("width", 160));
+						height = UZUtility.dipToPix(size.optInt("height", 75));
+					}
+					if (styles.has("illusRect")) {
+						JSONObject illusRect = styles.optJSONObject("illusRect");
+						imgX = UZUtility.dipToPix(illusRect.optInt("x", 10));
+						imgY = UZUtility.dipToPix(illusRect.optInt("y", 5));
+						imgW = UZUtility.dipToPix(illusRect.optInt("w", 35));
+						imgH = UZUtility.dipToPix(illusRect.optInt("h", 50));
+					}
+					if (styles.has("marginT")) {
+						titleMarginT = UZUtility.dipToPix(styles.optInt("marginT", 10));
+					}
 					titleMarginB = UZUtility.dipToPix(styles.optInt("marginB", 10));
-				}
-				if (styles != null && styles.has("alignment")) {
-					textalignment = styles.optString("alignment", "left");// 标题的对齐方式 左中右
+					if (styles.has("alignment")) {
+						textalignment = styles.optString("alignment", "left");// 标题的对齐方式 左中右
+					}
+					titleMaxLines = styles.optInt("titleMaxLines",titleMaxLines);
+					subTitleMaxLines = styles.optInt("subTitleMaxLines",subTitleMaxLines);
+					titleMarginLeft = UZUtility.dipToPix(styles.optInt("titleMarginLeft",10));
+					titleMarginRight = UZUtility.dipToPix(styles.optInt("titleMarginRight",10));
+					subMarginLeft = UZUtility.dipToPix(styles.optInt("subTitleMarginLeft",10));
+					subMarginRight = UZUtility.dipToPix(styles.optInt("subTitleMarginRight",10));
+					
+					bubble.setImgH(imgH);
+					bubble.setImgW(imgW);
+					bubble.setImgX(imgX);
+					bubble.setImgY(imgY);
+					bubble.setTitleMarginT(titleMarginT);
+					bubble.setTitleMarginB(titleMarginB);
+					bubble.setTitleMaxLines(titleMaxLines);
+					bubble.setSubTitleMaxLines(subTitleMaxLines);
+					bubble.setTitleMarginLeft(titleMarginLeft);
+					bubble.setTitleMarginRight(titleMarginRight);
+					bubble.setSubMarginLeft(subMarginLeft);
+					bubble.setSubMarginRight(subMarginRight);
+					
 				}
 			}
 			
 			JSONObject selectStylesJson = moduleContext.optJSONObject("selectedStyles");
 			if (selectStylesJson != null) {
 				String bgImg = mUzAMap.makeRealPath(selectStylesJson.optString("bgImg"));
-				bubble.setBillboard_selected_bgImg(bgImg);
-				int titleColor = UZUtility.parseCssColor(selectStylesJson.optString("titleColor"));
-				bubble.setBillboard_selected_titleColor(titleColor);
-				int subTitleColor = UZUtility.parseCssColor(selectStylesJson.optString("subTitleColor"));
-				bubble.setBillboard_selected_subTitleColor(subTitleColor);
-				String illus = mUzAMap.makeRealPath(selectStylesJson.optString("illus"));
-				bubble.setBillboard_selected_illus(illus);
+				if (bgImg != null) {
+					bubble.setBillboard_selected_bgImg(bgImg);
+				}else {
+					bubble.setBillboard_selected_bgImg(bgImgStr);
+				}
+				if (TextUtils.isEmpty(selectStylesJson.optString("titleColor"))) {
+					bubble.setBillboard_selected_titleColor(bubble.getTitleColor());
+				}else {
+					int titleColor = UZUtility.parseCssColor(selectStylesJson.optString("titleColor"));
+					bubble.setBillboard_selected_titleColor(titleColor);
+				}
+				if (TextUtils.isEmpty(selectStylesJson.optString("subTitleColor"))) {
+					bubble.setBillboard_selected_subTitleColor(bubble.getSubTitleColor());
+				}else {
+					int subTitleColor = UZUtility.parseCssColor(selectStylesJson.optString("subTitleColor"));
+					bubble.setBillboard_selected_subTitleColor(subTitleColor);
+				}
+				if (TextUtils.isEmpty(selectStylesJson.optString("illus"))) {
+					bubble.setBillboard_selected_illus(moduleContext.makeRealPath(bubble.getIconPath()));
+				}else {
+					String illus = mUzAMap.makeRealPath(selectStylesJson.optString("illus"));
+					bubble.setBillboard_selected_illus(illus);
+				}
 			}else {
 				bubble.setBillboard_selected_bgImg(bgImgStr);
 				bubble.setBillboard_selected_titleColor(bubble.getTitleColor());
@@ -460,14 +527,17 @@ public class MapAnnotations
 			}
 			RelativeLayout rlContent = (RelativeLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
 			RelativeLayout.LayoutParams rlContentP = new RelativeLayout.LayoutParams(-1, -1);
-			rlContentP.leftMargin = UZUtility.dipToPix(10);
-			rlContentP.rightMargin = UZUtility.dipToPix(10);
+//			rlContentP.leftMargin = UZUtility.dipToPix(10);
+//			rlContentP.rightMargin = UZUtility.dipToPix(10);
 			rlContent.setLayoutParams(rlContentP);
 			
 			infoContent.setLayoutParams(new ViewGroup.LayoutParams(width, height));
 			TextView titleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("title"));
+			titleView.setMaxLines(titleMaxLines);
 			RelativeLayout.LayoutParams textViewParaT = new RelativeLayout.LayoutParams(-1, -2);
 			textViewParaT.topMargin = titleMarginT;
+			textViewParaT.leftMargin = titleMarginLeft;
+			textViewParaT.rightMargin = titleMarginRight;
 			//textViewParaT.rightMargin = UZUtility.dipToPix(5);
 			//textViewParaT.addRule(RelativeLayout.CENTER_HORIZONTAL);
 			titleView.setLayoutParams(textViewParaT);
@@ -486,10 +556,15 @@ public class MapAnnotations
 			}
 			TextView subTitleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
 			RelativeLayout.LayoutParams textViewParaB = new RelativeLayout.LayoutParams(-1, -2);
-			//textViewParaB.bottomMargin = titleMarginB;
+			textViewParaB.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			textViewParaB.bottomMargin = titleMarginB;
+			textViewParaB.leftMargin = subMarginLeft;
+			textViewParaB.rightMargin = subMarginRight;
+//			textViewParaB.bottomMargin = titleMarginB;
 			//textViewParaB.rightMargin = UZUtility.dipToPix(5);
 			textViewParaB.addRule(RelativeLayout.BELOW, titleView.getId());
 			textViewParaB.addRule(RelativeLayout.CENTER_HORIZONTAL);
+			subTitleView.setMaxLines(subTitleMaxLines);
 			subTitleView.setLayoutParams(textViewParaB);
 			if (TextUtils.isEmpty(bubble.getSubTitle())) {
 				subTitleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
@@ -497,8 +572,7 @@ public class MapAnnotations
 				//textViewParaT.topMargin = 0;
 				//textViewParaT.rightMargin = UZUtility.dipToPix(0);
 			}
-			textViewParaB.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			textViewParaB.bottomMargin = titleMarginB;
+			
 			subTitleView.setText(bubble.getSubTitle());
 			subTitleView.setTextColor(bubble.getSubTitleColor());
 			subTitleView.setTextSize(bubble.getSubTitleSize());
@@ -534,10 +608,10 @@ public class MapAnnotations
 			} else {
 				if (illusAlign == null || !illusAlign.equals("left")) {//right
 					imgViewPara.addRule(RelativeLayout.RIGHT_OF, rlContent.getId());
-					imgViewPara.leftMargin = UZUtility.dipToPix(5);
+//					imgViewPara.leftMargin = UZUtility.dipToPix(5);
 				}else {
 					rlContentP.addRule(RelativeLayout.RIGHT_OF, iconView.getId());
-					rlContentP.leftMargin = UZUtility.dipToPix(5);
+//					rlContentP.leftMargin = UZUtility.dipToPix(5);
 				}
 				if (iconPath.startsWith("http")) {
 					billboard.setView(infoContent);
@@ -561,7 +635,79 @@ public class MapAnnotations
 				}
 			}
 		}
+	}
+	
+	public void addWebBoard(UZModuleContext moduleContext) {
+		String id = moduleContext.optString("id");
+		if (!mMarkers.containsKey(id)) {
+			
+			BitmapDescriptor bitmapDescriptor = webBoardView(moduleContext);
+			if (bitmapDescriptor != null) {
+				JSONObject coordsJson = moduleContext.optJSONObject("coords");
+				MarkerOptions markerOptions = new MarkerOptions();
+				markerOptions.anchor(0.5f, 1f).position(new LatLng(coordsJson.optDouble("lat"), coordsJson.optDouble("lon"))).draggable(false).icon(bitmapDescriptor).title(id);
+				Marker marker = mAMap.addMarker(markerOptions);
+				String url = moduleContext.optString("url");
+				String data = moduleContext.optString("data");
+				JSONObject sizeJson = moduleContext.optJSONObject("size");
+				if (sizeJson == null) {
+					sizeJson = new JSONObject();
+				}
+				int width = sizeJson.optInt("w", 50);
+				int height = sizeJson.optInt("h", 50);
+				WebBillBubb billBubb = new WebBillBubb(id, url, data, width, height);
+				mMarkerBubbleMap.put(marker, billBubb);
+			}
+			
+			
+		}
+	}
+	
+	public BitmapDescriptor webBoardView(UZModuleContext moduleContext) {
+		
+		JSONObject sizeJson = moduleContext.optJSONObject("size");
+		if (sizeJson == null) {
+			sizeJson = new JSONObject();
+		}
+		int width = sizeJson.optInt("w", 100);
+		int height = sizeJson.optInt("h", 100);
+		String bg = moduleContext.optString("bg");
+		Bitmap bitmap = UZUtility.getLocalImage(moduleContext.makeRealPath(bg));
+		if (bitmap != null) {
+			WebView webView = new WebView(mContext);
+			RelativeLayout.LayoutParams webParams = new RelativeLayout.LayoutParams(UZUtility.dipToPix(width), UZUtility.dipToPix(height));
+			webView.setLayoutParams(webParams);
+			webView.setBackgroundDrawable(new BitmapDrawable(bitmap));
+			
+			String url = moduleContext.optString("url");// 目前url:www.baidu.com
+			String data = moduleContext.optString("data");
+			
+			// 这里需要判断url是否/绝对路径开头，如果是，则加上file://
+			if (url != null && url.startsWith("/")) {
+				url = "file://" + url;
+			}
+			if (TextUtils.isEmpty(data)) {// 如果data是空就加载网页
+				webView.loadUrl(url);
+				webView.setWebViewClient(new WebViewClient() {
+					@Override
+					public boolean shouldOverrideUrlLoading(WebView view, String url) {
+						view.loadUrl(url);
+						return true;
+					}
+				});
+			} else {// 否则就加载data数据的片段
+				webView.getSettings().setJavaScriptEnabled(true);
+				webView.getSettings().setDefaultTextEncodingName("utf-8");
 
+				webView.loadDataWithBaseURL(url, data, "text/html", "utf-8", null);
+			}
+			
+			BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.fromView(webView);
+			return bitmapDescriptor;
+		}else {
+			return null;
+		}
+		
 	}
 
 	private BitmapLoadCallBack<View> getLoadCallBack(final Bubble bubble) {
@@ -609,26 +755,31 @@ public class MapAnnotations
 			ArrayList<BitmapDescriptor> giflist = new ArrayList<BitmapDescriptor>();
 			BitmapDescriptor bitmapDescriptor = null;
 			JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
-			for (String icon : iconsPath) {
-				if (icon != null) {
-					if (aWidth == -1 || aHeight == -1) {
-						bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(jsParamsUtil.getBitmap(icon));
-					}else {
-						Bitmap bgImg = UZUtility.getLocalImage(icon);
-						int width = bgImg.getWidth();
-						int height = bgImg.getHeight();
-						float scaleWidth = ((float) UZUtility.dipToPix(aWidth)) / width;  
-					    float scaleHeight = ((float) UZUtility.dipToPix(aHeight)) / height;  
-
-						Matrix matrix = new Matrix();  
-					    matrix.postScale(scaleWidth, scaleHeight);
-					    Bitmap newBitmap = Bitmap.createBitmap(bgImg, 0, 0, width, height, matrix, true); 
-						bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(newBitmap);
-					}
-					
-					giflist.add(bitmapDescriptor);
-				}
-			}
+// 			for (String icon : iconsPath) {
+//				if (icon != null) {
+//					if (aWidth == -1 || aHeight == -1) {
+//						bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(jsParamsUtil.getBitmap(icon, -1, -1));
+//					}else {
+//						Bitmap bgImg = UZUtility.getLocalImage(icon);
+//						int width = bgImg.getWidth();
+//						int height = bgImg.getHeight();
+//						float scaleWidth = ((float) UZUtility.dipToPix(aWidth)) / width;  
+//					    float scaleHeight = ((float) UZUtility.dipToPix(aHeight)) / height;  
+//
+//						Matrix matrix = new Matrix();  
+//					    matrix.postScale(scaleWidth, scaleHeight);
+//					    Bitmap newBitmap = Bitmap.createBitmap(bgImg, 0, 0, width, height, matrix, true); 
+//					    bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(newBitmap);
+//					}
+//					
+//					giflist.add(bitmapDescriptor);
+//				}
+//			}
+ 			for(int i = 0; i < icons.size(); i++) {
+ 				Bitmap bitmap = icons.get(i);
+			    bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(bitmap);
+ 				giflist.add(bitmapDescriptor);
+ 			}
 			markerOptions.icons(giflist);
 		} else {
 			BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
@@ -704,8 +855,11 @@ public class MapAnnotations
 		Object bubble = mMarkerBubbleMap.get(marker);
 		if (bubble instanceof Bubble) {
 			setWebBubbleUrl = false;
-		}else {
+		}else if(bubble instanceof UZModuleContext){
 			setWebBubbleUrl = true;
+		}else if (bubble instanceof WebBillBubb) {
+			//WebBillBubb webBillBubb = (WebBillBubb)bubble;
+			//mUzAMap.addWebBoardListener(webBillBubb.getId());
 		}
 		marker.showInfoWindow();
 		
@@ -816,8 +970,8 @@ public class MapAnnotations
 		infoContent.setBackgroundDrawable(new BitmapDrawable(bitmap));
 		RelativeLayout rlContent = (RelativeLayout)infoContent.findViewById(UZResourcesIDFinder.getResIdID("ll"));
 		RelativeLayout.LayoutParams rlContentP = new RelativeLayout.LayoutParams(-1, -1);
-		rlContentP.leftMargin = UZUtility.dipToPix(10);
-		rlContentP.rightMargin = UZUtility.dipToPix(10);
+//		rlContentP.leftMargin = UZUtility.dipToPix(10);
+//		rlContentP.rightMargin = UZUtility.dipToPix(10);
 		rlContent.setLayoutParams(rlContentP);
 		
 		int width = UZUtility.dipToPix(160);// 最外层的宽
@@ -856,11 +1010,15 @@ public class MapAnnotations
 		TextView titleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("title"));
 		RelativeLayout.LayoutParams textViewParaT = new RelativeLayout.LayoutParams(-1, -2);
 		textViewParaT.topMargin = titleMarginT;
+		textViewParaT.leftMargin = billboard_bubble.getTitleMarginLeft();
+		textViewParaT.rightMargin = billboard_bubble.getTitleMarginRight();
 		//textViewParaT.rightMargin = UZUtility.dipToPix(5);
 		titleView.setLayoutParams(textViewParaT);
 		if (TextUtils.isEmpty(billboard_bubble.getTitle())) {
 			titleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
 		}
+		titleView.setMaxLines(billboard_bubble.getTitleMaxLines());
+		
 		titleView.setText(billboard_bubble.getTitle());
 		if (isOld) {
 			titleView.setTextColor(billboard_bubble.getTitleColor());
@@ -882,10 +1040,14 @@ public class MapAnnotations
 		}
 		TextView subTitleView = (TextView) infoContent.findViewById(UZResourcesIDFinder.getResIdID("subTitle"));
 		RelativeLayout.LayoutParams textViewParaB = new RelativeLayout.LayoutParams(-1, -2);
+		textViewParaB.leftMargin = billboard_bubble.getSubMarginLeft();
+		textViewParaB.rightMargin = billboard_bubble.getSubMarginRight();
+		textViewParaB.bottomMargin = titleMarginB;
 		//textViewParaB.bottomMargin = titleMarginB;
 		//textViewParaB.rightMargin = UZUtility.dipToPix(5);
 		textViewParaB.addRule(RelativeLayout.BELOW, titleView.getId());
 		subTitleView.setLayoutParams(textViewParaB);
+		subTitleView.setMaxLines(billboard_bubble.getSubTitleMaxLines());
 		if (TextUtils.isEmpty(billboard_bubble.getSubTitle())) {
 			subTitleView.setVisibility(View.GONE);// 如果标题是null 就隐藏
 //			textViewParaT.addRule(RelativeLayout.CENTER_IN_PARENT);
@@ -893,7 +1055,8 @@ public class MapAnnotations
 //			textViewParaT.rightMargin = UZUtility.dipToPix(0);
 		}
 		textViewParaB.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-		textViewParaB.bottomMargin = titleMarginB;
+		textViewParaB.addRule(RelativeLayout.CENTER_HORIZONTAL);
+		
 		subTitleView.setText(billboard_bubble.getSubTitle());
 		if (isOld) {
 			subTitleView.setTextColor(billboard_bubble.getSubTitleColor());
@@ -924,10 +1087,10 @@ public class MapAnnotations
 		}else {
 			if (illusAlign == null || !illusAlign.equals("left")) {
 				imgViewPara.addRule(RelativeLayout.RIGHT_OF, rlContent.getId());
-				imgViewPara.leftMargin = UZUtility.dipToPix(5);
+//				imgViewPara.leftMargin = UZUtility.dipToPix(5);
 			}else {
 				rlContentP.addRule(RelativeLayout.RIGHT_OF, iconView.getId());
-				rlContentP.leftMargin = UZUtility.dipToPix(5);
+//				rlContentP.leftMargin = UZUtility.dipToPix(5);
 			}
 			String imagePath = null;
 			if (!TextUtils.equals(billboard_selected_illus, billboard_bubble.getIconPath())) {
@@ -982,110 +1145,11 @@ public class MapAnnotations
 	@Override
 	public View getInfoWindow(Marker marker) {
 		View infoContent = null;
-		if (setWebBubbleUrl) {
-			final UZModuleContext moduleContext = (UZModuleContext) mMarkerBubbleMap.get(marker);
+		Object bubbleObj = mMarkerBubbleMap.get(marker);
+		if (bubbleObj instanceof Bubble) {
+			setWebBubbleUrl = false;
+			final Bubble bubble = (Bubble) bubbleObj;
 			
-			int layoutId = UZResourcesIDFinder.getResLayoutID("webview");
-
-			infoContent = View.inflate(mContext, layoutId, null);
-
-			//new 
-			RelativeLayout rl = (RelativeLayout) infoContent.findViewById(UZResourcesIDFinder.getResIdID("rl"));
-			WebView webView = (WebView) infoContent
-					.findViewById(UZResourcesIDFinder.getResIdID("mo_amap_bubble_webview"));
-			int width = 50;
-			int hight = 50;
-			String bg = moduleContext.optString("bg", "rgba(0, 0, 0, 0)");
-
-			if (UZUtility.isHtmlColor(bg)) {
-				infoContent.setBackgroundColor(UZUtility.parseCssColor(bg));
-				webView.setBackgroundColor(UZUtility.parseCssColor(bg));
-			} else {
-				Bitmap bitmap = JsParamsUtil.getInstance().getBitmap(mUzAMap.makeRealPath(bg));
-				webView.setBackgroundDrawable(new BitmapDrawable(bitmap));
-			}
-			JSONObject size = moduleContext.optJSONObject("size");
-			if (size != null && !moduleContext.isNull("size")) {
-				width = size.optInt("width", 50);
-				hight = size.optInt("height", 50);
-			}
-						
-			rl.setLayoutParams(new RelativeLayout.LayoutParams(UZUtility.dipToPix(width), UZUtility.dipToPix(hight)));
-			
-			webView.setClickable(true);
-			webView.setOnClickListener(new OnClickListener() {
-				
-				@Override
-				public void onClick(View arg0) {
-					Log.e("TAG", "lll");
-				}
-			});
-			webView.setOnTouchListener(new OnTouchListener() {
-				
-				@Override
-				public boolean onTouch(View arg0, MotionEvent event) {
-					
-					if (event.getAction() == MotionEvent.ACTION_DOWN) {
-						if (UzAMap.webBubbleModuleContext != null) {
-							try {
-								String id = moduleContext.optString("id");
-								JSONObject result = new JSONObject();
-								result.put("id", id);
-								UzAMap.webBubbleModuleContext.success(result, false);
-							} catch (Exception e) {
-								// TODO: handle exception
-							}
-							
-						}
-						return false;
-					}else {
-						return false;
-					}
-					
-				}
-			});
-			String url = moduleContext.makeRealPath(moduleContext.optString("url"));
-			// 这里需要判断url是否/绝对路径开头，如果是，则加上file://
-			if (url != null && url.startsWith("/"))
-				url = "file://" + url;
-			if (moduleContext.isNull("data")) {// 如果data是空就加载网页
-				webView.loadUrl(url);
-				webView.setWebViewClient(new WebViewClient() {
-					@Override
-					public boolean shouldOverrideUrlLoading(WebView view, String url) {
-						view.loadUrl(url);
-						return true;
-					}
-				});
-			} else {// 否则就加载data数据的片段
-				String data = moduleContext.optString("data", "data parameter is nothing");
-				webView.getSettings().setJavaScriptEnabled(true);
-				webView.getSettings().setDefaultTextEncodingName("utf-8");
-
-				// String body="<img
-				// src=\"http://img03.3dmgame.com/uploads/allimg/141115/271_141115025804_1_lit.jpg\"/>";
-				// String html="<html><body>"+body+"</body></html>";
-				// webView.loadDataWithBaseURL("http://www.3dmgame.com/", html,
-				// "text/html","UTF-8", null);
-
-				webView.loadDataWithBaseURL(url, data, "text/html", "utf-8", null);// TODO
-				// webView.loadUrl(url);
-				// webView.setWebViewClient(new WebViewClient() {
-				// @Override
-				// public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				// Log.e("TAG", url);
-				// return super.shouldOverrideUrlLoading(view, url);
-				// }
-				// });
-			}
-
-		} else {
-			final Bubble bubble = (Bubble) mMarkerBubbleMap.get(marker);
-			if (bubble == null)
-				return null;
-			// Log.e("TAG", "=============getInfoWindow======================");
-			// Log.e("TAG", bubble.getId());
-			// Log.e("TAG", "=============getInfoWindow======================");
 			String illusAlign = bubble.getIllusAlign();
 			int layoutId = UZResourcesIDFinder.getResLayoutID("mo_amap_bubble_left");
 			// int layoutId = UZResourcesIDFinder.getResLayoutID("bubble_left");
@@ -1167,9 +1231,159 @@ public class MapAnnotations
 			if (TextUtils.isEmpty(bubble.getSubTitle())) {
 				subTitleView.setVisibility(View.GONE);
 			}
+			return infoContent;
+		}else if(bubbleObj instanceof UZModuleContext){
+			setWebBubbleUrl = true;
+			final UZModuleContext moduleContext = (UZModuleContext) mMarkerBubbleMap.get(marker);
+			
+			int layoutId = UZResourcesIDFinder.getResLayoutID("webview");
+
+			infoContent = View.inflate(mContext, layoutId, null);
+
+			//new 
+			RelativeLayout rl = (RelativeLayout) infoContent.findViewById(UZResourcesIDFinder.getResIdID("rl"));
+			WebView webView = (WebView) infoContent
+					.findViewById(UZResourcesIDFinder.getResIdID("mo_amap_bubble_webview"));
+			int width = 50;
+			int hight = 50;
+			String bg = moduleContext.optString("bg", "rgba(0, 0, 0, 0)");
+
+			if (UZUtility.isHtmlColor(bg)) {
+				infoContent.setBackgroundColor(UZUtility.parseCssColor(bg));
+				webView.setBackgroundColor(UZUtility.parseCssColor(bg));
+			} else {
+				Bitmap bitmap = JsParamsUtil.getInstance().getBitmap(mUzAMap.makeRealPath(bg), -1, -1);
+				
+				infoContent.setBackgroundDrawable(new BitmapDrawable(bitmap));
+				
+				webView.setBackgroundColor(Color.TRANSPARENT);
+			}
+			JSONObject size = moduleContext.optJSONObject("size");
+			if (size != null && !moduleContext.isNull("size")) {
+				width = size.optInt("width", 50);
+				hight = size.optInt("height", 50);
+			}
+						
+			rl.setLayoutParams(new RelativeLayout.LayoutParams(UZUtility.dipToPix(width), UZUtility.dipToPix(hight)));
+			
+			webView.setClickable(true);
+			webView.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View arg0) {
+					Log.e("TAG", "lll");
+				}
+			});
+			webView.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View arg0, MotionEvent event) {
+					
+					if (event.getAction() == MotionEvent.ACTION_DOWN) {
+						if (UzAMap.webBubbleModuleContext != null) {
+							try {
+								String id = moduleContext.optString("id");
+								JSONObject result = new JSONObject();
+								result.put("id", id);
+								UzAMap.webBubbleModuleContext.success(result, false);
+							} catch (Exception e) {
+								// TODO: handle exception
+							}
+							
+						}
+						return false;
+					}else {
+						return false;
+					}
+					
+				}
+			});
+			String url = moduleContext.makeRealPath(moduleContext.optString("url"));
+			// 这里需要判断url是否/绝对路径开头，如果是，则加上file://
+			if (url != null && url.startsWith("/"))
+				url = "file://" + url;
+			if (moduleContext.isNull("data")) {// 如果data是空就加载网页
+				webView.loadUrl(url);
+				webView.setWebViewClient(new WebViewClient() {
+					@Override
+					public boolean shouldOverrideUrlLoading(WebView view, String url) {
+						view.loadUrl(url);
+						return true;
+					}
+				});
+			} else {// 否则就加载data数据的片段
+				String data = moduleContext.optString("data", "data parameter is nothing");
+				webView.getSettings().setJavaScriptEnabled(true);
+				webView.getSettings().setDefaultTextEncodingName("utf-8");
+
+				webView.loadDataWithBaseURL(url, data, "text/html", "utf-8", null);
+			}
+			return infoContent;
 		}
 		return infoContent;
 	}
+	
+	class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+		
+        public MyGestureListener() {
+            super();
+        }
+        private String id;
+        public void setWebBubbleId(String id) {
+        		this.id = id;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTapEvent(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+        		mUzAMap.addWebBoardListener(id);
+            return true;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            
+            return true;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            
+            return super.onScroll(e1, e2, distanceX, distanceY);
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            Log.e("TAG", "velocityX ：" + velocityX); // 左--右 负数 右 -- 左 正数
+            Log.e("TAG", "velocityY ：" + velocityY);// 从上--下 负值 从下--上 正数
+            return true;
+        }
+
+    }
 
 	private BitmapUtils getImgShowUtil() {
 		BitmapUtils bitmapUtils = new BitmapUtils(mContext, OtherUtils.getDiskCacheDir(mContext, ""));
@@ -1182,33 +1396,6 @@ public class MapAnnotations
 		return mMoveMarkerMap;
 	}
 
-	// public BitmapDrawable (String path) throws IOException {
-	// //打开文件
-	// File file = new File(path);
-	// if(!file.exists())
-	// {
-	// return null;
-	// }
-	//
-	// ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-	// byte[] bt = new byte[BUFFER_SIZE];
-	//
-	// //得到文件的输入流
-	// InputStream in = new FileInputStream(file);
-	//
-	// //将文件读出到输出流中
-	// int readLength = in.read(bt);
-	// while (readLength != -1) {
-	// outStream.write(bt, 0, readLength);
-	// readLength = in.read(bt);
-	// }
-	//
-	// //转换成byte 后 再格式化成位图
-	// byte[] data = outStream.toByteArray();
-	// Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);// 生成位图
-	// BitmapDrawable bd = new BitmapDrawable(bitmap);
-	//
-	// return bd;
-	// }
+	
 
 }

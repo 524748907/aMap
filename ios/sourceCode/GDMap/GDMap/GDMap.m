@@ -23,6 +23,7 @@
 #import "UZMultiPolyline.h"
 #import "ACDistrictSearch.h"
 #import "ACDistrictLine.h"
+#import "AMapBillboardLabel.h"
 
 typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     AMapRoutePlanningTypeDrive = 0, //驾车
@@ -46,6 +47,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 #define BILLBOARD_TITLE       1052
 #define BILLBOARD_SUBTITLE    1053
 #define BILLBOARD_BUTTON      1054
+#define WEBBILLBOARD_BGIMG       1055
+#define WEBBILLBOARD_BGWEB       1056
 #define ANNOTATION_MOBILETAG     1060
 
 @interface GDMap ()
@@ -100,6 +103,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 @property (nonatomic, strong) NSDictionary *districtLineDict;     //边界线样式
 @property (nonatomic, strong) UIImage *placeholdImage;            //标注占位图(空图片)
 @property (nonatomic, strong) NSOperation *queryOperation;
+@property (nonatomic, strong) UZModuleMethodContext *webBoardListener;
 
 @end
 
@@ -1034,7 +1038,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
-#pragma mark - 取消选中标注
+// 取消选中标注
 - (void)cancelAnnotationSelected:(NSDictionary *)paramsDict_
 {
     NSString *setID = [paramsDict_ stringValueForKey:@"id" defaultValue:nil];
@@ -1141,8 +1145,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             continue;
         }
         if (annoElem.annotId == [setID integerValue]) {
-//            annoElem.contentDict = contentInfo;
-//            annoElem.stylesDict = styleInfo;
             annoElem.haveBubble = YES;
             annoElem.webBubbleDict = paramsDict_;
             [self.mapView removeAnnotation:annoElem];
@@ -1251,6 +1253,47 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     annotation.stylesDict = styleInfo;
     annotation.type = ANNOTATION_BILLBOARD;
     [self.mapView addAnnotation:annotation];
+}
+
+- (void)jsmethod_addWebBoard:(UZModuleMethodContext *)context {
+    NSString *setID = [context.param stringValueForKey:@"id" defaultValue:nil];
+    if (![setID isKindOfClass:[NSString class]]|| setID.length==0){
+        return;
+    }
+    NSDictionary *coordsInfo = [context.param dictValueForKey:@"coords" defaultValue:@{}];
+    double lon = [coordsInfo floatValueForKey:@"lon" defaultValue:360];
+    double lat = [coordsInfo floatValueForKey:@"lat" defaultValue:360];
+    if (![self isValidLon:lon lat:lat] ) {
+        return;
+    }
+    NSString *bgImgStr = [context.param stringValueForKey:@"bg" defaultValue:nil];
+    if (![UZAppUtils isValidColor:bgImgStr]) {
+        bgImgStr = [self getPathWithUZSchemeURL:bgImgStr];
+    }
+    NSString *urlStr = [context.param stringValueForKey:@"url" defaultValue:nil];
+    NSString *dataStr = [context.param stringValueForKey:@"data" defaultValue:nil];
+    NSDictionary *sizeInfo = [context.param dictValueForKey:@"size" defaultValue:@{}];
+    ACGDAnnotaion *annotation = [[ACGDAnnotaion alloc] init];
+    CLLocationCoordinate2D coor;
+    coor.longitude = lon;
+    coor.latitude = lat;
+    annotation.draggable = [context.param boolValueForKey:@"draggable" defaultValue:NO];
+    annotation.bgStr = bgImgStr;
+    annotation.dataStr = dataStr;
+    annotation.urlStr = urlStr;
+    annotation.sizeDict = sizeInfo;
+    annotation.coordinate = coor;
+    annotation.annotId = [setID integerValue];
+    annotation.billBgImg = bgImgStr;
+    annotation.type = ANNOTATION_WEBBOARD;
+    [self.mapView addAnnotation:annotation];
+}
+- (void)jsmethod_addWebBoardListener:(UZModuleMethodContext *)context {
+    self.webBoardListener = context;
+}
+
+- (void)jsmethod_removeWebBoardListener:(NSDictionary *)paramsDict_ {
+    self.webBoardListener = nil;
 }
 
 - (void)addMobileAnnotations:(NSDictionary *)paramsDict_ {
@@ -1475,6 +1518,43 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }
 }
 
+- (void)jsmethod_showAnnotations:(UZModuleMethodContext *)context {
+    NSMutableArray *willShowAnnos = [NSMutableArray array];
+    NSArray *idAry = [context.param arrayValueForKey:@"ids" defaultValue:nil];
+    if (idAry.count > 0) {
+        NSMutableArray *removeIdAry = [NSMutableArray array];
+        for (int i=0; i<idAry.count; i++) {
+            NSString *idStr = [NSString stringWithFormat:@"%@",[idAry objectAtIndex:i]];
+            [removeIdAry addObject:idStr];
+        }
+        NSArray *annos = [self.mapView annotations];
+        for (ACGDAnnotaion *annoAry in annos) {
+            if (![annoAry isKindOfClass:[ACGDAnnotaion class]]) {
+                continue;
+            }
+            NSString *annID = [NSString stringWithFormat:@"%ld",(long)annoAry.annotId];
+            if ([removeIdAry containsObject:annID]) {
+                [willShowAnnos addObject:annoAry];
+            }
+        }
+    } else {//若为空数组则移除全部
+        NSArray *annos = [self.mapView annotations];
+        for (ACGDAnnotaion *annoAry in annos) {
+            if (![annoAry isKindOfClass:[ACGDAnnotaion class]]) {
+                continue;
+            }
+            [willShowAnnos addObject:annoAry];
+        }
+    }
+    NSDictionary *insetsDict = [context.param dictValueForKey:@"insets" defaultValue:@{}];
+    float top = [insetsDict floatValueForKey:@"top" defaultValue:50];
+    float left = [insetsDict floatValueForKey:@"left" defaultValue:20];
+    float bottom = [insetsDict floatValueForKey:@"bottom" defaultValue:50];
+    float right = [insetsDict floatValueForKey:@"right" defaultValue:20];
+    UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
+    BOOL animation = [context.param boolValueForKey:@"animation" defaultValue:YES];
+    [self.mapView showAnnotations:willShowAnnos edgePadding:insets animated:animation];
+}
 #pragma mark 覆盖物类接口
 
 - (void)addHeatMap:(NSDictionary *)paramsDict_ {
@@ -3680,7 +3760,8 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             [self setBubbleView:targetAnnot withView:annotationView];
         }
         return annotationView;
-    } else if ([annotation isKindOfClass:[MAPointAnnotation class]]) {
+    }
+    else if ([annotation isKindOfClass:[MAPointAnnotation class]]) {
         static NSString *routePlanningCellIdentifier = @"RoutePlanningCellIdentifier";
         MAAnnotationView *poiAnnotationView = (MAAnnotationView*)[self.mapView dequeueReusableAnnotationViewWithIdentifier:routePlanningCellIdentifier];
         if (poiAnnotationView == nil) {
@@ -3843,7 +3924,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                     pinImage = [self scaleImage:pinImage];//2倍图缩放图片
                     annotationView.animationView.hidden = YES;//动画标注隐藏
                     annotationView.image = [self imageResize:pinImage andResizeTo:CGSizeMake((annotation.w == -1)?pinImage.size.width:annotation.w, (annotation.h == -1)?pinImage.size.height:annotation.h)];
-//                    annotationView.image = pinImage;
                 
                 } else {//动画标注
                     self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
@@ -3853,7 +3933,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                     float sclW = firstImageSize.width/2.0;
                     float sclH = firstImageSize.height/2.0;
                     //重设标注的image
-//                    [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
                     [self resetAnnotationViewImage:annotationView withSize:CGSizeMake((annotation.w == -1)?sclW:annotation.w, (annotation.h == -1)?sclH:annotation.h)];
                     [annotationView refreshAnimatedPin:annotation];
                     annotationView.animationView.hidden = NO;
@@ -3861,6 +3940,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
                 annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
                 annotationView.billboardView.hidden = YES;//避免与布告牌错乱
                 annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+                annotationView.webBillboardView.hidden = YES;
                 break;
             }
             NSArray *pinIconPaths = annotation.pinIcons;
@@ -3899,13 +3979,14 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             break;
             //设置标注为布告牌
         case ANNOTATION_BILLBOARD: {
-            if (annotationView.billboardView) {
+            if (annotationView.webBillboardView) {
                 [self refreshBillboardView:annotation withAnnotationView:annotationView];
             } else {
                 [self addBillboardView:annotation withAnnotationView:annotationView];
             }
             //避免与布告牌和可移动标注的冲突
             annotationView.billboardView.hidden = NO;
+            annotationView.webBillboardView.hidden = YES;
             annotationView.animationView.hidden = YES;//动画标注隐藏
             annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
             NSDictionary *stylesInfo = annotation.stylesDict;
@@ -3917,6 +3998,27 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
         }
             break;
+        //设置网页布告牌
+        case ANNOTATION_WEBBOARD: {
+            if (annotationView.billboardView) {
+                [self refreshWebBillboardView:annotation withAnnotationView:annotationView];
+            } else {
+                [self addWebBillboardView:annotation withAnnotationView:annotationView];
+            }
+            //避免与布告牌和可移动标注的冲突
+            annotationView.webBillboardView.hidden = NO;
+            annotationView.billboardView.hidden = YES;
+            annotationView.animationView.hidden = YES;//动画标注隐藏
+            annotationView.mobileIcon.hidden = YES;//可移动标注隐藏
+            NSDictionary *stylesInfo = annotation.stylesDict;
+            NSDictionary *billboardSize = [stylesInfo dictValueForKey:@"size" defaultValue:@{}];
+            float sclW = [billboardSize floatValueForKey:@"width" defaultValue:160];
+            float sclH = [billboardSize floatValueForKey:@"height" defaultValue:75];
+            //重设标注的image
+            [self resetAnnotationViewImage:annotationView withSize:CGSizeMake(sclW, sclH)];
+            annotationView.centerOffset = CGPointMake(0, -annotationView.bounds.size.height/2.0);
+        }
+        break;
             //设置标注为可移动对象
         case ANNOTATION_MOBILEGD: {
             self.placeholdImage = [UIImage imageNamed:@"res_aMap/mobile.png"];
@@ -3939,6 +4041,7 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
             annotationView.centerOffset = CGPointMake(0, 0);
             annotationView.billboardView.hidden = YES;//避免与布告牌错乱
             annotationView.animationView.hidden = YES;//避免与动画标注错乱
+            annotationView.webBillboardView.hidden = YES;
             annotationView.mobileIcon.hidden = NO;
         }
             break;
@@ -4614,12 +4717,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     }else {
         [webView loadHTMLString:bubbleWebData baseURL:nil];
     }
-    // 监听点击
-    //UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
-    //singleTap.delegate = self;
-    //singleTap.delaysTouchesBegan = YES;
-    //singleTap.numberOfTapsRequired = 1;
-    //[webView addGestureRecognizer:singleTap];
 }
 
 - (void)setBubbleView:(ACGDAnnotaion *)annotation withView:(AnimatedAnnotationView *)annotationView {//自定义气泡
@@ -4891,9 +4988,18 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(nonnull UIGestureRecognizer *)otherGestureRecognizer {
     return YES;
 }
-
+- (void)handleWebBillboardSingleTap:(UITapGestureRecognizer *)sender {
+    if (!self.webBoardListener) {
+        return;
+    }
+    if (sender.numberOfTapsRequired==1) {
+        UIView *tempView = [sender.view superview];
+        NSInteger annoid = tempView.tag;
+        [self.webBoardListener callbackWithRet:@{@"id":@(annoid)} err:nil delete:NO];
+    }
+}
 - (void)handleSingleTap:(UITapGestureRecognizer *)sender {
-    if (sender.numberOfTapsRequired==1 && webBubbleCbid>=0) {//关闭输入框
+    if (sender.numberOfTapsRequired==1 && webBubbleCbid>=0) {
         NSInteger annoid = sender.view.tag;
         [self sendResultEventWithCallbackId:webBubbleCbid dataDict:@{@"id":@(annoid)} errDict:nil doDelete:NO];
     }
@@ -4919,6 +5025,62 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         [sendDict setObject:@"clickIllus" forKey:@"eventType"];
         [self sendResultEventWithCallbackId:setBubbleCbid dataDict:sendDict errDict:nil doDelete:NO];
     }
+}
+
+- (void)addWebBillboardView:(ACGDAnnotaion *)annotation withAnnotationView:(AnimatedAnnotationView *)annotationView {
+    //样式参数获取
+    NSDictionary *sizeDict = annotation.sizeDict;
+    float billWidth = [sizeDict floatValueForKey:@"w" defaultValue:160];
+    float billHeight = [sizeDict floatValueForKey:@"h" defaultValue:75];
+    //背景图片（160*75）
+    UIView *mainBoard = [[UIView alloc]initWithFrame:CGRectMake(0, 0, billWidth, billHeight)];
+    mainBoard.backgroundColor = [UIColor clearColor];
+    UIImageView *bgView = [[UIImageView alloc]init];
+    bgView.frame = mainBoard.bounds;
+    bgView.tag = WEBBILLBOARD_BGIMG;
+    [mainBoard addSubview:bgView];
+    
+    if ([UZAppUtils isValidColor:annotation.bgStr]) {
+        mainBoard.backgroundColor = [UZAppUtils colorFromNSString:annotation.bgStr];
+    } else {
+        UIImage *bgImg = [UIImage imageWithContentsOfFile:annotation.bgStr];
+        bgView.image = bgImg;
+    }
+    annotationView.webBillboardView = mainBoard;
+    
+    //内容
+    UIWebView *webView = [[UIWebView alloc]init];
+    webView.scalesPageToFit = NO;//自动对页面进行缩放以适应屏幕
+    webView.scrollView.bounces = NO;
+    [webView setBackgroundColor:[UIColor clearColor]];
+    [webView setOpaque:NO];
+    webView.tag = WEBBILLBOARD_BGWEB;
+    webView.frame = mainBoard.bounds;
+    [mainBoard addSubview:webView];//加载内容
+    
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleWebBillboardSingleTap:)];
+    tapGesture.delegate = self;
+    tapGesture.cancelsTouchesInView = NO;
+    [webView addGestureRecognizer:tapGesture];
+    
+    NSString *billboardWebUrl = annotation.urlStr;
+    NSString *dataWebData = annotation.dataStr;
+    NSURL *url = nil;
+    if ([billboardWebUrl hasPrefix:@"http"]) {
+        url = [NSURL URLWithString:billboardWebUrl];//创建URL
+    } else if (billboardWebUrl.length == 0) {
+        url = nil;//创建URL
+    } else {
+        billboardWebUrl = [self getPathWithUZSchemeURL:billboardWebUrl];
+        url = [NSURL fileURLWithPath:billboardWebUrl];//创建URL
+    }
+    if (dataWebData.length <=0 ) {
+        NSURLRequest *request = [NSURLRequest requestWithURL:url];//创建NSURLRequest
+        [webView loadRequest:request];//加载
+    } else {
+        [webView loadHTMLString:dataWebData baseURL:nil];
+    }
+    mainBoard.tag = annotation.annotId;
 }
 
 
@@ -4970,9 +5132,12 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         }
     }
     float titleSize = [stylesInfo floatValueForKey:@"titleSize" defaultValue:16];
-    float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:12];
+    float subtitleSize = [stylesInfo floatValueForKey:@"subTitleSize" defaultValue:10];
+    
+    
     float titleMarginT = [stylesInfo floatValueForKey:@"marginT" defaultValue:10];
     float subtitleMarginB = [stylesInfo floatValueForKey:@"marginB" defaultValue:15];
+    
     NSString *alignment = [stylesInfo stringValueForKey:@"alignment" defaultValue:@"left"];
     NSTextAlignment lableAlignment = NSTextAlignmentRight;
     if ([alignment isEqualToString:@"left"]) {
@@ -4980,18 +5145,36 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     } else if ([alignment isEqualToString:@"center"]){
         lableAlignment = NSTextAlignmentCenter;
     }
+    //标题子标题间距
+    float titleMarginLeft = [stylesInfo floatValueForKey:@"titleMarginLeft" defaultValue:10];
+    float titleMarginRight = [stylesInfo floatValueForKey:@"titleMarginRight" defaultValue:10];
+    float subTitleMarginLeft = [stylesInfo floatValueForKey:@"subTitleMarginLeft" defaultValue:10];
+    float subTitleMarginRight = [stylesInfo floatValueForKey:@"subTitleMarginRight" defaultValue:10];
+    float titleMaxLines = [stylesInfo floatValueForKey:@"titleMaxLines" defaultValue:1];
+    float subTitleMaxLines = [stylesInfo floatValueForKey:@"subTitleMaxLines" defaultValue:1];
     //位置参数
-    float labelW, labelX, titleLableH ,titleLabelY, subtitleLabelY, subtitleLableH;
-    //无插图时标题的布局
-    labelX = 10;
-    labelW = billWidth - 20;
+    float titlelabelW, subtitlelabelW, titleLabelY, titleLableH, subtitleLabelY, subtitleLableH;
+    //计算标题高度
+    if (titleMaxLines <= 1) {
+        titleLableH = titleSize + 2.0;
+    } else {
+        titleLableH = titleSize * titleMaxLines + (titleMaxLines-1)*2.0 + 2.0;
+    }
+    //计算子标题高度
+    if (subTitleMaxLines <= 1) {
+        subtitleLableH = subtitleSize + 2;
+    } else {
+        subtitleLableH = subtitleSize * subTitleMaxLines + (subTitleMaxLines-1)*2.0 + 2.0;
+    }
+    //标题y坐标
     titleLabelY = titleMarginT;
-    titleLableH = titleSize + 2;
-    subtitleLableH = subtitleSize + 2;
     subtitleLabelY = billHeight - subtitleMarginB - subtitleLableH;
+    //标题宽度
+    titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+    subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
     //有插图时标题和插图的布局
     if (illusPath.length > 0) {
-        CGRect rect;
+        CGRect illusrect;
         NSDictionary *illusRectDict = [stylesInfo dictValueForKey:@"illusRect" defaultValue:nil];
         BOOL hasIllusRec = NO;
         if (illusRectDict) {
@@ -5003,36 +5186,52 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         float illusY = [illusRectDict floatValueForKey:@"y" defaultValue:5];
         float illusW = [illusRectDict floatValueForKey:@"w" defaultValue:35];
         float illusH = [illusRectDict floatValueForKey:@"h" defaultValue:50];
-        rect = CGRectMake(illusX, illusY, illusW, illusH);
-        labelW = billWidth - 20 - (illusW+5);
-        if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
-            labelX = 10;
-            if (!hasIllusRec) {
-                rect = CGRectMake(115, 5, 35, 50);
+        illusrect = CGRectMake(illusX, illusY, illusW, illusH);
+        if (!hasIllusRec) {//插图的aligment
+            if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
+                illusrect = CGRectMake(115, 5, 35, 50);
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight - illusrect.size.width;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight - illusrect.size.width;
+            } else {//左插图
+                titleMarginLeft = illusX + illusW + titleMarginLeft;//插图和文字间距10.0
+                subTitleMarginLeft = illusX + illusW + subTitleMarginLeft;//插图和文字间距10.0
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
             }
-        } else {//左插图
-            labelX = illusX + illusW + 5;//插图和文字间距5.0
+        } else {//插图rect
+            if (illusX > (billWidth-illusW)/2.0) {//文字在左边，插图在右边（右边插图）
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight - illusrect.size.width;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight - illusrect.size.width;
+            } else {//文字在右边，插图在左边（左插图）
+                titleMarginLeft = illusX + illusW + titleMarginLeft;//插图和文字间距10.0
+                subTitleMarginLeft = illusX + illusW + subTitleMarginLeft;//插图和文字间距10.0
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
+            }
         }
         if ([illusPath hasPrefix:@"http"]) {//网络图片
             UIImageView *asyImg = [[UIImageView alloc]init];
             NSURL *urlpath = [NSURL URLWithString:illusPath];
             [asyImg sd_setImageWithURL:urlpath];
             asyImg.tag = BILLBOARD_ILLUS;
-            asyImg.frame = rect;
+            asyImg.frame = illusrect;
             [mainBoard addSubview:asyImg];
         } else {//本地图片
             NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
             UIImageView *illusImg = [[UIImageView alloc]init];
             illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
             illusImg.tag = BILLBOARD_ILLUS;
-            illusImg.frame = rect;
+            illusImg.frame = illusrect;
             [mainBoard addSubview:illusImg];
         }
     }
-    //标题
-    NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
-    UILabel *titleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, titleLabelY, labelW, titleLableH)];
-    titleLab.text = title;
+    
+    NSString *titleStr = [contentInfo stringValueForKey:@"title" defaultValue:@""];
+    
+    AMapBillboardLabel *titleLab = [[AMapBillboardLabel alloc]initWithFrame:CGRectMake(titleMarginLeft, titleLabelY, titlelabelW, titleLableH)];
+    titleLab.text = titleStr;
+    titleLab.numberOfLines = 0;//表示label可以多行显示
+    //[self changeLineSpaceForLabel:titleLab WithSpace:1.0];
     titleLab.tag = BILLBOARD_TITLE;
     titleLab.backgroundColor = [UIColor clearColor];
     titleLab.font = [UIFont systemFontOfSize:titleSize];
@@ -5041,7 +5240,9 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     [mainBoard addSubview:titleLab];
     //子标题
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:nil];
-    UILabel *subTitleLab = [[UILabel alloc]initWithFrame:CGRectMake(labelX, subtitleLabelY, labelW, subtitleLableH)];
+    AMapBillboardLabel *subTitleLab = [[AMapBillboardLabel alloc]initWithFrame:CGRectMake(subTitleMarginLeft, subtitleLabelY, subtitlelabelW, subtitleLableH)];
+    subTitleLab.numberOfLines = 0;//表示label可以多行显示
+    //[self changeLineSpaceForLabel:subTitleLab WithSpace:2.0];
     subTitleLab.text = subTitle;
     subTitleLab.tag = BILLBOARD_SUBTITLE;
     subTitleLab.backgroundColor = [UIColor clearColor];
@@ -5061,6 +5262,48 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     tap.billboardCbid = annotation.addBillboardCbid;
     [tap addTarget:self action:@selector(selectBillboard:) forControlEvents:UIControlEventTouchDown];
     [mainBoard addSubview:tap];
+}
+- (void)refreshWebBillboardView:(ACGDAnnotaion *)annotation withAnnotationView:(AnimatedAnnotationView *)annotationView {
+    //样式参数获取
+    NSDictionary *sizeDict = annotation.sizeDict;
+    float billWidth = [sizeDict floatValueForKey:@"w" defaultValue:160];
+    float billHeight = [sizeDict floatValueForKey:@"h" defaultValue:75];
+    //背景图片（160*75）
+    UIView *mainBoard = annotationView.webBillboardView;
+    mainBoard.tag = annotation.annotId;
+    mainBoard.frame = CGRectMake(0, 0, billWidth, billHeight);
+    NSString *billImgPath = annotation.bgStr;
+    
+    UIImageView *bgView = [(UIImageView *)mainBoard viewWithTag:WEBBILLBOARD_BGIMG];
+    if ([UZAppUtils isValidColor:billImgPath]) {
+        mainBoard.backgroundColor = [UZAppUtils colorFromNSString:billImgPath];
+        bgView.image = nil;
+    } else {
+        mainBoard.backgroundColor = [UIColor clearColor];
+        UIImage *bgImg = [UIImage imageWithContentsOfFile:billImgPath];
+        bgView.image = bgImg;
+    }
+    
+    //内容
+    UIWebView *webView = [(UIWebView *)mainBoard viewWithTag:WEBBILLBOARD_BGWEB];
+    webView.frame = mainBoard.bounds;
+    NSString *billboardWebUrl = annotation.urlStr;
+    NSString *dataWebData = annotation.dataStr;
+    NSURL *url = nil;
+    if ([billboardWebUrl hasPrefix:@"http"]) {
+        url = [NSURL URLWithString:billboardWebUrl];//创建URL
+    } else if (billboardWebUrl.length == 0) {
+        url = nil;//创建URL
+    } else {
+        billboardWebUrl = [self getPathWithUZSchemeURL:billboardWebUrl];
+        url = [NSURL fileURLWithPath:billboardWebUrl];//创建URL
+    }
+    if (dataWebData.length <=0 ) {
+        NSURLRequest *request = [NSURLRequest requestWithURL:url];//创建NSURLRequest
+        [webView loadRequest:request];//加载
+    } else {
+        [webView loadHTMLString:dataWebData baseURL:nil];
+    }
 }
 
 - (void)refreshBillboardView:(ACGDAnnotaion *)annotation withAnnotationView:(AnimatedAnnotationView *)annotationView {
@@ -5115,18 +5358,46 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     } else if ([alignment isEqualToString:@"center"]){
         lableAlignment = NSTextAlignmentCenter;
     }
+    ////位置参数
+    //float labelW, labelX, titleLableH ,titleLabelY, subtitleLabelY, subtitleLableH;
+    ////无插图时标题的布局
+    //labelX = 10;
+    //labelW = billWidth - 20;
+    //titleLabelY = titleMarginT;
+    //titleLableH = titleSize + 2;
+    //subtitleLableH = subtitleSize + 2;
+    //subtitleLabelY = billHeight - subtitleMarginB - subtitleLableH;
+    
+    //标题子标题间距
+    float titleMarginLeft = [stylesInfo floatValueForKey:@"titleMarginLeft" defaultValue:10];
+    float titleMarginRight = [stylesInfo floatValueForKey:@"titleMarginRight" defaultValue:10];
+    float subTitleMarginLeft = [stylesInfo floatValueForKey:@"subTitleMarginLeft" defaultValue:10];
+    float subTitleMarginRight = [stylesInfo floatValueForKey:@"subTitleMarginRight" defaultValue:10];
+    float titleMaxLines = [stylesInfo floatValueForKey:@"titleMaxLines" defaultValue:1];
+    float subTitleMaxLines = [stylesInfo floatValueForKey:@"subTitleMaxLines" defaultValue:1];
     //位置参数
-    float labelW, labelX, titleLableH ,titleLabelY, subtitleLabelY, subtitleLableH;
-    //无插图时标题的布局
-    labelX = 10;
-    labelW = billWidth - 20;
+    float titlelabelW, subtitlelabelW, titleLabelY, titleLableH, subtitleLabelY, subtitleLableH;
+    //计算标题高度
+    if (titleMaxLines <= 1) {
+        titleLableH = titleSize + 2.0;
+    } else {
+        titleLableH = titleSize * titleMaxLines + (titleMaxLines-1)*2.0;
+    }
+    //计算子标题高度
+    if (subTitleMaxLines <= 1) {
+        subtitleLableH = subtitleSize + 2;
+    } else {
+        subtitleLableH = subtitleSize * subTitleMaxLines + (subTitleMaxLines-1)*2.0;
+    }
+    //标题y坐标
     titleLabelY = titleMarginT;
-    titleLableH = titleSize + 2;
-    subtitleLableH = subtitleSize + 2;
     subtitleLabelY = billHeight - subtitleMarginB - subtitleLableH;
+    //标题宽度
+    titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+    subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
     //有插图时标题和插图的布局
     if (illusPath.length > 0) {
-        CGRect rect;
+        CGRect illusrect;
         NSDictionary *illusRectDict = [stylesInfo dictValueForKey:@"illusRect" defaultValue:nil];
         BOOL hasIllusRec = NO;
         if (illusRectDict) {
@@ -5138,42 +5409,59 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
         float illusY = [illusRectDict floatValueForKey:@"y" defaultValue:5];
         float illusW = [illusRectDict floatValueForKey:@"w" defaultValue:35];
         float illusH = [illusRectDict floatValueForKey:@"h" defaultValue:50];
-        rect = CGRectMake(illusX, illusY, illusW, illusH);
-        labelW = billWidth - 20 - (illusW+5);
-        if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
-            labelX = 10;
-            if (!hasIllusRec) {
-                rect = CGRectMake(115, 5, 35, 50);
+        illusrect = CGRectMake(illusX, illusY, illusW, illusH);
+        if (!hasIllusRec) {//插图的aligment
+            if (illusaligment.length>0 && [illusaligment isEqualToString:@"right"]) {//右插图
+                illusrect = CGRectMake(115, 5, 35, 50);
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight - illusrect.size.width;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight - illusrect.size.width;
+            } else {//左插图
+                titleMarginLeft = illusX + illusW + titleMarginLeft;//插图和文字间距10.0
+                subTitleMarginLeft = illusX + illusW + subTitleMarginLeft;//插图和文字间距10.0
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
             }
-        } else {//左插图
-            labelX = illusX + illusW + 5;//插图和文字间距5.0
+        } else {//插图rect
+            if (illusX > (billWidth-illusW)/2.0) {//文字在左边，插图在右边（右边插图）
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight - illusrect.size.width;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight - illusrect.size.width;
+            } else {//文字在右边，插图在左边（左插图）
+                titleMarginLeft = illusX + illusW + titleMarginLeft;//插图和文字间距10.0
+                subTitleMarginLeft = illusX + illusW + subTitleMarginLeft;//插图和文字间距10.0
+                titlelabelW = billWidth - titleMarginLeft - titleMarginRight;
+                subtitlelabelW = billWidth - subTitleMarginLeft - subTitleMarginRight;
+            }
         }
         if ([illusPath hasPrefix:@"http"]) {//网络图片
             UIImageView *asyImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
             NSURL *urlpath = [NSURL URLWithString:illusPath];
             [asyImg sd_setImageWithURL:urlpath];
-            asyImg.frame = rect;
+            asyImg.frame = illusrect;
         } else {//本地图片
             NSString *realIllusPath = [self getPathWithUZSchemeURL:illusPath];
             UIImageView *illusImg = [mainBoard viewWithTag:BILLBOARD_ILLUS];
             illusImg.image = [UIImage imageWithContentsOfFile:realIllusPath];
-            illusImg.frame = rect;
+            illusImg.frame = illusrect;
         }
     }
 
     //标题
-    NSString *title = [contentInfo stringValueForKey:@"title" defaultValue:@""];
-    UILabel *titleLab = [mainBoard viewWithTag:BILLBOARD_TITLE];
-    titleLab.frame = CGRectMake(labelX, titleLabelY, labelW, titleLableH);
-    titleLab.text = title;
+    NSString *titleStr = [contentInfo stringValueForKey:@"title" defaultValue:@""];
+    AMapBillboardLabel *titleLab = [mainBoard viewWithTag:BILLBOARD_TITLE];
+    titleLab.numberOfLines = 0;//表示label可以多行显示
+    [self changeLineSpaceForLabel:titleLab WithSpace:2.0];
+    titleLab.frame = CGRectMake(titleMarginLeft, titleLabelY, titlelabelW, titleLableH);
+    titleLab.text = titleStr;
     titleLab.backgroundColor = [UIColor clearColor];
     titleLab.font = [UIFont systemFontOfSize:titleSize];
     titleLab.textAlignment = lableAlignment;
     titleLab.textColor = [UZAppUtils colorFromNSString:titleColor];
     //子标题
     NSString *subTitle = [contentInfo stringValueForKey:@"subTitle" defaultValue:nil];
-    UILabel *subTitleLab = [mainBoard viewWithTag:BILLBOARD_SUBTITLE];
-    subTitleLab.frame = CGRectMake(labelX, subtitleLabelY, labelW, subtitleLableH);
+    AMapBillboardLabel *subTitleLab = [mainBoard viewWithTag:BILLBOARD_SUBTITLE];
+    subTitleLab.numberOfLines = 0;//表示label可以多行显示
+    [self changeLineSpaceForLabel:subTitleLab WithSpace:2.0];
+    subTitleLab.frame = CGRectMake(subTitleMarginLeft, subtitleLabelY, subtitlelabelW, subtitleLableH);
     subTitleLab.text = subTitle;
     subTitleLab.backgroundColor = [UIColor clearColor];
     subTitleLab.font = [UIFont systemFontOfSize:subtitleSize];
@@ -5515,7 +5803,6 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     UIGraphicsEndImageContext();
     return newImage;
 }
-#pragma mark -搜索区域
 
 - (NSMutableDictionary *)getDistrictDict:(AMapDistrictSearchResponse *)response {
     NSMutableDictionary *returnDict = [NSMutableDictionary dictionary];
@@ -5665,5 +5952,27 @@ typedef NS_ENUM(NSInteger, AMapRoutePlanningType) {
     
     return polyline;
 }
-
+- (void)changeLineSpaceForLabel:(UILabel *)label WithSpace:(float)space {
+    NSString *labelText = label.text;
+    if (labelText.length == 0) {
+        return;
+    }
+    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:labelText];
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    [paragraphStyle setLineSpacing:space];
+    [attributedString addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, [labelText length])];
+    label.attributedText = attributedString;
+    [label sizeToFit];
+}
+- (void)changeLineSpaceForTextView:(UITextView *)textView WithSpace:(float)space andSize:(float)fontSize {
+    NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+    
+    paragraphStyle.lineSpacing = space;// 字体的行间距
+    
+    NSDictionary *attributes = @{
+                                 NSFontAttributeName:[UIFont systemFontOfSize:fontSize],
+                                 NSParagraphStyleAttributeName:paragraphStyle
+                                 };
+    textView.typingAttributes = attributes;
+}
 @end

@@ -1,9 +1,3 @@
-//
-//UZModule
-//
-//Modified by magic 16/2/23.
-//Copyright (c) 2016年 APICloud. All rights reserved.
-//
 package com.apicloud.devlop.uzAMap;
 
 import java.io.File;
@@ -18,9 +12,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.amap.api.col.n3.ew;
-import com.amap.api.col.n3.ne;
-import com.amap.api.col.n3.nu;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMap.OnIndoorBuildingActiveListener;
 import com.amap.api.maps.AMap.OnMapScreenShotListener;
@@ -28,6 +19,7 @@ import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.CoordinateConverter;
 import com.amap.api.maps.CoordinateConverter.CoordType;
 import com.amap.api.maps.MapView;
+import com.amap.api.maps.TextureMapView;
 import com.amap.api.maps.model.IndoorBuildingInfo;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
@@ -61,6 +53,7 @@ public class UzAMap extends UZModule {
 
 	public UzAMap(UZWebView webView) {
 		super(webView);
+		
 	}
 	
 
@@ -174,8 +167,6 @@ public class UzAMap extends UZModule {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
-				String zoom = String.valueOf(mapView.getMap().getCameraPosition().zoom);
-				float zoomLevel = (float) moduleContext.optDouble("level", 10);
 				//Toast.makeText(context(), "当前的缩放级别是" + zoom + "-----要缩放的级别是" + String.valueOf(zoomLevel), Toast.LENGTH_LONG).show();
 				new MapSimple().setZoomLevel(moduleContext, mapView.getMap());
 //				float zoomLevel = (float) moduleContext.optDouble("level", 10);
@@ -344,8 +335,6 @@ public class UzAMap extends UZModule {
 	public void jsmethod_addAnnotations(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
-			int width = mapView.getWidth();
-			int height = mapView.getHeight();
 			if (mapView != null) {
 				if (mAnnotations == null) {
 					mAnnotations = new MapAnnotations(this, mapView, context());
@@ -388,11 +377,10 @@ public class UzAMap extends UZModule {
 	}
 	
 	/**
-	 * TODO
 	 * 显示mark和气泡
 	 * @param moduleContext
 	 */
-	public void jsmethod_showAnnotations(UZModuleContext moduleContext) {
+	public void jsmethod_showAnnotations1(UZModuleContext moduleContext) {
 		if (mMap != null) {
 			UzMapView mapView = mMap.getMapView();
 			if (mapView != null) {
@@ -580,6 +568,51 @@ public class UzAMap extends UZModule {
 			}
 		}
 	}
+	
+	/**
+	 * 在地图上添加网页布告牌
+	 * @param moduleContext
+	 */
+	public void jsmethod_addWebBoard(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView, context());
+				}
+				mAnnotations.addWebBoard(moduleContext);
+			}
+		}
+	}
+	
+	public UZModuleContext webBoardListener_moduleContext;
+	/**
+	 * 添加网页布告牌点击监听
+	 * @param moduleContext
+	 */
+	public void jsmethod_addWebBoardListener(UZModuleContext moduleContext) {
+		this.webBoardListener_moduleContext = moduleContext;
+	}
+	
+	public void addWebBoardListener(String id) {
+		try {
+			if (webBoardListener_moduleContext != null) {
+				JSONObject result = new JSONObject();
+				result.put("id", id);
+				webBoardListener_moduleContext.success(result, false);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * 移除网页布告牌点击监听
+	 */
+	public void jsmethod_removeWebBoardListener(UZModuleContext moduleContext) {
+		this.webBoardListener_moduleContext = null;
+	}
 
 	public void jsmethod_addMobileAnnotations(UZModuleContext moduleContext) {
 		if (mMap != null) {
@@ -589,6 +622,18 @@ public class UzAMap extends UZModule {
 					mAnnotations = new MapAnnotations(this, mapView, context());
 				}
 				mAnnotations.addMoveAnnotations(moduleContext);
+			}
+		}
+	}
+	
+	public void jsmethod_showAnnotations(UZModuleContext moduleContext) {
+		if (mMap != null) {
+			UzMapView mapView = mMap.getMapView();
+			if (mapView != null) {
+				if (mAnnotations == null) {
+					mAnnotations = new MapAnnotations(this, mapView, context());
+				}
+				mAnnotations.showAnnotations(moduleContext);
 			}
 		}
 	}
@@ -1068,11 +1113,11 @@ public class UzAMap extends UZModule {
 
 	/**
 	 * @param moduleContext
-	 * TODO  行政区划边界查询
+	 * 行政区划边界查询
 	 */
 	public void jsmethod_districtSearch(UZModuleContext moduleContext) {
 		if (mMap != null) {
-			MapView mapView = mMap.getMapView();
+			TextureMapView mapView = mMap.getMapView();
 			AMap amap = mapView.getMap();
 			new MapDistrictSearch(this,amap, moduleContext);
 		}else{
@@ -1086,7 +1131,7 @@ public class UzAMap extends UZModule {
 	 */
 	public void jsmethod_takeSnapshotInRect(final UZModuleContext moduleContext) {
 		if (mMap != null) {
-			MapView mapView = mMap.getMapView();
+			TextureMapView mapView = mMap.getMapView();
 			AMap aMap = mapView.getMap();
 			
 			JSONObject rectJson = moduleContext.optJSONObject("rect");
@@ -1104,7 +1149,6 @@ public class UzAMap extends UZModule {
 				try {
 					file.createNewFile();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1140,7 +1184,6 @@ public class UzAMap extends UZModule {
 								moduleContext.success(ret, true);
 							}
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 						try {
 							ret.put("status", false);
@@ -1172,8 +1215,8 @@ public class UzAMap extends UZModule {
 			JSONObject result = new JSONObject();
 			result.put("status", isShows);
 			moduleContext.success(result, false);
-		} catch (Exception e) {
-			// TODO: handle exception
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 	}
 	

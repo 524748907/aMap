@@ -53,7 +53,12 @@ div {
 		    <param name="ios_api_key" value="92b62be6f96b3b303ff56219176516f9"/>
 		  </feature>  
 			-->
+		<div tapmode="active" onclick="fnOpenWin()">打开新页面</div>
+		
 		<div tapmode="active" onclick="fnOpen()">打开高德地图</div>
+		
+		<div tapmode="active" onclick="fnOpen_test()">打开高德地图-test</div>
+		
 		<div tapmode="active" onclick="fnClose()">关闭高德地图</div>
 
 		<div tapmode="active" onclick="fnAddAnnotations()">在地图上添加标注信息</div>
@@ -163,6 +168,8 @@ div {
 		<div tapmode="active" onclick="fnSetWebBubbleUrl()">弹出的网页气泡信息</div>
 		<div tapmode="active" onclick="fnCloseBubble()">关闭已弹出的气泡</div>
 		<div tapmode="active" onclick="fnAddBillboard()">在地图上添加布告牌</div>
+		<div tapmode="active" onclick="addWebBoard()">在地图上添加网页布告牌 - addWebBoard</div>
+		<div tapmode="active" onclick="addWebBoardListener()">添加网页布告牌点击监听 - addWebBoardListener</div>
 		<div tapmode="active" onclick="fnAddMobileAnnotations()">
 			在地图上添加可移动、旋转的标注图标</div>
 		<div tapmode="active" onclick="fnMoveAnnotation()">
@@ -236,21 +243,139 @@ div {
 </body>
 <script type="text/javascript" src="../script/api.js"></script>
 <script type="text/javascript">
-	function fndownVedio() {
-		api.download(
-						{
-							url : 'http://img1.3lian.com/gif/more/11/201206/a5194ba8c27b17def4a7c5495aba5e32.jpg',
-							savePath : 'fs://test.jpg',
-							report : true,
-							cache : true,
-							allowResume : true
-						}, function(ret, err) {
-							if (ret.state == 1) {
-								alert(JSON.stringify(ret));
-							} else {
-								alert(JSON.stringify(err));
-							}
-						});
+
+	function fnOpenWin() {
+	   api.openWin({
+		    name: 'test22',
+		    url: '../index22.html',
+		});
+	}
+	
+	function fnOpen_test(){
+		var map = api.require('aMap');
+		map.open({
+            rect: {
+                x: 0,
+                y: 0,
+                w: 'auto',
+                h: api.frameHeight / 2
+            },
+            // center: {lon: 0,lat: 0},
+            showUserLocation: true,
+            showsAccuracyRing: true,
+            zoomLevel: 15,
+            fixedOn: api.frameName,
+            fixed: true
+        }, function(ret, err) {
+            console.log("asdasdasdasdada"+JSON.stringify(ret));
+            if (ret.status) {
+                console.log("z1");
+                
+                var systemType = api.systemType;//系统类型，字符串类型
+
+                
+                  //安卓开启关闭都走下面逻辑
+                  //获取当前定位
+                  map.getLocation(function(ret, err) {
+                      console.log("z2");
+                          console.log("1"+JSON.stringify(ret));
+                          lon = ret.lon;
+                          lat = ret.lat;
+                          console.log("lon:"+lon+",lat:"+lat);
+
+                          if(lon != 0 && lat != 0){
+                            map.setCenter({
+                                coords: {
+                                    lon: lon,
+                                    lat: lat
+                                },
+                                animation: false
+                            });
+                            //设置中心点图标
+                            map.addAnnotations({
+                                annotations: [{
+                                    id: 1,
+                                    w: 30,               //数字类型；图标标注宽度；默认值：icons或selectedIcons内第一张图片宽度的二分之一 （android不根据图片大小，传多少是多少）
+                                    h: 30,
+                                    lon: lon,
+                                    lat: lat,
+                                    locked:true
+                                }],
+                                // icons: ['fs://image/ic_tomap.png'],
+                                draggable: false,
+                                timeInterval: 2.0
+                            }, function(ret) {
+
+                            });
+
+                            //监听题图移动
+                            map.addEventListener({
+                                name: 'viewChange'
+                            }, function(ret) {
+                                
+                            });
+                          }else{
+                            map.getCenter(function(ret, err) {
+                                console.log("getCenter:"+JSON.stringify(ret));
+                                if (ret) {
+                                  //设置中心点图标
+                                  map.addAnnotations({
+                                      annotations: [{
+                                          id: 1,
+                                          w: 30,               //数字类型；图标标注宽度；默认值：icons或selectedIcons内第一张图片宽度的二分之一 （android不根据图片大小，传多少是多少）
+                                          h: 30,
+                                          lon: ret.lon,
+                                          lat: ret.lat,
+                                          locked:true
+                                      }],
+                                      // icons: ['widget://image/ic_tomap.png'],
+                                      draggable: false,
+                                      timeInterval: 2.0
+                                  }, function(ret) {
+
+                                  });
+                                  map.setCenter({
+                                      coords: {
+                                          lon: ret.lon,
+                                          lat: ret.lat
+                                      },
+                                      animation: false
+                                  });
+                                  //监听题图移动
+                                  map.addEventListener({
+                                      name: 'viewChange'
+                                  }, function(ret) {
+                                      console.log("flag:"+flag);
+                                      
+                                  });
+                                }
+                            });
+                          }
+
+                  });
+                
+
+
+                //设置比例尺
+                map.setScaleBar({
+                    show: false //不显示
+                });
+
+                //指南针
+                map.setCompass({
+                    show: false //不显示
+                });
+
+                //2019年4月15日 设置缩放比例
+                map.setZoomLevel({
+                     level: 15,
+                     animation: true
+                });
+
+            } else {
+                // alert(JSON.stringify(err));
+            }
+        });
 	}
 
 	function isCircleContainsPoint() {
@@ -286,26 +411,21 @@ div {
 		api.require('aMap').open({
 			rect : {
 				x : 0,
-				y : 50,
-				w : api.winWidth,
+				y : 0,
+				w : 300,
 				h : 300
 			},
 			showUserLocation : true, //是否显示用户位置
-			zoomLevel : 17, //缩放等级
-			showsAccuracyRing : false,
-			center : {
-				lon : 116.4021310000,
-				lat : 39.9994480000
-			},
+			zoomLevel : 15, //缩放等级
+			showsAccuracyRing : true,
+			//center : {
+				//lon : 116.4021310000,
+				//lat : 39.9994480000
+			//},
 			//fixedOn : api.winName,
 			fixed : true
 		}, function(ret, err) {
-			if (ret.status) {
-				alert(JSON.stringify(ret));
-				//fnAddLine();
-			} else {
-				alert(JSON.stringify(err));
-			}
+			
 
 		});
 	};
@@ -374,13 +494,17 @@ div {
 	function fnGetLocation() { //获取当前位置
 		var aMap = api.require('aMap');
 		aMap.getLocation({
-			autoStop : true
+			autoStop : false,
+			enableLocInForeground:true
 		//获取位置后是否自动停止定位
 		}, function(ret, err) {
 			if (ret.status) {
-				alert(JSON.stringify(ret));
+				//alert(JSON.stringify(ret));
+				//console.log('定位数据：' + JSON.stringify(ret));
+				api.toast({msg:'定位数据：' + JSON.stringify(ret), global:true});
 			} else {
 				alert(JSON.stringify(err));
+				
 			}
 		});
 	};
@@ -621,23 +745,26 @@ div {
 			name : 'click'
 		});
 	};
-	function fnAddAnnotations() {
+	function fnAddAnnotations1() {
 		var aMap = api.require('aMap');
 		aMap.addAnnotations({
 			annotations : [ {
 				id : 1,
 				lon : 116.297,
-				lat : 40.109
+				lat : 40.129,
+				icons:['widget://image/881649.jpg']
 			}, {
 				id : 2,
 				lon : 116.29,
-				lat : 40.109
+				lat : 40.199,
+				icons:['widget://image/abg.jpg']
 			}, {
 				id : 3,
 				lon : 116.298,
-				lat : 40.11
+				lat : 40.90,
+				icons:['widget://image/aiil.jpg']
 			} ],
-			icons : ['widget://image/paopao.png'],
+			//icons : ['widget://image/paopao.png'],
 			draggable : true,
 			timeInterval : 2.0
 		}, function(ret) {
@@ -645,7 +772,55 @@ div {
 				alert(ret.id);
 			}
 		});
-	};
+	}
+	
+	function fnAddAnnotations() {
+        var aMap = api.require('aMap');
+        aMap.addAnnotations({
+            annotations: [{
+                id: 1,
+                lon: 116.406568,
+                lat: 39.917591,
+                icons: ['widget://image/aiil.jpg'],
+                selectedIcons:['widget://image/abg.jpg'],
+                locked: false,
+                lockedX: 100,
+                lockedY: 100,
+                w:56,
+                h:56
+            },
+            {
+                id: 2,
+                lon: 116.347352,
+                lat: 39.972907,
+                icons: ['widget://image/default_list.png','widget://image/bgImg.png'],
+                locked: false,
+                lockedX: 200,
+                lockedY: 200,
+                w:100,
+                h:100
+            },
+            {
+                id: 3,
+                lon: 116.445088,
+                lat: 39.929543,
+                locked: false,
+                lockedX: 200,
+                lockedY: 200,
+                icons: ['widget://image/default_list.png'],
+                w:120,
+                h:120
+            }],
+            //icons: ['widget://image/default_list.png', 'widget://image/default_list.png', 'widget://image/default_list.png'],
+            draggable: true,
+            timeInterval: 2.0
+        }, function(ret) {
+            if (ret.eventType == 'click') {
+                alert(ret.id);
+            }
+        });
+    }
+	
 	function fnGetAnnotationCoords() {
 		var aMap = api.require('aMap');
 		aMap.getAnnotationCoords({
@@ -714,10 +889,10 @@ div {
 				hight : 100
 			//泡泡高，默认值50
 			},
-			url :
-			//'fs://doubleSlider.html'
-			'widget://res/doubleSlider.html',
-			bg : '#FF0000'
+			//url :'widget://res/doubleSlider.html',
+			
+			bg : 'widget://image/881649.jpg',   //'#FF0000'
+			data:'<p>漂亮MM</p>'
 		}, function(ret) {
 			alert(JSON.stringify(ret));
 		});
@@ -734,21 +909,49 @@ div {
 			id : 2
 		});
 	};
+	
+	function addWebBoard(){
+		var aMap = api.require('aMap');
+		var params = {
+			id:5,
+			coords:{
+				lon : 116.4021310000,
+				lat : 39.9994480000
+			},
+			bg:'widget://image/paopao.png',
+			url :'https://www.apicloud.com',
+			//data:'<p>漂亮MM</p>',
+			size:{
+				w:100,
+				h:100
+			}
+		};
+		aMap.addWebBoard(params);
+	}
+	
+	function addWebBoardListener(){
+		var aMap = api.require('aMap');
+		aMap.addWebBoardListener(function(ret){
+			alert(JSON.stringify(ret));
+		});
+	}
+	
 	function fnAddBillboard() {
 		var aMap = api.require('aMap');
 		aMap.addBillboard({
 			id : 3,
-			draggable : true,
+			draggable : false,
 			coords : {
 				lon : 116.4021310000, //116.233   116.4021310000
 				lat : 39.9994480000
 			//39.134   39.9994480000
 			},
-			bgImg : 'widget://image/bgImg.png',
+			bgImg : 'widget://image/paopao.png',
 			content : {
-				title : '大标题',
-				subTitle : '概述内容概述内容概述内容',
-				illus : 'http://ico.ooopic.com/ajax/iconpng/?id=145044.pn',
+				title : '大标题大标题大标题大标题大标题大标题大标题大标题大标题大标题大标题大标题',
+				subTitle : '概述内容概述内容概述内容333333333333333333',
+				//illus : 'http://ico.ooopic.com/ajax/iconpng/?id=145044.pn',
+				illus : 'widget://image/aiil.jpg',
 			},
 			styles : {
 				size : { //（可选项）JSON对象；布告牌大小配置，若不传则取默认值
@@ -756,18 +959,37 @@ div {
 					height : 200
 				//（可选项）数组类型；布告牌的高；默认：75
 				},
-				marginT : 40,
-				alignment : 'center',
-				titleColor : '#fff',
-				subTitleColor : '#fff',
+				marginT : 10,
+				marginB : 40,
+				titleMarginLeft:10,
+				subTitleMarginLeft:20,
+				alignment : 'left',
+				titleColor : '#ff0',
+				subTitleColor : '#f0f',
 				titleSize : 12,
-				subTitleSize : 10
+				subTitleSize : 10,
+				/* illusRect: {
+			        x: 0,
+			        y: 0,
+			        w: 50,
+			        h: 50
+			    }, */
+			    illusAlign:'left',
+			    titleMaxLines:1,
+			    subTitleMaxLines:2,
+			},
+			selectedStyles:{
+			//bgImg:'widget://image/paopao.png',
+			subTitleColor:'#cc55dd',
+			//titleColor:'#ff0000',
+			//illus:'widget://image/aiil.jpg'
 			}
 		}, function(ret) {
 			if (ret) {
 				alert(JSON.stringify(ret));
 			}
 		});
+		
 	};
 	function fnAddMobileAnnotations() {
 		var aMap = api.require('aMap');
@@ -1293,7 +1515,7 @@ div {
 	};
 	function fnReloadMap() {
 		var aMap = api.require('aMap');
-		aMap.reloadMap();
+		//aMap.reloadMap();
 	};
 
 	function fnConvertCoordinate() {
@@ -1334,11 +1556,11 @@ div {
 		aMap.addLine({
 			id : 1,
 			styles : {
-				type : 'round1',
+				type : 'arrow',
 				borderColor : '#000000',
 				borderWidth : 13,
 				lineDash : true,
-				strokeImg : 'widget://image/kkk.png'
+				strokeImg : 'widget://image/bgImg.png'
 			},
 			points : [ {
 				lon : 116.135972,

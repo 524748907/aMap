@@ -19,12 +19,6 @@
 
 @implementation AnimatedAnnotationView
 
-//@synthesize imageView = _imageView;
-//@synthesize animatedImages = _animatedImages;
-//@synthesize interval = _interval;
-//@synthesize bubbleView = _bubbleView;
-//@synthesize billboardView = _billboardView;
-
 #pragma mark - Life Cycle -
 
 - (id)initWithAnnotation:(id<MAAnnotation>)annotation reuseIdentifier:(NSString *)reuseIdentifier {
@@ -115,6 +109,15 @@
         _billboardView = billboardView;
         self.bounds = _billboardView.bounds;
         [self addSubview:_billboardView];
+    }
+}
+
+- (void)setWebBillboardView:(UIView *)webBillboardView {
+    if (_webBillboardView != webBillboardView) {
+        [_webBillboardView removeFromSuperview];
+        _webBillboardView = webBillboardView;
+        self.bounds = _webBillboardView.bounds;
+        [self addSubview:_webBillboardView];
     }
 }
 

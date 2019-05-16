@@ -135,7 +135,7 @@ public class MapDistrictSearch implements OnDistrictSearchListener{
 							String strokeImgPath = showInMap.optString("strokeImg");
 							JsParamsUtil jsParamsUtil = JsParamsUtil.getInstance();
 							Bitmap strokeImg = jsParamsUtil.getBitmap(mModuleContext
-									.makeRealPath(strokeImgPath));
+									.makeRealPath(strokeImgPath), -1, -1);
 							polylineOption.setCustomTexture(BitmapDescriptorFactory
 									.fromBitmap(strokeImg));
 							polylineOption.width((float) borderWidth).color(borderColor);

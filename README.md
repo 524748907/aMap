@@ -6,11 +6,17 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 
 # **模块接口文档**
 
-<p style="color: #ccc; margin-bottom: 30px;">来自于：APICloud 官方</p>
+/*
+Title: aMap
+Description: 高德地图
+*/
+
+<p style="color: #ccc; margin-bottom: 30px;">来自于：官方<a style="background-color: #95ba20; color:#fff; padding:4px 8px;border-radius:5px;margin-left:30px; margin-bottom:0px; font-size:12px;text-decoration:none;" target="_blank" href="//www.apicloud.com/mod_detail/aMap">立即使用</a></p>
 
 ## 基础类
 
 <div class="outline">
+
 [open](#open)
 [close](#close)
 [show](#show)
@@ -39,6 +45,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [setLogo](#setLogo)
 [takeSnapshotInRect](#takeSnapshotInRect)
 [isPolygonContainsPoint](#isPolygonContainsPoint)
+[isCircleContainsPoint](#isCircleContainsPoint)
 [interconvertCoords](#interconvertCoords)
 [addEventListener](#addEventListener)
 [removeEventListener](#removeEventListener)
@@ -47,6 +54,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 室内地图
 
 <div class="outline">
+
 [isShowsIndoorMap](#isShowsIndoorMap)
 [showsIndoorMap](#showsIndoorMap)
 [isShowsIndoorMapControl](#isShowsIndoorMapControl)
@@ -60,7 +68,9 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 标注、气泡类
 
 <div class="outline">
+
 [addAnnotations](#addAnnotations)
+[cancelAnnotationSelected](#cancelAnnotationSelected)
 [getAnnotationCoords](#getAnnotationCoords)
 [setAnnotationCoords](#setAnnotationCoords)
 [annotationExist](#annotationExist)
@@ -68,6 +78,9 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [popupBubble](#popupBubble)
 [closeBubble](#closeBubble)
 [addBillboard](#addBillboard)
+[addWebBoard](#addWebBoard)
+[addWebBoardListener](#addWebBoardListener)
+[removeWebBoardListener](#removeWebBoardListener)
 [addMobileAnnotations](#addMobileAnnotations)
 [moveAnnotation](#moveAnnotation)
 [removeAnnotations](#removeAnnotations)
@@ -76,11 +89,13 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 [removeWebBubbleListener](#removeWebBubbleListener)
 [addMoveAnimation](#addMoveAnimation)
 [cancelMoveAnimation](#cancelMoveAnimation)
+[showAnnotations](#showAnnotations)
 </div>
 
 ## 覆盖物类
 
 <div class="outline">
+
 [addHeatMap](#addHeatMap)
 [refreshHeatMap](#refreshHeatMap)
 [addMultiPoint](#addMultiPoint)
@@ -95,6 +110,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 搜索类
 
 <div class="outline">
+
 [searchRoute](#searchRoute)
 [drawRoute](#drawRoute)
 [removeRoute](#removeRoute)
@@ -111,6 +127,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 离线地图类
 
 <div class="outline">
+
 [getProvinces](#getProvinces)
 [getCitiesByProvince](#getCitiesByProvince)
 [getMunicipalities](#getMunicipalities)
@@ -129,6 +146,7 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 ## 经纬度坐标转换、轨迹纠偏
 
 <div class="outline">
+
 [convertCoordinate](#convertCoordinate)
 [processedTrace](#processedTrace)
 [cancelProcessedTrace](#cancelProcessedTrace)
@@ -138,7 +156,6 @@ APICloud 的 aMap 模块是对高德地图移动端开放 SDK 进行的一次封
 # 论坛示例
 
 为帮助用户更好更快的使用模块，论坛维护了一个[示例](https://community.apicloud.com/bbs/thread-34877-1-1.html)，示例中包含示例代码、知识点讲解、注意事项等，供您参考。
-
 
 # **概述**
 
@@ -174,6 +191,7 @@ aMap 模块封装了高德地图的原生 SDK，集成了高德地图常用基�
 
 若某些带UI的接口不能满足开发设计需求，开发者（借助于原生开发者）可在本模块基础上修改少量原生代码，随心所欲的自定义高德地图所具有的原生功能，简单、轻松、快捷、高效、迅速集成高德地图，将自己的 app 和高德地图实现无缝链接。模块原生代码开源地址为：[https://github.com/apicloudcom/moduleCode/aMap](https://github.com/apicloudcom/aMap)
 
+
 **模块使用攻略**
 
 ***注意事项***
@@ -207,7 +225,7 @@ aMap 模块封装了高德地图的原生 SDK，集成了高德地图常用基�
     
 用户在使用本模块之前需要获取高德地图API Key，Key 申请的具体流程请参照 [申请Key](http://lbs.amap.com/api/ios-location-sdk/summary/#getkey)。本模块需要的 key 可以和 [aMapLBS](//docs.apicloud.com/Client-API/Open-SDK/aMapLBS)、[aMapLocation](//docs.apicloud.com/Client-API/Open-SDK/aMapLocation) 、[aMapNavigation](//docs.apicloud.com/Client-API/Open-SDK/aMapNavigation) 、[aMapReportLocation](//docs.apicloud.com/Client-API/Open-SDK/aMapReportLocation) 模块的 key 共用。
     
-**注意：在 iOS 上版本使用定位功能，需要在云编译时勾选 `定位（使用期间）` 或 `定位服务（始终）`**
+**注意：在 iOS 上版本使用定位功能，需要在云编译时勾选 `定位（使用期间）` 和 `定位服务（始终）`**
     
 ## **模块接口**
 
@@ -260,6 +278,13 @@ showUserLocation：
 - 类型：布尔
 - 描述：（可选项）是否在地图上显示用户位置
 - 默认值：true
+
+showsAccuracyRing：
+
+- 类型：布尔
+- 描述：（可选项）是否在地图上显示用户位置的精度圈儿
+- 默认值：true
+- 注意：若open时本参数为false 则 showUserLocation 接口传 true 也无法显示精度圈儿
 
 isGestureScaleByMapCenter:
 
@@ -439,7 +464,9 @@ iOS系统，Android系统
 
 # **getLocation**
 
-获取当前位置信息，若要支持后台定位需[配置 [config.xml](/APICloud/技术专题/app-config-manual) 文件 location 字段](//docs.apicloud.com/APICloud/技术专题/app-config-manual#14-2)。**调用本接口需先 open，在iOS 平台上 showUserLocation 为 false 时此接口不可用**
+获取当前位置信息，若要支持后台定位需[配置 [config.xml](/APICloud/技术专题/app-config-manual) 文件 location 字段](//docs.apicloud.com/APICloud/技术专题/app-config-manual#14-2)。**iOS上调用本接口需先 open，在iOS 平台上 showUserLocation 为 false 时此接口不可用**
+
+注：根据高德地图技术回复，在有的手机上及时拒绝手机定位权限，依然可以获取到位置信息
 
 getLocation({params}, callback(ret, err))
 
@@ -450,6 +477,26 @@ autoStop：
 - 类型：布尔
 - 描述：（可选项）获取到位置信息后是否自动停止定位
 - 默认值：true
+
+enableLocInForeground：
+
+- 类型：布尔类型
+- 描述：(可选项) 开发者应用如果有后台定位需求，在退到后台的时候，为了保证定位可以在后台一直运行，可以设置为true，适配android 8后台无法定位问题；注：单次定位(autoStop为true时)无效(ios不支持)
+- 默认值：false
+
+notification:
+
+- 类型：JSON对象
+- 描述：(必选项) 通知栏的提示，此字段只有在enableLocInForeground设置为true时有效。(ios不支持)
+
+内部字段：
+
+```js
+{
+	title :  //(可选项) 字符串类型；标题； 默认值：应用名称
+	content:    //(可选项) 字符串类型；内容； 默认值：正在后台运行
+}
+```
 
 ## callback(ret, err)
 
@@ -463,10 +510,15 @@ ret：
     status: true,               //布尔型；true||false
     lon: 116.213,               //数字类型；经度
     lat: 39.213,                //数字类型；纬度
-    accuracy: 65,               //数字类型；本次定位的精度，仅支持 iOS 平台
+    accuracy: 65,               //数字类型；本次定位的精度
     timestamp: 1396068155591,   //数字类型；时间戳
     heading:200,                //数字类型；设备方向，取值范围：0.0（正北） - 359.9 
     altitude: 200               //数字类型；当前设备所处的海拔信息
+    verticalAccuracy: 10               //数字类型；垂直位置精度，无效时为负数 (android不支持)
+    horizontalAccuracy: 20               //数字类型；平面位置精度，无效时为负数(android不支持)
+    course: 200               //数字类型；偏离正北方向的角度，无效时为负数，范围 0.0 - 359.9
+    speed: 200               //数字类型；速度，无效时为负数，单位：m/s
+    floor: 2               //数字类型；在建筑物的第几层，无效时不返回
 }
 ```
 
@@ -752,8 +804,9 @@ imagePath:
 showsAccuracyRing：
 
 - 类型：布尔
-- 描述：（可选项）精度圈是否显示(android不支持)
+- 描述：（可选项）精度圈是否显示
 - 默认值：true
+- 注意：若 open 时 showsAccuracyRing 为false 则本接口的此参数传 true 也无法显示精度圈儿
 
 
 showsHeadingIndicator：
@@ -1578,6 +1631,88 @@ iOS系统，Android系统
 
 可提供的1.0.0及更高版本
 
+
+<div id="isCircleContainsPoint"></div>
+
+# **isCircleContainsPoint**
+
+判断已知点是否在指定的圆形区域内
+
+isCircleContainsPoint({params}, callback(ret, err))
+
+## params
+
+point：
+
+- 类型：JSON 对象
+- 描述：已知点的地理坐标
+- 内部字段：
+
+```js
+{
+    lon: 116.297,      //数字类型；经度
+    lat: 40.109        //数字类型；纬度
+}
+```
+
+circle：
+
+- 类型：JSON
+- 描述：圆形信息
+- 内部字段：
+
+```js
+{
+    center: {           //JSON对象；圆心信息
+       lon: 116.297,    //数字类型；经度
+       lat: 40.109      //数字类型；纬度
+    },
+    radius: 100         //（可选项）数字类型；半径，单位米（m）；默认：100
+}
+```
+
+## params
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    status: true      //布尔类型；目标点是否在指定区域内，true || false      
+}
+```
+
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.isCircleContainsPoint({
+    point: {
+        lon: 116.39432327,
+        lat: 39.98963192
+    },
+    circle: {
+       center: {           
+         lon: 116.297,    
+         lat: 40.109      
+       },
+       radius: 100
+    }
+}, function(ret) {
+    alert(ret.status);
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.1.9及更高版本
+
+
 <div id="interconvertCoords"></div>
 
 # **interconvertCoords**
@@ -2093,7 +2228,7 @@ iOS系统
 
 # **addAnnotations**
 
-在地图上添加标注信息，标注大小为 icons 内第一张图片大小的二分之一。**图标中轴线的下边缘点为坐标基准点**
+在地图上添加标注信息，标注大小默认为 icons 内第一张图片大小的二分之一。**图标中轴线的下边缘点为坐标基准点**
 
 addAnnotations({params}, callback(ret, err))
 
@@ -2113,6 +2248,11 @@ annotations：
     icons: 'widget://',        //（可选项）数组类型；指定的标注图标路径组成的数组，若包含多张图片，则此标注显示为多图联动的 gif 动画效果，要求本地路径（fs://、widget://），若不传则显示公用的 icons 图标
     selectedIcons:             // (可选项) 数组类型；点击标注后的图标路径，若包含多张图片，则此标注显示为多图联动的 gif 动画效果，要求本地路径（fs://、widget://），若不传则显示公用的selectedIcons，如果公用的selectedIcons也不传，则点击时不切换图标
     draggable: true            //（可选项）布尔类型；所添加的标注是否可被拖动，若不传则以公用的 draggable 为准
+    w: 30,               //数字类型；图标标注宽度；默认值：icons或selectedIcons内第一张图片宽度的二分之一 （android不根据图片大小，传多少是多少）   
+    h: 30,               //数字类型；图标标注高度；默认值：icons或selectedIcons内第一张图片高度的二分之一 （android不根据图片大小，传多少是多少） 
+    locked: false,        //（可选项）布尔类型；是否固定在屏幕一点, 注意，拖动或者手动改变经纬度，都会导致设置失效。如果为true，设置lon和lat会失效，需要设置lockedX和lockedY；默认：false
+    lockedX: 100,               //数字类型；固定屏幕点的X坐标，locked为true时设置；默认值：地图视图中间
+    lockedY: 100,               //数字类型；固定屏幕点的Y坐标，locked为true时设置；默认值：地图视图中间
 }]
 ```
 
@@ -2121,6 +2261,7 @@ icons：
 - 类型：数组
 - 描述：（可选项）指定的标注图标路径组成的数组，若包含多张图片，则此标注显示为多图联动的 gif ，要求本地路径（fs://、widget://）
 - 默认值：红色大头针
+- 注：android上如果填写此选项，并有多张图片时，请尽量保证图片的大小是一致的；
 
 selectedIcons：
 
@@ -2196,6 +2337,36 @@ aMap.addAnnotations({
 iOS系统，Android系统
 
 可提供的1.0.0及更高版本
+
+<div id="cancelAnnotationSelected"></div>
+
+# **cancelAnnotationSelected**
+
+取消标注选中状态
+
+cancelAnnotationSelected({params})
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：指定的标注 id
+
+##示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.cancelAnnotationSelected({
+    id: 1
+});
+```
+
+##可用性
+
+iOS系统
+
+可提供的1.2.7及更高版本
 
 <div id="getAnnotationCoords"></div>
 
@@ -2352,7 +2523,7 @@ id：
 bgImg：
 
 - 类型：字符串
-- 描述：（可选项）弹出气泡的背景图片（160x90规格），要求本地路径（fs://、widget://），中轴线下边缘点为气泡弹出点，**若本字段为空，则 content 内的 title 长度大于105时，气泡宽度会根据 title 长度自适应**
+- 描述：（可选项）弹出气泡的背景图片，要求本地路径（fs://、widget://），中轴线下边缘点为气泡弹出点
 - 默认值：默认气泡背景图片
 
 content：
@@ -2363,7 +2534,7 @@ content：
 
 ```js
 {
-    title: '',             //字符串类型；弹出气泡的标题，若 bgImg 为默认图片，则标题长度大于105时，气泡宽度会根据标题长度自适应
+    title: '',             //字符串类型；弹出气泡的标题
     subTitle: '',          //（可选项）字符串类型；弹出气泡的概述内容，若不传则 title 在上下位置居中显示
     illus: ''              //（可选项）字符串类型；弹出气泡的配图（30*40规格），支持http://、https://、widget://、fs://等协议，若不传则不显示插图，标题和子标题忽略插图显示
 }
@@ -2385,6 +2556,8 @@ styles：
                                     //取值范围：
                                     //left（图片居左）
                                     //right（图片居右）
+    w: 160,                 //（可选项）数字类型；气泡的宽；默认：bgImg有值时，为160；bgImg为默认值时，为title的长度，并且不会超过地图视图的宽度-64，不会小于160
+    h: 90,                 //（可选项）数字类型；气泡的高；默认：90
 }
 ```
 
@@ -2694,20 +2867,26 @@ styles：
         width: 160,                 //（可选项）数组类型；布告牌的宽；默认：160
         height: 75                  //（可选项）数组类型；布告牌的高；默认：75
     },
-    illusRect: {                    //（可选项）JSON对象；插图大小配置
+    illusRect: {                    //（可选项）JSON对象；插图大小配置，与 illusAlign 同时存在时以本参数为准
         x: ,                        //（可选项）数字类型；插图左上角x坐标，相对布告牌坐标系；默认：10
         y: ,                        //（可选项）数字类型；插图左上角y坐标，相对布告牌坐标系；默认：5
         w: ,                        //（可选项）数字类型；插图的宽；默认：35
         h:                          //（可选项）数字类型；插图的高；默认：50
     },
-    marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，标题的左右间距都固定为10；默认：10            
-    marginB: 15,                    //（可选项）数字类型；子标题距布告牌低端的距离，子标题的左右间距都固定为10；默认：15
+    marginT: 10,                    //（可选项）数字类型；标题距布告牌顶端的距离，默认：10  
+    titleMarginLeft:10,        //(可选项) 数字类型；标题的左边距；默认：10
+     titleMarginRight:10,        //(可选项) 数字类型；标题的右边距；默认：10
+    marginB: 15,                    //（可选项）数字类型；子标题距布告牌低端的距离，默认：15
+    subTitleMarginLeft:10,        //(可选项) 数字类型；子标题的左边距；默认：10
+    subTitleMarginRight:10,        //(可选项) 数字类型；子标题的右边距；默认：10
     alignment: 'left',              //（可选项）字符串类型；标题和子标题的对齐方式：left（水平居左）、center（水平居中）、right（水平居右）；默认：left
     titleColor: '#000',             //（可选项）字符串类型；布告牌标题的文字颜色，支持 rgb、rgba、#；默认：'#000'
     titleSize: 14,                  //（可选项）数字类型；布告牌标题的文字大小；默认：16
     subTitleColor: '#000',          //（可选项）字符串类型；布告牌概述内容的文字颜色，支持 rgb、rgba、#；默认：'#000'
     subTitleSize: 12,               //（可选项）数字类型；布告牌概述内容的文字大小；默认：16
-    illusAlign: 'left'              //（可选项）字符串类型；布告牌配图的显示位置；默认：'left'
+    titleMaxLines:1,             // （可选项） 数字类型；标题最大行数，超过一行自动换行，换行规则与原生一致；默认：1
+    subTitleMaxLines:1,      // （可选项）数字类型 ；子标题最大行数，超过一行自动换行，换行规则与原生一致；默认：1
+    illusAlign: 'left',              //（可选项）字符串类型；布告牌配图的显示位置，与 illusRect 同时存在时忽略本参数；默认：'left'
                                     //取值范围：
                                     //left（图片居左）
                                     //right（图片居右）
@@ -2788,6 +2967,154 @@ aMap.addBillboard({
 iOS系统，Android系统
 
 可提供的1.0.0及更高版本
+
+
+<div id="addWebBoard"></div>
+
+# **addWebBoard**
+
+在地图上添加网页布告牌，**布告牌图标中轴线的下边缘点为坐标基准点**
+
+addWebBoard({params})
+
+## params
+
+id：
+
+- 类型：数字
+- 描述：布告牌的 id，**注意：本 id 不可与 addAnnotations 接口内的 id 相同**
+
+coords：
+
+- 类型：JSON 对象
+- 描述：布告牌所在位置的坐标
+- 内部字段：
+
+```js
+{
+lon: 116.233,            //数字类型；布告牌所在位置的经度
+lat: 39.134              //数字类型；布告牌所在位置的纬度
+}
+```
+
+bg：
+
+- 类型：字符串
+- 描述：布告牌的背景图片，要求本地路径（fs://、widget://）
+
+
+url：
+
+- 类型：字符串
+- 描述：（可选项）网页布告牌的网页地址,当data参数不为空时，url将做为baseUrl，data中的html引用的资源文件根路径以该url为基础。
+
+data：
+
+- 类型：字符串
+- 描述：（可选项）页面加载的数据内容，可以为html片段或者整张html文件的数据,当data为空或者不传的时候， 会将url地址作为整个加载进去
+
+size：
+
+- 类型：JSON对象
+- 描述：（可选项）气泡的大小配置
+- 内部字段
+
+```js
+{
+      w: 50,     //（可选项）数字类型；气泡的宽；默认：50
+      h: 50      //（可选项）数字类型；气泡的高；默认：50
+}
+```
+
+## 示例代码
+
+```js
+var map = api.require('aMap');
+map.addWebBoard({
+    id: 4,
+    draggable: true,
+    coords: {
+        lon:116.29432327,
+        lat:39.98963192
+    },
+    bg: 'widget://res/billboard.png',
+    url:'./aMap-con.html',
+    data:'',
+    size:{
+        w:100,
+        h:100
+    }
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.3.1及更高版本
+
+
+
+<div id="addWebBoardListener"></div>
+
+# **addWebBoardListener**
+
+添加网页布告牌点击监听
+
+addWebBoardListener(callback(ret))
+
+
+## callback(ret)
+
+ret：
+
+- 类型：JSON 对象
+- 内部字段：
+
+```js
+{
+    id: 1               //数字类型；用户点击布告牌返回的id
+}
+```
+
+## 示例代码
+
+```js
+var map = api.require('aMap');
+map.addWebBoardListener(function(ret){
+    api.alert({msg:'网页布告牌'+JSON.stringify(ret)});
+});
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.3.1及更高版本
+
+
+
+<div id="removeWebBoardListener"></div>
+
+# **removeWebBoardListener**
+
+移除网页布告牌点击监听
+
+removeWebBoardListener(callback(ret))
+
+
+## 示例代码
+
+```js
+	var map = api.require('aMap');
+	map.removeWebBoardListener();
+```
+
+## 可用性
+
+iOS系统
+
+可提供的1.3.1及更高版本
 
 <div id="addMobileAnnotations"></div>
 
@@ -3085,6 +3412,60 @@ iOS系统，Android系统
 可提供的1.1.8及更高版本
 
 
+<div id="showAnnotations"></div>
+
+# **showAnnotations**
+
+显示指定 id 的标注（可移动、不可移动）或布告牌
+
+showAnnotations({params})
+
+## params
+
+animation：
+
+- 类型：布尔
+- 描述：（可选项）移动地图以显示标注时是否带动画效果
+- 默认：true
+
+
+ids：
+
+- 类型：数组
+- 描述：（可选项）要显示的标注或布告牌id（数字），若为空或不传，则显示所有标注
+
+
+insets：
+
+- 类型：JSON对象
+- 描述：（可选项）标注显示的区域上下左右边距
+- 内部字段：
+
+```
+{
+    top:,         //数字类型；上边距；默认：50
+    left:,        //数字类型；左边距；默认：20
+    bottom:,      //数字类型；下边距；默认：50
+    right:        //数字类型；右边距；默认：20
+}
+```
+
+## 示例代码
+
+```js
+var aMap = api.require('aMap');
+aMap.showAnnotations({
+    ids: [1,3,5,7]
+});
+```
+
+## 可用性
+
+iOS系统，Android系统
+
+可提供的1.2.9及更高版本
+
+
 <div id="addHeatMap"></div>
 
 # **addHeatMap**
@@ -3237,15 +3618,15 @@ path：
 
 - 类型：字符串
 - 描述：聚合点信息文件路径，要求本地路径（widget://、fs://）
-- 内部字段：
+- 内部字段：iOS上需要按照标准的json格式，否则解析不了
 
 ```js
 [{
-	longitude:,      //数字类型；经度
-	latitude:,       //数字类型；纬度
-	title:'',        //字符串类型；标题
-	subtitle:'',     //字符串类型；子标题
-	customID:''      //字符串类型；自定义id
+	"longitude":,      //数字类型；经度
+	"latitude":,       //数字类型；纬度
+	"title":"apicloud",        //字符串类型；标题
+	"subtitle":"apicloud",     //字符串类型；子标题
+	"customID":"1"      //字符串类型；自定义id
 }]
 ```
 
@@ -3348,7 +3729,7 @@ styles：
     lineDash: false,          //（可选项）布尔类型；是否绘制成虚线，当 type 为 arrow 时，本参数无效；默认：false
     borderColor: '#000',      //（可选项）字符串类型；线的颜色，支持 rgb、rgba、#；默认值：'#000'
     borderWidth: 3,           //（可选项）数字类型；线的宽度，默认：2
-    strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则本接口忽略 type、lineDash、borderColor 参数   
+    strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），图片需满足: 长宽相等,且宽度值为2的整数次幂，若本参数不为空，则本接口忽略 type、lineDash、borderColor 参数   
 }
 ```
 
@@ -3710,11 +4091,12 @@ type：
     - drive（开车）
     - transit（公交）
     - walk（步行）
+    - ride（骑行）   
 
 strategy：
 
 - 类型：字符串
-- 描述：（可选项）路线策略，**type 为 walk（步行）时，此参数可不传**
+- 描述：（可选项）路线策略，**type 为 walk（步行）或ride（骑行）时，此参数可不传**
 - 默认值：'drive_time_first/transit_time_first'
 - 取值范围：
     - drive_time_first：速度优先（时间）
@@ -3801,7 +4183,7 @@ ret：
        lat: 39.989576           //数字类型；终点纬度
     },
     taxiCost: 50,               //数字类型；出租车费用（单位：元）
-    paths: [{                   //数组类型；步行、驾车方案列表数组
+    paths: [{                   //数组类型；步行、骑行、驾车方案列表数组
         steps:[{                //数组类型；路段基本信息组成的数组
 			instruction:'左转',  //字符串类型；行走指示
 			orientation:'北',    //字符串类型；方向
@@ -3929,27 +4311,34 @@ styles：
     walkLine:{                    //（可选项）JSON对象；步行路线样式
         width: 3,                 //（可选项）数字类型；步行路线的线条宽度；默认：3
         color:'#698B22',          //（可选项）字符串类型；步行路线的线条颜色，支持 rgb、rgba、#；默认：#698B22
-        lineDash:false,           //（可选项）布尔类型；步行路线的线条是否为虚线，Android 平台暂不支持；默认：false
-        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数 。Android 平台暂不支持
+        lineDash:false,           //（可选项）布尔类型；步行路线的线条是否为虚线；默认：false
+        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数 。
+    },
+    rideLine:{                    //（可选项）JSON对象；骑行路线样式
+        width: 3,                 //（可选项）数字类型；骑行路线的线条宽度；默认：3
+        color:'#698B22',          //（可选项）字符串类型；骑行路线的线条颜色，支持 rgb、rgba、#；默认：#698B22
+        lineDash:false,           //（可选项）布尔类型；骑行路线的线条是否为虚线；默认：false
+        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数 。
     },
     driveLine:{                   //（可选项）JSON对象；驾车路线样式
         width: 6,                 //（可选项）数字类型；驾车路线的线条宽度；默认：5
         color:'#0000EE',          //（可选项）字符串类型；驾车路线的线条颜色，支持 rgb、rgba、#；默认：#00868B
-        lineDash:false,           //（可选项）布尔类型；驾车路线的线条是否为虚线，Android 平台暂不支持；默认：false
-        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数。Android 平台暂不支持
+        lineDash:false,           //（可选项）布尔类型；驾车路线的线条是否为虚线；默认：false
+        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数。
     },
     busLine:{                     //（可选项）JSON对象；公交路线样式
         width: 4,                 //（可选项）数字类型；公交路线的线条宽度；默认：4
         color:'#00BFFF',          //（可选项）字符串类型；公交路线的线条颜色，支持 rgb、rgba、#；默认：#00BFFF
-        lineDash:false,           //（可选项）布尔类型；公交路线的线条是否为虚线，Android 平台暂不支持；默认：false
-        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数。Android 平台暂不支持  
+        lineDash:false,           //（可选项）布尔类型；公交路线的线条是否为虚线；默认：false
+        strokeImg:'fs://arrow.png'//（可选项）字符串类型；组成纹理画线的图片路径，要求本地路径（fs://、widget://），若本参数不为空，则忽略 color、dashed 参数。
     },
     icons: {                     //（可选项）JSON对象；路线结点标注图标
        start: '',                //（可选项）字符串类型；起点图标路径，要求本地路径（fs://、widget://）；默认：默认起点图标
        end: '',                  //（可选项）字符串类型；终点图标路径，要求本地路径（fs://、widget://）；默认：默认终点图标
        bus: '',                  //（可选项）字符串类型；公交路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认公交图标
-       car: '',                  //（可选项）字符串类型；驾车路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认公交图标
-       man: ''                   //（可选项）字符串类型；步行路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认公交图标
+       car: '',                  //（可选项）字符串类型；驾车路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认驾车图标
+       man: '',                  //（可选项）字符串类型；步行路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认步行图标
+       ride: ''                   //（可选项）字符串类型；骑行路线结点提示图标路径，要求本地路径（widget://、fs://）默认：默认步行图标
     }
 }
 ```
@@ -4311,6 +4700,9 @@ ret：
       lat: ,                  //数字类型；兴趣点纬度
       lon: ,                  //数字类型；兴趣点经度
       address: '',            //字符串类型；兴趣点地址
+      province: '',            //字符串类型；省
+      city: '',            //字符串类型；城市名称
+      district: '',            //字符串类型；区域名称
       tel: '',                //字符串类型；兴趣点电话
       distance:               //数字类型；兴趣点距离中心点距离
     }],
@@ -4413,6 +4805,9 @@ ret：
       lat: ,                  //数字类型；兴趣点纬度
       lon: ,                  //数字类型；兴趣点经度
       address: '',            //字符串类型；兴趣点地址
+      province: '',            //字符串类型；省
+      city: '',            //字符串类型；城市名称
+      district: '',            //字符串类型；区域名称
       tel: '',                //字符串类型；兴趣点电话
       distance:               //数字类型；兴趣点距离中心点距离
     }],
@@ -4515,6 +4910,9 @@ ret：
       lat: ,                  //数字类型；兴趣点纬度
       lon: ,                  //数字类型；兴趣点经度
       address: '',            //字符串类型；兴趣点地址
+      province: '',            //字符串类型；省
+      city: '',            //字符串类型；城市名称
+      district: '',            //字符串类型；区域名称
       tel: '',                //字符串类型；兴趣点电话
       distance:              //数字类型；兴趣点距离中心点距离
     }],

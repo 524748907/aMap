@@ -160,7 +160,7 @@ public class MapShowUser implements AMapLocationListener {
 			if (moduleContext.optBoolean("showsHeadingIndicator", true)) {
 				myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_MAP_ROTATE);
 			}else {
-				myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);
+				myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_SHOW);//LOCATION_TYPE_LOCATION_ROTATE
 			}
 		}else {
 			myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_SHOW);

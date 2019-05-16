@@ -22,7 +22,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:singleLine="true"
             android:text="标题"
             android:textSize="16sp"
             android:gravity="center"/>
@@ -33,7 +32,6 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/title"
             android:ellipsize="end"
-            android:singleLine="true"
             android:text="子标题"
             android:textSize="14sp"
             android:gravity="center" />

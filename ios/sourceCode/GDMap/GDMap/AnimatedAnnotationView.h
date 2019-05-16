@@ -14,7 +14,7 @@
 
 @property (nonatomic, strong) UIImageView *animationView, *mobileIcon;
 @property (nonatomic, strong) ACBubbleView *bubbleView;
-@property (nonatomic, strong) UIView *billboardView;
+@property (nonatomic, strong) UIView *billboardView, *webBillboardView;;
 
 - (void)refreshAnimatedPin:(id<MAAnnotation>)annotation;
 

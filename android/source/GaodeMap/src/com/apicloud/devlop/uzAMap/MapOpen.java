@@ -9,6 +9,8 @@ package com.apicloud.devlop.uzAMap;
 import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnAttachStateChangeListener;
@@ -18,11 +20,14 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 
+import com.amap.api.col.n3.in;
 import com.amap.api.location.AMapLocationClient;
+import com.amap.api.maps.AMap;
 import com.amap.api.maps.UiSettings;
 import com.apicloud.devlop.uzAMap.utils.CallBackUtil;
 import com.apicloud.devlop.uzAMap.utils.JsParamsUtil;
 import com.uzmap.pkg.uzcore.UZCoreUtil;
+import com.uzmap.pkg.uzcore.UZResourcesIDFinder;
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
 import com.uzmap.pkg.uzkit.UZUtility;
 
@@ -40,6 +45,11 @@ public class MapOpen {
 	public void openMap(UzAMap uzAMap, final UZModuleContext moduleContext,
 			final Context context) {
 		if (mMapView == null) {
+//			int mapId = UZResourcesIDFinder.getResLayoutID("basicmap");
+//			View parView = LayoutInflater.from(context).inflate(mapId, null);
+//			int mapViewId = UZResourcesIDFinder.getResIdID("map");
+//			mMapView = (UzMapView) parView.findViewById(mapViewId);
+			
 			mMapView = new UzMapView(context);
 			//mMapView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 			
@@ -80,6 +90,30 @@ public class MapOpen {
 			showMap();
 		}
 		CallBackUtil.openCallBack(moduleContext);
+	}
+	
+	public void onPause(){
+		if (mMapView != null) {
+			mMapView.onPause();
+		}
+	}
+	
+	public void onResume(){
+		if (mMapView != null) {
+			mMapView.onResume();
+		}
+	}
+	
+	public void onDestroy(){
+		if (mMapView != null) {
+			mMapView.onDestroy();
+		}
+	}
+	
+	public void onSaveInstance(){
+		if (mMapView != null) {
+			mMapView.onSaveInstanceState(null);
+		}
 	}
 
 	public void closeMap(UzAMap uzAMap) {
@@ -134,7 +168,7 @@ public class MapOpen {
 	}
 
 	private void insertView(UzAMap uzAMap, UZModuleContext moduleContext,
-			Context context, UzMapView mapView) {
+			Context context, View mapView) {
 		RelativeLayout.LayoutParams layoutParams = layoutParams(moduleContext, context);
 		String fixedOn = moduleContext.optString("fixedOn");
 		boolean fixed = moduleContext.optBoolean("fixed", true);

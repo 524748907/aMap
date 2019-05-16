@@ -7,6 +7,7 @@
 package com.apicloud.devlop.uzAMap.models;
 
 import com.uzmap.pkg.uzcore.uzmodule.UZModuleContext;
+import com.uzmap.pkg.uzkit.UZUtility;
 
 import android.R.integer;
 import android.graphics.Bitmap;
@@ -32,6 +33,17 @@ public class Bubble {
 	private int width;
 	private int height;
 	
+	private int titleMarginT = UZUtility.dipToPix(10);
+	private int titleMarginB = UZUtility.dipToPix(10);
+	private int titleMaxLines = 1;
+	private int subTitleMaxLines = 1;
+	private int titleMarginLeft = UZUtility.dipToPix(10);
+	private int titleMarginRight = UZUtility.dipToPix(10);
+	private int subMarginLeft = UZUtility.dipToPix(10);
+	private int subMarginRight = UZUtility.dipToPix(10);
+	
+	private int imgX,imgY,imgW,ImgH;
+	
 
 	public Bubble() {
 	}
@@ -53,6 +65,112 @@ public class Bubble {
 		this.width = w;
 		this.height = h;
 		this.moduleContext = moduleContext;
+	}
+	
+	
+
+	public int getImgX() {
+		return imgX;
+	}
+
+	public void setImgX(int imgX) {
+		this.imgX = imgX;
+	}
+
+	public int getImgY() {
+		return imgY;
+	}
+
+	public void setImgY(int imgY) {
+		this.imgY = imgY;
+	}
+
+	public int getImgW() {
+		return imgW;
+	}
+
+	public void setImgW(int imgW) {
+		this.imgW = imgW;
+	}
+
+	public int getImgH() {
+		return ImgH;
+	}
+
+	public void setImgH(int imgH) {
+		ImgH = imgH;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	public int getTitleMarginT() {
+		return titleMarginT;
+	}
+
+	public void setTitleMarginT(int titleMarginT) {
+		this.titleMarginT = titleMarginT;
+	}
+
+	public int getTitleMarginB() {
+		return titleMarginB;
+	}
+
+	public void setTitleMarginB(int titleMarginB) {
+		this.titleMarginB = titleMarginB;
+	}
+
+	public int getTitleMaxLines() {
+		return titleMaxLines;
+	}
+
+	public void setTitleMaxLines(int titleMaxLines) {
+		this.titleMaxLines = titleMaxLines;
+	}
+
+	public int getSubTitleMaxLines() {
+		return subTitleMaxLines;
+	}
+
+	public void setSubTitleMaxLines(int subTitleMaxLines) {
+		this.subTitleMaxLines = subTitleMaxLines;
+	}
+
+	public int getTitleMarginLeft() {
+		return titleMarginLeft;
+	}
+
+	public void setTitleMarginLeft(int titleMarginLeft) {
+		this.titleMarginLeft = titleMarginLeft;
+	}
+
+	public int getTitleMarginRight() {
+		return titleMarginRight;
+	}
+
+	public void setTitleMarginRight(int titleMarginRight) {
+		this.titleMarginRight = titleMarginRight;
+	}
+
+	public int getSubMarginLeft() {
+		return subMarginLeft;
+	}
+
+	public void setSubMarginLeft(int subMarginLeft) {
+		this.subMarginLeft = subMarginLeft;
+	}
+
+	public int getSubMarginRight() {
+		return subMarginRight;
+	}
+
+	public void setSubMarginRight(int subMarginRight) {
+		this.subMarginRight = subMarginRight;
 	}
 
 	public String getId() {
